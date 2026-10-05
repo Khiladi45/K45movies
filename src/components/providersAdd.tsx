@@ -12,11 +12,15 @@ import {
   LayoutAnimation,
   Platform,
   UIManager,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useThemeStore } from "../store/useThemeStore";
 import { useProviderStore } from "../store/useProviderStore";
 import { useProviders } from "@/lib/providerApi";
+import { ProviderManager } from "@/services/ProviderManager";
+import { SandboxManager } from "@/services/SandboxManager";
 
 // Enable LayoutAnimation on Android
 if (
@@ -38,6 +42,7 @@ export default function AddProviders() {
   const [searchQuery, setSearchQuery] = useState("");
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [providerToDelete, setProviderToDelete] = useState<string | null>(null);
+  const [installingId, setInstallingId] = useState<string | null>(null);
   const { data: providers, isLoading, error } = useProviders();
 
   const withOpacity = (hex: string, opacityHex: string) =>
@@ -49,14 +54,25 @@ export default function AddProviders() {
     ) || [];
 
   const installedCount = installedProviders.length;
-  const availableCount = providers?.length - installedCount || 0;
+  const availableCount = Math.max((providers?.length ?? 0) - installedCount, 0);
 
-  const handleProviderPress = (item: any) => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+  const handleProviderPress = async (item: any) => {
     const isInstalled = installedProviders.includes(item.value);
     if (!isInstalled) {
-      toggleInstall(item.value);
-      setActiveProvider(item.value);
+      try {
+        setInstallingId(item.value);
+        await ProviderManager.installProvider(item.value, item);
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+        toggleInstall(item.value);
+        setActiveProvider(item.value);
+      } catch (e: any) {
+        Alert.alert(
+          "Install failed",
+          e?.message || "Could not download this provider. Please try again.",
+        );
+      } finally {
+        setInstallingId(null);
+      }
     } else {
       setActiveProvider(item.value);
     }
@@ -70,11 +86,12 @@ export default function AddProviders() {
   const confirmDelete = () => {
     if (providerToDelete) {
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-      toggleInstall(providerToDelete);
-      if (activeProvider === providerToDelete) {
-        const remaining = installedProviders.filter(
-          (p) => p !== providerToDelete,
-        );
+      const id = providerToDelete;
+      toggleInstall(id);
+      SandboxManager.unloadProvider(id);
+      ProviderManager.uninstallProviderFiles(id).catch(() => {});
+      if (activeProvider === id) {
+        const remaining = installedProviders.filter((p) => p !== id);
         if (remaining.length > 0) {
           setActiveProvider(remaining[0]);
         }
@@ -208,9 +225,14 @@ export default function AddProviders() {
                     { backgroundColor: primaryColor },
                   ]}
                   onPress={() => handleProviderPress(item)}
+                  disabled={installingId === item.value}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.installButtonText}>Install</Text>
+                  {installingId === item.value ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={styles.installButtonText}>Install</Text>
+                  )}
                 </TouchableOpacity>
               ) : null}
 

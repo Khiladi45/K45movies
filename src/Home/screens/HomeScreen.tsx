@@ -106,7 +106,8 @@ export default function HomeScreen({ navigation }: any) {
     return (
       <View className="flex-1 bg-background justify-center items-center p-4">
         <Text className="text-white text-center">
-          Failed to connect to provider. Check your BASE_URL in providerApi.ts
+          Failed to load from provider. Check your connection, then reinstall
+          the provider from the Providers screen.
         </Text>
       </View>
     );
