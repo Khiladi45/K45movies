@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "653434428418",
+    "project_id": "k45movies-31302",
+    "storage_bucket": "k45movies-31302.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:653434428418:android:53d0d9067aceb457c19b1b",
+        "android_client_info": {
+          "package_name": "com.k45movies.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA9EGcpwOSaSEOLlly48g2XBudV1_eDfG4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
