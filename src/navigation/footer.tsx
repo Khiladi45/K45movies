@@ -30,6 +30,7 @@ import GlobalSearch from "@/components/search";
 import AddProviders from "@/components/providersAdd";
 import Watchlist from "@/components/watchlist";
 import UserSettings from "@/components/settings";
+import { useProfileStore } from "@/store/useProfileStore";
 
 if (
   Platform.OS === "android" &&
@@ -189,6 +190,18 @@ export default function BottomTabs() {
   // 👇 Get theme color here too, for the Profile image border
   const { primaryColor } = useThemeStore();
 
+  const {
+    profiles,
+    activeProfileId,
+    addProfile,
+    updateProfile,
+    deleteProfile,
+    setActiveProfile,
+    getActiveProfile,
+  } = useProfileStore();
+
+  const activeProfile: any = getActiveProfile();
+
   return (
     <View style={{ flex: 1, backgroundColor: "#000", overflow: "hidden" }}>
       <Tab.Navigator
@@ -246,20 +259,27 @@ export default function BottomTabs() {
           component={UserSettings}
           options={{
             title: "Profile",
-            tabBarIcon: ({ focused }) => (
-              <Image
-                source={{ uri: "https://i.pravatar.cc/75" }}
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 16,
-                  opacity: focused ? 1 : 0.55,
-                  borderWidth: focused ? 2 : 0,
-                  // 👇 Dynamic theme color for the profile border
-                  borderColor: primaryColor,
-                }}
-              />
-            ),
+            tabBarIcon: ({ focused }) =>
+              activeProfile ? (
+                <Image
+                  source={{ uri: activeProfile.avatarUri }}
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 16,
+                    opacity: focused ? 1 : 0.55,
+                    borderWidth: focused ? 2 : 0,
+                    // 👇 Dynamic theme color for the profile border
+                    borderColor: primaryColor,
+                  }}
+                />
+              ) : (
+                <Ionicons
+                  name="person-circle-outline"
+                  size={30}
+                  color={focused ? "#ECEDEE" : "#8b93a0"}
+                />
+              ),
           }}
         />
       </Tab.Navigator>

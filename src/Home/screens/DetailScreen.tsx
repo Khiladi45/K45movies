@@ -4,14 +4,12 @@ import {
   Text,
   Image,
   TouchableOpacity,
-  ActivityIndicator,
   ScrollView,
   StyleSheet,
   StatusBar,
   Dimensions,
   Animated,
   Share,
-  Alert,
   Easing,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -23,6 +21,8 @@ import { useProviderStore } from "@/store/useProviderStore";
 import { useWatchlistStore } from "@/store/useWatchlistStore";
 import { useThemeStore } from "@/store/useThemeStore";
 import SeasonList, { LinkItem } from "@/components/SeasonList";
+import DownloadButton from "@/components/DownloadButton";
+import Skeleton from "@/components/Skeleton";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const BACKDROP_HEIGHT = SCREEN_HEIGHT * 0.34; // ✅ slightly smaller
@@ -288,6 +288,10 @@ export default function DetailScreen({ route, navigation }: any) {
       setVideo(first.link, streams, 0, {
         title: meta?.title || movie.title,
         episode: streamType === "series" ? "Now Playing" : undefined,
+        link: streamLink,
+        providerId,
+        type: streamType,
+        image: meta?.poster || meta?.image || movie.image,
       });
       navigation.navigate("Player");
     };
@@ -501,7 +505,14 @@ export default function DetailScreen({ route, navigation }: any) {
               activeOpacity={0.85}
             >
               {isFetchingStream ? (
-                <ActivityIndicator color="#0B0B0F" size="small" />
+                <Skeleton
+                  style={{
+                    width: 88,
+                    height: 14,
+                    borderRadius: 7,
+                    backgroundColor: "rgba(11,11,15,0.35)",
+                  }}
+                />
               ) : (
                 <>
                   <Ionicons name="play" size={16} color="#0B0B0F" />
@@ -553,15 +564,16 @@ export default function DetailScreen({ route, navigation }: any) {
               <Ionicons name="arrow-redo-outline" size={22} color="#F2F2F2" />
               <Text style={styles.actionLabel}>Share</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.actionItem}
-              onPress={() =>
-                Alert.alert("Download", "Download manager coming soon!")
-              }
-            >
-              <Ionicons name="download-outline" size={22} color="#F2F2F2" />
-              <Text style={styles.actionLabel}>Download</Text>
-            </TouchableOpacity>
+            <View style={styles.actionItem}>
+              <DownloadButton
+                link={movie.link}
+                title={meta.title || movie.title}
+                providerId={providerId}
+                type={meta.type || movie.type}
+                image={poster}
+                label="Download"
+              />
+            </View>
             <TouchableOpacity
               style={styles.actionItem}
               onPress={() => setRated(!rated)}

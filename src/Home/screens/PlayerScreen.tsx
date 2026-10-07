@@ -34,6 +34,7 @@ export default function PlayerScreen({ navigation }: any) {
       initialStreamIndex={initialStreamIndex}
       title={playerMeta?.title}
       episodeTitle={playerMeta?.episode}
+      meta={playerMeta}
       accentColor={primaryColor}
       onBack={() => {
         closeMiniPlayer();

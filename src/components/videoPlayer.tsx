@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   StatusBar,
-  ActivityIndicator,
   ScrollView,
   PanResponder,
   Dimensions,
@@ -23,6 +22,8 @@ import {
   MaterialIcons,
 } from "@expo/vector-icons";
 import { createMMKV } from "react-native-mmkv";
+import { useContinueWatchingStore } from "@/store/useContinueWatchingStore";
+import Skeleton from "@/components/Skeleton";
 
 const mmkv = createMMKV();
 const ICON = "rgba(255,255,255,0.78)";
@@ -218,6 +219,7 @@ export default function VideoPlayer({
   initialStreamIndex = 0,
   title,
   episodeTitle,
+  meta = null,
   accentColor = "#E50914",
   onBack,
   onNextEpisode,
@@ -227,6 +229,9 @@ export default function VideoPlayer({
   const [sourceUri, setSourceUri] = useState(videoUrl);
   const [streamIndex, setStreamIndex] = useState(initialStreamIndex);
   const currentStream: any = streams[streamIndex] || { link: videoUrl };
+  const upsertContinueWatching = useContinueWatchingStore((s) => s.upsert);
+  const removeContinueWatching = useContinueWatchingStore((s) => s.remove);
+  const lastProgressSave = useRef(0);
 
   const [showControls, setShowControls] = useState(true);
   const [panel, setPanel] = useState<null | string>(null);
@@ -330,13 +335,32 @@ export default function VideoPlayer({
   const onProgress = (e: any) => {
     setCurrentTime(e.currentTime);
     setBuffered(e.playableDuration || 0);
+    // Throttle persisted writes — react-native-video ticks ~4x/sec and an
+    // MMKV write + store update each tick causes UI jank during playback.
+    const now = Date.now();
+    if (now - lastProgressSave.current < 5000) return;
+    lastProgressSave.current = now;
+    const position = e.currentTime || 0;
+    const duration = e.seekableDuration || 0;
     mmkv.set(
       `playerProgress:${videoUrl}`,
-      JSON.stringify({
-        position: e.currentTime,
-        duration: e.seekableDuration || 0,
-      }),
+      JSON.stringify({ position, duration }),
     );
+    if (!meta?.link || !meta?.title) return;
+    if (duration > 0 && position / duration >= 0.9) {
+      removeContinueWatching(meta.link);
+      return;
+    }
+    if (position < 10) return;
+    upsertContinueWatching({
+      link: meta.link,
+      title: meta.title,
+      image: meta.image || meta.poster,
+      providerId: meta.providerId || "",
+      type: meta.type,
+      position,
+      duration,
+    });
   };
 
   // Pinch zoom
@@ -730,7 +754,10 @@ export default function VideoPlayer({
           style={[StyleSheet.absoluteFill, { transform: [{ scale: zoom }] }]}
           source={{
             uri: sourceUri,
-            ...(currentStream?.type === "m3u8" && { type: "m3u8" }),
+            ...((currentStream?.type ||
+              (sourceUri.includes(".m3u8") ? "m3u8" : "")) === "m3u8" && {
+              type: "m3u8",
+            }),
             ...(currentStream?.type === "mpd" && { type: "mpd" }),
             ...(currentStream?.headers && { headers: currentStream.headers }),
             bufferConfig: {
@@ -764,7 +791,15 @@ export default function VideoPlayer({
           playWhenInactive
           onError={() => {
             setBuffering(false);
-            showToast("Playback error — try another server");
+            // Vega-style fallback: a dead server should never dead-end the
+            // user — advance to the next stream automatically.
+            const next = streamIndex + 1;
+            if (streams.length > 1 && next < streams.length) {
+              showToast("This server failed — trying the next one…");
+              selectServer(streams[next], next);
+            } else {
+              showToast("Playback error — try another server");
+            }
           }}
           onEnd={() =>
             hasNextEpisode && onNextEpisode
@@ -785,7 +820,14 @@ export default function VideoPlayer({
 
       {buffering && !paused && (
         <View style={st.center} pointerEvents="none">
-          <ActivityIndicator size="large" color={accentColor} />
+          <Skeleton
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              backgroundColor: "rgba(255,255,255,0.85)",
+            }}
+          />
         </View>
       )}
 

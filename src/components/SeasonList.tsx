@@ -5,16 +5,16 @@ import {
   TouchableOpacity,
   Image,
   TextInput,
-  ActivityIndicator,
   Modal,
   StyleSheet,
   ScrollView,
-  Alert,
 } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useEpisodes } from "@/hooks/useProvider";
 import { useThemeStore } from "@/store/useThemeStore";
 import { createMMKV } from "react-native-mmkv";
+import DownloadButton from "@/components/DownloadButton";
+import Skeleton from "@/components/Skeleton";
 
 const mmkv = createMMKV();
 
@@ -40,7 +40,6 @@ interface SeasonListProps {
   sortKey: string;
   poster?: string;
   onPlay: (link: string, type: string, episodeData: any[]) => void;
-  onDownload?: (link: string, title: string, type: string) => void;
   fetchingLink?: string | null;
 }
 
@@ -51,7 +50,6 @@ export default function SeasonList({
   sortKey,
   poster,
   onPlay,
-  onDownload,
   fetchingLink,
 }: SeasonListProps) {
   const { primaryColor } = useThemeStore();
@@ -153,7 +151,14 @@ export default function SeasonList({
                 />
                 <View style={styles.thumbPlayOverlay}>
                   {isFetching ? (
-                    <ActivityIndicator size="small" color="#fff" />
+                    <Skeleton
+                      style={{
+                        width: 16,
+                        height: 16,
+                        borderRadius: 8,
+                        backgroundColor: "rgba(255,255,255,0.9)",
+                      }}
+                    />
                   ) : (
                     <Ionicons name="play" size={14} color="#fff" />
                   )}
@@ -177,7 +182,9 @@ export default function SeasonList({
             </View>
 
             {isFetching ? (
-              <ActivityIndicator size="small" color={primaryColor} />
+              <Skeleton
+                style={{ width: 18, height: 18, borderRadius: 9, backgroundColor: primaryColor }}
+              />
             ) : (
               <Ionicons name="play-circle" size={26} color={primaryColor} />
             )}
@@ -202,16 +209,15 @@ export default function SeasonList({
                 />
               </TouchableOpacity>
             )}
-            <TouchableOpacity
-              style={styles.actionBtn}
-              onPress={() =>
-                onDownload
-                  ? onDownload(item.link, displayTitle, type)
-                  : Alert.alert("Download", "Download manager coming soon!")
-              }
-            >
-              <Ionicons name="download-outline" size={20} color="#999" />
-            </TouchableOpacity>
+            <DownloadButton
+              link={item.link}
+              title={`${metaTitle} - ${displayTitle}`}
+              providerId={providerValue}
+              type={type}
+              image={item.image || poster}
+              size={20}
+              color="#999"
+            />
           </View>
         </View>
       </View>
@@ -284,9 +290,27 @@ export default function SeasonList({
       )}
 
       {activeSeason?.episodesLink && episodeLoading && (
-        <View style={styles.loaderRow}>
-          <ActivityIndicator size="small" color={primaryColor} />
-          <Text style={styles.loaderText}>Loading episodes...</Text>
+        <View style={styles.listWrap}>
+          {[0, 1, 2].map((i) => (
+            <View key={i} style={styles.row}>
+              <View style={styles.rowPress}>
+                <Skeleton style={{ width: 96, height: 54, borderRadius: 8 }} />
+                <View style={styles.rowInfo}>
+                  <Skeleton
+                    style={{ width: "62%", height: 13, borderRadius: 4 }}
+                  />
+                  <Skeleton
+                    style={{
+                      width: "38%",
+                      height: 11,
+                      borderRadius: 4,
+                      marginTop: 7,
+                    }}
+                  />
+                </View>
+              </View>
+            </View>
+          ))}
         </View>
       )}
 
@@ -448,15 +472,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-
-  loaderRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 10,
-    paddingVertical: 20,
-  },
-  loaderText: { color: "#888", fontSize: 13 },
 
   listWrap: { gap: 8, marginTop: 4 },
   rowWrap: { width: "100%" },

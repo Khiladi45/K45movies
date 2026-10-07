@@ -48,7 +48,16 @@
         }
       ],
       "expo-image",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-media-library",
+        {
+          "savePhotosPermission": "Allow K45movies to save downloaded videos to your gallery.",
+          "photosPermission": "Allow K45movies to access media so downloaded videos can be saved.",
+          "isAccessMediaLocationEnabled": false,
+          "granularPermissions": ["video"]
+        }
+      ]
     ]
   }
 }

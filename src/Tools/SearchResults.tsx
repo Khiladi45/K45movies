@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -6,12 +6,13 @@ import {
   FlatList,
   Image,
   TouchableOpacity,
-  ActivityIndicator,
+  Animated,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useThemeStore } from "@/store/useThemeStore";
 import { useSearch } from "@/hooks/useSearch";
+import Skeleton from "@/components/Skeleton";
 
 export default function SearchResults({ route, navigation }: any) {
   const { query, providerId, providerName } = route.params;
@@ -39,8 +40,19 @@ export default function SearchResults({ route, navigation }: any) {
     });
   };
 
+  const fade = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.timing(fade, {
+      toValue: 1,
+      duration: 260,
+      useNativeDriver: true,
+    }).start();
+  }, [fade]);
+
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <Animated.View
+      style={[styles.container, { paddingTop: insets.top, opacity: fade }]}
+    >
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -74,11 +86,22 @@ export default function SearchResults({ route, navigation }: any) {
       </View>
 
       {isLoading ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={primaryColor} />
-          <Text style={[styles.loadingText, { color: "#888" }]}>
-            Searching {providerName || providerId}...
-          </Text>
+        <View style={styles.skeletonGrid}>
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <View key={i} style={styles.card}>
+              <Skeleton
+                style={{ width: "100%", aspectRatio: 2 / 3, borderRadius: 12 }}
+              />
+              <Skeleton
+                style={{
+                  width: "82%",
+                  height: 12,
+                  borderRadius: 4,
+                  marginTop: 8,
+                }}
+              />
+            </View>
+          ))}
         </View>
       ) : (
         <FlatList
@@ -112,7 +135,7 @@ export default function SearchResults({ route, navigation }: any) {
           )}
         />
       )}
-    </View>
+    </Animated.View>
   );
 }
 
@@ -143,8 +166,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 40,
   },
-  loadingText: { marginTop: 12, fontSize: 14 },
   emptyText: { fontSize: 15, marginTop: 12, textAlign: "center" },
+  skeletonGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingTop: 8,
+  },
   listContent: { paddingBottom: 40, paddingTop: 8 },
   columnWrapper: { justifyContent: "space-between", paddingHorizontal: 16 },
   card: { width: "31%", marginBottom: 18 },

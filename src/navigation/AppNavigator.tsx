@@ -6,6 +6,7 @@ import ThemeSettingsScreen from "@/Tools/ThemeSettingsScreen";
 import DetailScreen from "@/Home/screens/DetailScreen";
 import SearchResults from "@/Tools/SearchResults";
 import PlayerScreen from "@/Home/screens/PlayerScreen";
+import DownloadsScreen from "@/Home/screens/DownloadsScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -45,6 +46,15 @@ export default function AppNavigator() {
           component={PlayerScreen}
           options={{
             title: "Player",
+          }}
+        />
+
+        <Stack.Screen
+          name="Downloads"
+          component={DownloadsScreen}
+          options={{
+            title: "Downloads",
+            animation: "slide_from_right",
           }}
         />
 

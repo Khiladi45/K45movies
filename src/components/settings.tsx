@@ -271,9 +271,10 @@ export default function UserSettings({ navigation }: any) {
               <Ionicons name="download-outline" size={24} color="#38bdf8" />
             }
             iconBg="rgba(56, 189, 248, 0.1)"
-            title="Download Settings"
-            subtitle="Manage download quality and storage"
+            title="Downloads"
+            subtitle="Manage downloaded movies and episodes"
             isLast
+            onPress={() => navigation.navigate("Downloads")}
           />
         </Section>
 

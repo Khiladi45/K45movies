@@ -1,21 +1,28 @@
-import React, { useState, useRef, useEffect, useMemo } from "react";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useMemo,
+  memo,
+} from "react";
 import {
   View,
   Text,
   FlatList,
-  Image,
   TouchableOpacity,
-  ActivityIndicator,
   StyleSheet,
   Dimensions,
   Animated,
 } from "react-native";
+import { Image } from "expo-image";
 import { useCatalog, usePosts } from "@/hooks/useProvider";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useProviderStore } from "@/store/useProviderStore";
 import { useThemeStore } from "@/store/useThemeStore";
 import { useWatchlistStore } from "@/store/useWatchlistStore";
+import ContinueWatching from "@/Home/components/ContinueWatching";
+import Skeleton from "@/components/Skeleton";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CARD_WIDTH = SCREEN_WIDTH - 34;
@@ -28,31 +35,39 @@ const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
 export default function HomeScreen({ navigation }: any) {
   const activeProvider = useProviderStore((state) => state.activeProvider);
-  const { primaryColor } = useThemeStore();
   const {
     data: catalogs,
     isLoading: isCatalogLoading,
     error: catalogError,
   } = useCatalog(activeProvider);
 
-  const carouselCategories = catalogs?.slice(0, 4) || [];
+  // Catalogs without a filter/id can never fetch posts (usePosts stays
+  // disabled), which left their skeleton on screen forever.
+  const validCatalogs = useMemo(
+    () => (catalogs || []).filter((c: any) => c.filter || c.id),
+    [catalogs],
+  );
 
-  const { data: cat1Posts } = usePosts(
+  const carouselCategories = validCatalogs.slice(0, 4);
+
+  const { data: cat1Posts, isLoading: cat1Loading } = usePosts(
     activeProvider,
     carouselCategories[0]?.filter || carouselCategories[0]?.id,
   );
-  const { data: cat2Posts } = usePosts(
+  const { data: cat2Posts, isLoading: cat2Loading } = usePosts(
     activeProvider,
     carouselCategories[1]?.filter || carouselCategories[1]?.id,
   );
-  const { data: cat3Posts } = usePosts(
+  const { data: cat3Posts, isLoading: cat3Loading } = usePosts(
     activeProvider,
     carouselCategories[2]?.filter || carouselCategories[2]?.id,
   );
-  const { data: cat4Posts } = usePosts(
+  const { data: cat4Posts, isLoading: cat4Loading } = usePosts(
     activeProvider,
     carouselCategories[3]?.filter || carouselCategories[3]?.id,
   );
+  const isCarouselLoading =
+    cat1Loading || cat2Loading || cat3Loading || cat4Loading;
 
   const carouselItems = useMemo(() => {
     const mixed: any[] = [];
@@ -96,8 +111,11 @@ export default function HomeScreen({ navigation }: any) {
 
   if (isCatalogLoading) {
     return (
-      <View className="flex-1 bg-background justify-center items-center">
-        <ActivityIndicator size="large" color={primaryColor} />
+      <View style={{ flex: 1, backgroundColor: "#000" }}>
+        <CarouselSkeleton />
+        <CategorySkeleton />
+        <CategorySkeleton />
+        <CategorySkeleton />
       </View>
     );
   }
@@ -109,6 +127,9 @@ export default function HomeScreen({ navigation }: any) {
           Failed to load from provider. Check your connection, then reinstall
           the provider from the Providers screen.
         </Text>
+        <Text className="text-gray-400 text-center text-xs mt-3">
+          {(catalogError as any)?.message || String(catalogError)}
+        </Text>
       </View>
     );
   }
@@ -116,23 +137,63 @@ export default function HomeScreen({ navigation }: any) {
   return (
     <View style={{ flex: 1, backgroundColor: "#000" }}>
       <FlatList
-        data={catalogs}
+        data={validCatalogs}
         ListHeaderComponent={
-          carouselItems.length > 0 ? (
-            <HotstarCarousel
-              items={carouselItems}
-              navigation={navigation}
-              providerId={activeProvider}
-            />
-          ) : null
+          <>
+            {carouselItems.length > 0 ? (
+              <HotstarCarousel
+                items={carouselItems}
+                navigation={navigation}
+                providerId={activeProvider}
+              />
+            ) : isCarouselLoading ? (
+              <CarouselSkeleton />
+            ) : null}
+            <ContinueWatching navigation={navigation} />
+          </>
         }
         renderItem={({ item }) => (
           <CategorySection category={item} navigation={navigation} />
         )}
-        keyExtractor={(item: any) => item.id || item.title}
+        keyExtractor={keyExtractor}
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: 100 }}
+        initialNumToRender={3}
+        maxToRenderPerBatch={3}
+        windowSize={5}
+        removeClippedSubviews
+        updateCellsBatchingPeriod={50}
       />
+    </View>
+  );
+}
+
+const keyExtractor = (item: any) => String(item.id || item.title);
+
+function CarouselSkeleton() {
+  return (
+    <View style={styles.carouselWrapper}>
+      <Skeleton style={styles.carouselCard} />
+    </View>
+  );
+}
+
+function CategorySkeleton() {
+  return (
+    <View style={{ marginBottom: 24, marginLeft: 16, marginRight: 16 }}>
+      <Skeleton
+        style={{ width: 130, height: 18, borderRadius: 4, marginBottom: 14 }}
+      />
+      <View style={{ flexDirection: "row", gap: 16 }}>
+        {[0, 1, 2, 3].map((i) => (
+          <View key={i} style={{ width: 128 }}>
+            <Skeleton style={{ width: 128, height: 192, borderRadius: 8 }} />
+            <Skeleton
+              style={{ width: 96, height: 12, borderRadius: 4, marginTop: 8 }}
+            />
+          </View>
+        ))}
+      </View>
     </View>
   );
 }
@@ -170,7 +231,11 @@ function ScaleButton({ onPress, children, style }: any) {
   );
 }
 
-function HotstarCarousel({ items, navigation, providerId }: any) {
+const HotstarCarousel = memo(function HotstarCarousel({
+  items,
+  navigation,
+  providerId,
+}: any) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   // ✅ FIX 2: Use `any` for the ref to avoid TS conflicts with AnimatedFlatList
@@ -284,7 +349,8 @@ function HotstarCarousel({ items, navigation, providerId }: any) {
                 <Image
                   source={{ uri: item.image }}
                   style={styles.cardImage}
-                  resizeMode="cover"
+                  contentFit="cover"
+                  transition={250}
                 />
 
                 <LinearGradient
@@ -361,21 +427,23 @@ function HotstarCarousel({ items, navigation, providerId }: any) {
       />
     </View>
   );
-}
+});
 
-function CategorySection({ category, navigation }: any) {
+const CategorySection = memo(function CategorySection({
+  category,
+  navigation,
+}: any) {
   const activeProvider = useProviderStore((state) => state.activeProvider);
   const { primaryColor } = useThemeStore();
 
-  const { data: posts, isLoading } = usePosts(
+  const { data: posts, isLoading, isError } = usePosts(
     activeProvider,
     category.filter || category.id,
   );
 
-  const withOpacity = (hex: string, opacityHex: string) =>
-    `${hex}${opacityHex}`;
-
-  if (isLoading || !posts) return null;
+  if (isError) return null;
+  if (isLoading || !posts) return <CategorySkeleton />;
+  if (posts.length === 0) return null;
 
   return (
     <View style={{ marginBottom: 24, marginLeft: 16, marginRight: 16 }}>
@@ -402,9 +470,11 @@ function CategorySection({ category, navigation }: any) {
         }
         decelerationRate="fast"
         scrollEventThrottle={16}
+        ItemSeparatorComponent={() => <View style={{ width: 14 }} />}
         renderItem={({ item }) => (
           <TouchableOpacity
-            className="mr-4 w-32"
+            style={{ width: 128 }}
+            activeOpacity={0.8}
             onPress={() =>
               navigation.navigate("Detail", {
                 movie: item,
@@ -414,8 +484,14 @@ function CategorySection({ category, navigation }: any) {
           >
             <Image
               source={{ uri: item.image }}
-              className="w-32 h-48 rounded-lg bg-surface"
-              resizeMode="cover"
+              style={{
+                width: 128,
+                height: 192,
+                borderRadius: 10,
+                backgroundColor: "#111",
+              }}
+              contentFit="cover"
+              transition={200}
             />
             <Text className="text-white text-sm mt-2" numberOfLines={2}>
               {item.title}
@@ -425,7 +501,7 @@ function CategorySection({ category, navigation }: any) {
       />
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   carouselWrapper: {

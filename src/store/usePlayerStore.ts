@@ -1,6 +1,14 @@
 import { create } from "zustand";
 
-type PlayerMeta = { title?: string; episode?: string; poster?: string } | null;
+type PlayerMeta = {
+  title?: string;
+  episode?: string;
+  poster?: string;
+  link?: string;
+  providerId?: string;
+  type?: string;
+  image?: string;
+} | null;
 
 type PlayerState = {
   currentVideoUrl: string;

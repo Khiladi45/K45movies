@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   FlatList,
   Image,
-  ActivityIndicator,
   SafeAreaView,
   Keyboard,
 } from "react-native";
@@ -16,6 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useThemeStore } from "../store/useThemeStore";
 import { useProviderStore } from "../store/useProviderStore";
 import { useSearch } from "../hooks/useSearch";
+import Skeleton from "./Skeleton";
 
 export default function GlobalSearch({ navigation }: any) {
   const { primaryColor } = useThemeStore();
@@ -198,11 +198,37 @@ export default function GlobalSearch({ navigation }: any) {
               </View>
             </View>
           ) : isLoading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={primaryColor} />
-              <Text style={[styles.loadingText, { color: "#888" }]}>
-                Searching your providers...
-              </Text>
+            <View style={styles.skeletonList}>
+              {[0, 1].map((s) => (
+                <View key={s} style={styles.categorySection}>
+                  <View style={styles.categoryHeader}>
+                    <Skeleton
+                      style={{ width: 110, height: 14, borderRadius: 4 }}
+                    />
+                  </View>
+                  <View style={styles.columnWrapper}>
+                    {[0, 1, 2].map((i) => (
+                      <View key={i} style={styles.card}>
+                        <Skeleton
+                          style={{
+                            width: "100%",
+                            aspectRatio: 2 / 3,
+                            borderRadius: 12,
+                          }}
+                        />
+                        <Skeleton
+                          style={{
+                            width: "82%",
+                            height: 12,
+                            borderRadius: 4,
+                            marginTop: 8,
+                          }}
+                        />
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              ))}
             </View>
           ) : sectionKeys.length === 0 ? (
             <View style={styles.emptyContainer}>
@@ -348,13 +374,7 @@ const styles = StyleSheet.create({
   },
   tagText: { fontSize: 14, fontWeight: "500" },
 
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 40,
-  },
-  loadingText: { marginTop: 12, fontSize: 14 },
+  skeletonList: { paddingTop: 8 },
 
   emptyContainer: {
     flex: 1,

@@ -13,11 +13,11 @@ import {
   Platform,
   UIManager,
   Alert,
-  ActivityIndicator,
 } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useThemeStore } from "../store/useThemeStore";
 import { useProviderStore } from "../store/useProviderStore";
+import Skeleton from "./Skeleton";
 import { useProviders } from "@/lib/providerApi";
 import { ProviderManager } from "@/services/ProviderManager";
 import { SandboxManager } from "@/services/SandboxManager";
@@ -50,20 +50,24 @@ export default function AddProviders() {
 
   const filteredProviders =
     providers?.filter((provider: any) =>
-      provider.display_name.toLowerCase().includes(searchQuery.toLowerCase()),
+      provider.display_name
+        ?.toLowerCase()
+        ?.includes(searchQuery?.toLowerCase()),
     ) || [];
 
-  const installedCount = installedProviders.length;
+  const installedCount = installedProviders?.length;
   const availableCount = Math.max((providers?.length ?? 0) - installedCount, 0);
 
   const handleProviderPress = async (item: any) => {
-    const isInstalled = installedProviders.includes(item.value);
-    if (!isInstalled) {
+    // The store can claim "installed" without a bundle on disk — always
+    // trust the file system here. ensureProviderBundle downloads if needed,
+    // dedupes concurrent installs, and syncs the store.
+    const bundleOnDisk = ProviderManager.isProviderInstalled(item.value);
+    if (!bundleOnDisk) {
       try {
         setInstallingId(item.value);
-        await ProviderManager.installProvider(item.value, item);
+        await ProviderManager.ensureProviderBundle(item.value);
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-        toggleInstall(item.value);
         setActiveProvider(item.value);
       } catch (e: any) {
         Alert.alert(
@@ -94,6 +98,13 @@ export default function AddProviders() {
         const remaining = installedProviders.filter((p) => p !== id);
         if (remaining.length > 0) {
           setActiveProvider(remaining[0]);
+        } else {
+          // Deleted the last provider — point at any other one so Home
+          // self-heals a fresh provider instead of the deleted one.
+          const fallback = providers?.find((p: any) => p.value !== id)?.value;
+          if (fallback) {
+            setActiveProvider(fallback);
+          }
         }
       }
       setDeleteModalVisible(false);
@@ -229,7 +240,14 @@ export default function AddProviders() {
                   activeOpacity={0.8}
                 >
                   {installingId === item.value ? (
-                    <ActivityIndicator size="small" color="#fff" />
+                    <Skeleton
+                      style={{
+                        width: 14,
+                        height: 14,
+                        borderRadius: 7,
+                        backgroundColor: "rgba(255,255,255,0.9)",
+                      }}
+                    />
                   ) : (
                     <Text style={styles.installButtonText}>Install</Text>
                   )}
