@@ -3,10 +3,9 @@
     "name": "K45movies",
     "slug": "K45movies",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "userInterfaceStyle": "dark",
 
     "ios": {
       "supportsTablet": true
@@ -34,7 +33,7 @@
         {
           "image": "./assets/splash-icon.png",
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#141414"
         }
       ],
       "@react-native-firebase/app",
@@ -48,16 +47,7 @@
         }
       ],
       "expo-image",
-      "expo-font",
-      [
-        "expo-media-library",
-        {
-          "savePhotosPermission": "Allow K45movies to save downloaded videos to your gallery.",
-          "photosPermission": "Allow K45movies to access media so downloaded videos can be saved.",
-          "isAccessMediaLocationEnabled": false,
-          "granularPermissions": ["video"]
-        }
-      ]
+      "expo-font"
     ]
   }
 }

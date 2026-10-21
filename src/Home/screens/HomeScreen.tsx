@@ -157,6 +157,7 @@ export default function HomeScreen({ navigation }: any) {
         )}
         keyExtractor={keyExtractor}
         style={{ flex: 1 }}
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 100 }}
         initialNumToRender={3}
         maxToRenderPerBatch={3}
@@ -445,11 +446,18 @@ const CategorySection = memo(function CategorySection({
   if (isLoading || !posts) return <CategorySkeleton />;
   if (posts.length === 0) return null;
 
+  const filter = category.filter || category.id;
+
   return (
     <View style={{ marginBottom: 24, marginLeft: 16, marginRight: 16 }}>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 8,
+        }}
+      >
         <View
-          className="mb-3"
           style={{
             width: 4,
             height: 18,
@@ -457,9 +465,29 @@ const CategorySection = memo(function CategorySection({
             backgroundColor: primaryColor,
           }}
         />
-        <Text className="text-white text-xl font-bold mb-3">
+        <Text
+          className="text-white text-xl font-bold"
+          style={{ flex: 1, marginBottom: 12 }}
+          numberOfLines={1}
+        >
           {category.title}
         </Text>
+        {!!filter && (
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate("Category", {
+                providerId: activeProvider,
+                filter,
+                title: category.title,
+              })
+            }
+            hitSlop={8}
+            style={{ flexDirection: "row", alignItems: "center", gap: 2 }}
+          >
+            <Text style={{ color: "#9a9a9a", fontSize: 12.5 }}>See More</Text>
+            <Ionicons name="chevron-forward" size={14} color="#9a9a9a" />
+          </TouchableOpacity>
+        )}
       </View>
       <FlatList
         data={posts}

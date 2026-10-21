@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   Animated,
   Share,
   Easing,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -20,6 +21,8 @@ import { useMeta, useStream, useEpisodes } from "@/hooks/useProvider";
 import { useProviderStore } from "@/store/useProviderStore";
 import { useWatchlistStore } from "@/store/useWatchlistStore";
 import { useThemeStore } from "@/store/useThemeStore";
+import { usePreferencesStore } from "@/store/usePreferencesStore";
+import { selectPlaybackStreams } from "@/lib/streams";
 import SeasonList, { LinkItem } from "@/components/SeasonList";
 import DownloadButton from "@/components/DownloadButton";
 import Skeleton from "@/components/Skeleton";
@@ -217,18 +220,79 @@ export default function DetailScreen({ route, navigation }: any) {
     movie.link,
   );
 
+  type StartSource = "watch" | "list";
   const [streamLink, setStreamLink] = useState("");
   const [streamType, setStreamType] = useState("movie");
   const [shouldFetchStream, setShouldFetchStream] = useState(false);
-  const [isFetchingStream, setIsFetchingStream] = useState(false);
+  const [starting, setStarting] = useState<null | {
+    link: string;
+    source: StartSource;
+    stage?: string;
+  }>(null);
+  const [playbackError, setPlaybackError] = useState<string | null>(null);
+  const startInFlight = useRef(false);
+  const playbackAbort = useRef<AbortController | null>(null);
+  const launchingRef = useRef(false);
+  const mountedRef = useRef(true);
+  const lastAttempt = useRef<
+    | { kind: "stream"; link: string; type: string; source: StartSource }
+    | { kind: "episodes"; link: string }
+    | null
+  >(null);
   const { refetch: fetchStream } = useStream(
     providerId,
     streamLink,
     streamType,
   );
 
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      playbackAbort.current?.abort();
+    };
+  }, []);
+
   const [pendingEpisodesUrl, setPendingEpisodesUrl] = useState("");
-  const { data: pendingEpisodes } = useEpisodes(providerId, pendingEpisodesUrl);
+  const {
+    data: pendingEpisodes,
+    error: pendingEpisodesError,
+    refetch: refetchPendingEpisodes,
+  } = useEpisodes(providerId, pendingEpisodesUrl);
+
+  const startPlayback = useCallback(
+    (link: string, type: string, source: StartSource) => {
+      if (!link || startInFlight.current || launchingRef.current) return;
+      launchingRef.current = true;
+      setPlaybackError(null);
+      setStarting({ link, source, stage: "Preparing stream…" });
+      lastAttempt.current = { kind: "stream", link, type, source };
+      setStreamLink(link);
+      setStreamType(type);
+      setShouldFetchStream(true);
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (!pendingEpisodesError || !pendingEpisodesUrl) return;
+    launchingRef.current = false;
+    setStarting(null);
+    setPlaybackError("Could not load episodes for this title.");
+  }, [pendingEpisodesError, pendingEpisodesUrl]);
+
+  useEffect(() => {
+    if (!pendingEpisodesUrl || !pendingEpisodes) return;
+    if (pendingEpisodes.length > 0) {
+      setPendingEpisodesUrl("");
+      launchingRef.current = false;
+      startPlayback(pendingEpisodes[0].link, "series", "watch");
+    } else {
+      launchingRef.current = false;
+      setStarting(null);
+      setPlaybackError("No episodes were found for this title.");
+    }
+  }, [pendingEpisodes, pendingEpisodesUrl, startPlayback]);
 
   const [extra, setExtra] = useState<any>(null);
   useEffect(() => {
@@ -276,26 +340,75 @@ export default function DetailScreen({ route, navigation }: any) {
 
   useEffect(() => {
     if (!shouldFetchStream || !streamLink) return;
+    if (startInFlight.current) return;
+    startInFlight.current = true;
+    playbackAbort.current?.abort();
+    const controller = new AbortController();
+    playbackAbort.current = controller;
     const fetchAndPlay = async () => {
-      setIsFetchingStream(true);
-      const { data, error } = await fetchStream();
-      setIsFetchingStream(false);
-      setShouldFetchStream(false);
-      if (error || !data) return;
-      const streams: any[] = Array.isArray(data) ? data : [data];
-      const first = streams[0];
-      if (!first?.link) return;
-      setVideo(first.link, streams, 0, {
-        title: meta?.title || movie.title,
-        episode: streamType === "series" ? "Now Playing" : undefined,
-        link: streamLink,
-        providerId,
-        type: streamType,
-        image: meta?.poster || meta?.image || movie.image,
-      });
-      navigation.navigate("Player");
+      try {
+        const { data, error } = await fetchStream();
+        if (!mountedRef.current || controller.signal.aborted) return;
+        if (error || !data) {
+          setStarting(null);
+          setPlaybackError(
+            error instanceof Error
+              ? error.message
+              : "Could not get a playable stream from this provider.",
+          );
+          return;
+        }
+        const streams: any[] = Array.isArray(data) ? data : [data];
+        setStarting((current) =>
+          current ? { ...current, stage: "Checking servers…" } : current,
+        );
+        const selection = await selectPlaybackStreams(streams, {
+          preference: usePreferencesStore.getState().defaultQuality,
+          signal: controller.signal,
+        });
+        if (!mountedRef.current || controller.signal.aborted) return;
+        if (selection.streams.length === 0) {
+          setStarting(null);
+          setPlaybackError(
+            selection.skippedDownloadOnly > 0
+              ? "This provider only offers download-only servers. Use Download to save it for offline playback."
+              : "This provider returned no playable stream.",
+          );
+          return;
+        }
+        const chosen =
+          selection.streams[selection.startIndex] || selection.streams[0];
+        setPlaybackError(null);
+        setVideo(chosen.link, selection.streams, selection.startIndex, {
+          title: meta?.title || movie.title,
+          episode: streamType === "series" ? "Now Playing" : undefined,
+          link: streamLink,
+          providerId,
+          type: streamType,
+          image: meta?.poster || meta?.image || movie.image,
+        });
+        setStarting(null);
+        if (navigation.isFocused()) {
+          navigation.navigate("Player");
+        }
+      } catch (err) {
+        if (!mountedRef.current || controller.signal.aborted) return;
+        setStarting(null);
+        setPlaybackError(
+          err instanceof Error
+            ? err.message
+            : "Could not start playback for this stream.",
+        );
+      } finally {
+        if (playbackAbort.current === controller) playbackAbort.current = null;
+        if (mountedRef.current) {
+          setShouldFetchStream(false);
+        }
+        startInFlight.current = false;
+        launchingRef.current = false;
+      }
     };
-    fetchAndPlay();
+    void fetchAndPlay();
   }, [
     shouldFetchStream,
     streamLink,
@@ -305,14 +418,8 @@ export default function DetailScreen({ route, navigation }: any) {
     setVideo,
     meta,
     movie,
+    providerId,
   ]);
-
-  useEffect(() => {
-    if (pendingEpisodesUrl && pendingEpisodes && pendingEpisodes.length > 0) {
-      handlePlay(pendingEpisodes[0].link, "series", pendingEpisodes);
-      setPendingEpisodesUrl("");
-    }
-  }, [pendingEpisodes, pendingEpisodesUrl]);
 
   const filteredLinkList: LinkItem[] = useMemo(() => {
     if (!meta?.linkList || meta.linkList.length === 0) {
@@ -332,25 +439,42 @@ export default function DetailScreen({ route, navigation }: any) {
     return meta.linkList;
   }, [meta?.linkList, meta?.title, meta?.type, movie.link]);
 
-  const handlePlay = (link: string, type: string, episodeData: any[]) => {
-    setStreamLink(link);
-    setStreamType(type);
-    setShouldFetchStream(true);
+  const handlePlay = (link: string, type: string) => {
+    startPlayback(link, type, "list");
   };
 
   const handleWatchNow = () => {
+    if (startInFlight.current || launchingRef.current) return;
     const list = meta?.linkList;
     if (!list || list.length === 0) {
-      handlePlay(movie.link, meta?.type || "movie", []);
+      startPlayback(movie.link, meta?.type || "movie", "watch");
       return;
     }
     const first = list[0];
     if (first.directLinks && first.directLinks.length > 0) {
       const item = first.directLinks[0];
-      handlePlay(item.link, item.type || "series", first.directLinks);
+      startPlayback(item.link, item.type || "series", "watch");
     } else if (first.episodesLink) {
+      launchingRef.current = true;
+      setPlaybackError(null);
+      setStarting({ link: first.episodesLink, source: "watch" });
+      lastAttempt.current = { kind: "episodes", link: first.episodesLink };
       setPendingEpisodesUrl(first.episodesLink);
     }
+  };
+
+  const retryLast = () => {
+    if (startInFlight.current || launchingRef.current) return;
+    const attempt = lastAttempt.current;
+    if (!attempt) return;
+    if (attempt.kind === "stream") {
+      startPlayback(attempt.link, attempt.type, attempt.source);
+      return;
+    }
+    launchingRef.current = true;
+    setPlaybackError(null);
+    setStarting({ link: attempt.link, source: "watch" });
+    void refetchPendingEpisodes();
   };
 
   const handleToggleWatchlist = () => {
@@ -499,20 +623,21 @@ export default function DetailScreen({ route, navigation }: any) {
           {/* ▶ WATCH NOW */}
           <View style={styles.watchNowWrap}>
             <TouchableOpacity
-              style={styles.watchNowButton}
+              style={[
+                styles.watchNowButton,
+                !!starting && styles.watchNowButtonDisabled,
+              ]}
               onPress={handleWatchNow}
-              disabled={isFetchingStream}
+              disabled={!!starting}
               activeOpacity={0.85}
             >
-              {isFetchingStream ? (
-                <Skeleton
-                  style={{
-                    width: 88,
-                    height: 14,
-                    borderRadius: 7,
-                    backgroundColor: "rgba(11,11,15,0.35)",
-                  }}
-                />
+              {starting?.source === "watch" ? (
+                <View style={styles.startingRow}>
+                  <ActivityIndicator size="small" color="#0B0B0F" />
+                  <Text style={styles.watchNowText}>
+                    {starting.stage || "Preparing…"}
+                  </Text>
+                </View>
               ) : (
                 <>
                   <Ionicons name="play" size={16} color="#0B0B0F" />
@@ -520,6 +645,31 @@ export default function DetailScreen({ route, navigation }: any) {
                 </>
               )}
             </TouchableOpacity>
+
+            {playbackError && (
+              <View style={styles.errorBanner}>
+                <Ionicons
+                  name="alert-circle-outline"
+                  size={18}
+                  color="#F87171"
+                />
+                <Text style={styles.errorBannerText} numberOfLines={3}>
+                  {playbackError}
+                </Text>
+                {lastAttempt.current && (
+                  <TouchableOpacity
+                    onPress={retryLast}
+                    style={styles.retryBtn}
+                    disabled={!!starting}
+                  >
+                    <Text style={styles.retryBtnText}>Retry</Text>
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity onPress={() => setPlaybackError(null)}>
+                  <Ionicons name="close" size={18} color="#9A9A9A" />
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
 
           {/* 🎭 GENRES */}
@@ -597,7 +747,9 @@ export default function DetailScreen({ route, navigation }: any) {
               sortKey={movie.link}
               poster={poster}
               onPlay={handlePlay}
-              fetchingLink={isFetchingStream ? streamLink : null}
+              fetchingLink={
+                starting?.source === "list" ? starting.link : null
+              }
             />
           </View>
         </ScrollView>
@@ -710,6 +862,29 @@ const styles = StyleSheet.create({
     backgroundColor: "#E6E6F0",
   },
   watchNowText: { color: "#0B0B0F", fontSize: 15, fontWeight: "800" },
+  startingRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  watchNowButtonDisabled: { opacity: 0.7 },
+
+  errorBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "rgba(248,113,113,0.35)",
+    backgroundColor: "rgba(248,113,113,0.08)",
+  },
+  errorBannerText: { flex: 1, color: "#FCA5A5", fontSize: 12.5, lineHeight: 17 },
+  retryBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: "rgba(248,113,113,0.18)",
+  },
+  retryBtnText: { color: "#FCA5A5", fontSize: 12, fontWeight: "700" },
 
   // 🎭 Genres (smaller)
   genreScroll: { paddingHorizontal: 16, marginTop: 22, alignItems: "center" },

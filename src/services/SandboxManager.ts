@@ -8,7 +8,13 @@ type PendingRequest = {
   resolve: (value: any) => void;
   reject: (reason?: any) => void;
   timer: ReturnType<typeof setTimeout>;
+  cleanup?: () => void;
 };
+
+export type OpenWebViewHandler = (
+  url: string,
+  options: Record<string, any>,
+) => Promise<Record<string, any>>;
 
 const EXECUTION_TIMEOUT_MS = 30000;
 
@@ -17,6 +23,35 @@ const EXECUTION_TIMEOUT_MS = 30000;
 export const DEFAULT_UA =
   "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36";
 
+const BASE64_CHARS =
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+const bytesToBase64 = (bytes: Uint8Array): string => {
+  const chunks: string[] = [];
+  let chunk = "";
+  for (let i = 0; i < bytes.length; i += 3) {
+    const b0 = bytes[i];
+    const has1 = i + 1 < bytes.length;
+    const has2 = i + 2 < bytes.length;
+    const b1 = has1 ? bytes[i + 1] : 0;
+    const b2 = has2 ? bytes[i + 2] : 0;
+    chunk +=
+      BASE64_CHARS[b0 >> 2] +
+      BASE64_CHARS[((b0 & 3) << 4) | (b1 >> 4)] +
+      (has1 ? BASE64_CHARS[((b1 & 15) << 2) | (b2 >> 6)] : "=") +
+      (has2 ? BASE64_CHARS[b2 & 63] : "=");
+    if (chunk.length >= 8192) {
+      chunks.push(chunk);
+      chunk = "";
+    }
+  }
+  if (chunk) chunks.push(chunk);
+  return chunks.join("");
+};
+
+const BINARY_CONTENT_TYPE =
+  /^(?:image|audio|video|font)\/|application\/(?:octet-stream|zip|pdf|wasm|x-font|x-msdownload|vnd\.android\.package-archive)/i;
+
 class SandboxManagerClass {
   private webviewRef: RefObject<WebView | null> | null = null;
   private pendingRequests: Map<string, PendingRequest> = new Map();
@@ -24,6 +59,7 @@ class SandboxManagerClass {
   private loadedProviders: Set<string> = new Set();
   private pageLoaded = false;
   private loadWaiters: Array<() => void> = [];
+  private openWebViewHandler: OpenWebViewHandler | null = null;
 
   setWebviewRef(ref: RefObject<WebView | null>) {
     this.webviewRef = ref;
@@ -35,14 +71,24 @@ class SandboxManagerClass {
     }
   }
 
+  setOpenWebViewHandler(handler: OpenWebViewHandler | null) {
+    this.openWebViewHandler = handler;
+  }
+
   // Called by the sandbox WebView when a page load starts/finishes. A reload
   // wipes window.providers and window.__pendingHttp, so the in-memory
-  // registry and in-flight native HTTP requests must be dropped too.
+  // registry and in-flight requests must be dropped too.
   notifyLoadStart() {
     this.pageLoaded = false;
     this.loadedProviders.clear();
     this.pendingHttpRequests.forEach((p) => p.abort());
     this.pendingHttpRequests.clear();
+    this.pendingRequests.forEach((pending) => {
+      clearTimeout(pending.timer);
+      pending.cleanup?.();
+      pending.reject(new Error("Sandbox reloaded"));
+    });
+    this.pendingRequests.clear();
   }
 
   notifyLoadEnd() {
@@ -71,7 +117,7 @@ class SandboxManagerClass {
       const parsed = JSON.parse(event.nativeEvent.data);
 
       if (parsed.type === "httpRequest") {
-        this.handleHttpRequest(parsed);
+        void this.handleHttpRequest(parsed);
         return;
       }
       if (parsed.type === "httpAbort") {
@@ -82,6 +128,10 @@ class SandboxManagerClass {
         }
         return;
       }
+      if (parsed.type === "openWebView") {
+        void this.handleOpenWebViewRequest(parsed);
+        return;
+      }
 
       const { id, result, error } = parsed;
       if (!id) return;
@@ -90,11 +140,13 @@ class SandboxManagerClass {
       if (!pendingRequest) return;
 
       clearTimeout(pendingRequest.timer);
+      pendingRequest.cleanup?.();
       this.pendingRequests.delete(id);
 
       if (error) {
-        console.warn(`[Sandbox] ${id} failed:`, error);
-        pendingRequest.reject(new Error(typeof error === "string" ? error : JSON.stringify(error)));
+        pendingRequest.reject(
+          new Error(typeof error === "string" ? error : JSON.stringify(error)),
+        );
       } else {
         pendingRequest.resolve(result);
       }
@@ -108,11 +160,39 @@ class SandboxManagerClass {
     return Object.keys(headers).some((k) => k.toLowerCase() === target);
   }
 
+  private inject(js: string) {
+    try {
+      this.webviewRef?.current?.injectJavaScript(js);
+    } catch {
+      // The WebView may have been torn down between scheduling and injection.
+    }
+  }
+
   private replyHttp(payload: Record<string, unknown>) {
     // Double stringify keeps U+2028/2029 and quotes from breaking the
     // injected JS string; JSON.parse on the sandbox side restores the object.
-    this.webviewRef?.current?.injectJavaScript(
-      `(function(){ window.__onHttpResponse(JSON.parse(${JSON.stringify(JSON.stringify(payload))})); })(); true;`,
+    this.inject(
+      `(function(){ window.__onHttpResponse(JSON.parse(${JSON.stringify(
+        JSON.stringify(payload),
+      )})); })(); true;`,
+    );
+  }
+
+  private replyWebView(payload: Record<string, unknown>) {
+    this.inject(
+      `(function(){ window.__onWebViewResult(JSON.parse(${JSON.stringify(
+        JSON.stringify(payload),
+      )})); })(); true;`,
+    );
+  }
+
+  private abortExecution(requestId: string) {
+    this.inject(
+      `(function(){ try { var c = window.__executionAborts[${JSON.stringify(
+        requestId,
+      )}]; if (c) c.abort(); } catch (e) {} delete window.__executionAborts[${JSON.stringify(
+        requestId,
+      )}]; })(); true;`,
     );
   }
 
@@ -129,6 +209,11 @@ class SandboxManagerClass {
     this.pendingHttpRequests.set(httpId, { abort: () => controller.abort() });
 
     try {
+      const rawUrl = String(req.url || "");
+      if (!/^https?:\/\//i.test(rawUrl)) {
+        throw new Error("Blocked non-HTTP request in sandbox");
+      }
+
       const headers: Record<string, string> = {};
       const reqHeaders = req.headers || {};
       for (const key of Object.keys(reqHeaders)) {
@@ -159,25 +244,60 @@ class SandboxManagerClass {
         timeoutId = setTimeout(() => controller.abort(), timeoutMs);
       }
 
-      const response = await fetch(req.url, {
+      const response = await fetch(rawUrl, {
         method: String(req.method || "GET").toUpperCase(),
         headers,
         body,
         signal: controller.signal,
       });
-      const text = await response.text();
 
       const responseHeaders: Record<string, string> = {};
       response.headers.forEach((value, key) => {
         responseHeaders[key] = value;
       });
 
+      const finalUrl = response.url || rawUrl;
+      const redirected = !!response.redirected || finalUrl !== rawUrl;
+
+      // React Native's fetch follows redirects even when callers ask for
+      // "manual". Providers such as cinefreak and eonMovies inspect the 3xx
+      // status and Location header, so synthesize one from the final URL.
+      if (req.redirect === "manual" && redirected) {
+        this.replyHttp({
+          httpId,
+          status: 302,
+          statusText: "Found",
+          headers: { ...responseHeaders, location: finalUrl },
+          body: "",
+          url: finalUrl,
+          redirected: true,
+        });
+        return;
+      }
+
+      const wantsBinary =
+        /arraybuffer|blob|stream/i.test(String(req.responseType || "")) ||
+        BINARY_CONTENT_TYPE.test(responseHeaders["content-type"] || "");
+
+      let responseBody: string;
+      let encoding: "base64" | undefined;
+      if (wantsBinary) {
+        const buffer = await response.arrayBuffer();
+        responseBody = bytesToBase64(new Uint8Array(buffer));
+        encoding = "base64";
+      } else {
+        responseBody = await response.text();
+      }
+
       this.replyHttp({
         httpId,
         status: response.status,
         statusText: response.statusText,
         headers: responseHeaders,
-        body: text,
+        body: responseBody,
+        ...(encoding ? { encoding } : {}),
+        url: finalUrl,
+        redirected,
       });
     } catch (e: any) {
       this.replyHttp({
@@ -187,6 +307,25 @@ class SandboxManagerClass {
     } finally {
       if (timeoutId != null) clearTimeout(timeoutId);
       this.pendingHttpRequests.delete(httpId);
+    }
+  }
+
+  private async handleOpenWebViewRequest(req: any) {
+    const id = String(req.id || "");
+    try {
+      const url = String(req.url || "");
+      if (!/^https?:\/\//i.test(url)) {
+        throw new Error("Blocked non-HTTP verification URL");
+      }
+      if (!this.openWebViewHandler) {
+        throw new Error(
+          "Interactive verification is unavailable while the app UI is not ready",
+        );
+      }
+      const result = await this.openWebViewHandler(url, req.options || {});
+      this.replyWebView({ id, result });
+    } catch (e: any) {
+      this.replyWebView({ id, error: e?.message || String(e) });
     }
   }
 
@@ -213,6 +352,7 @@ class SandboxManagerClass {
     module: string,
     method: string,
     args: any,
+    signal?: AbortSignal,
   ): Promise<any> {
     const webviewRef = await this.ensureWebview();
 
@@ -221,16 +361,44 @@ class SandboxManagerClass {
     }
 
     await this.waitForPageLoad();
+    if (signal?.aborted) throw new Error("canceled");
 
     return new Promise((resolve, reject) => {
       const id = `${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
-      const timer = setTimeout(() => {
+      let settled = false;
+
+      const cleanup = () => {
+        settled = true;
+        if (signal) signal.removeEventListener("abort", onAbort);
+      };
+
+      const onAbort = () => {
+        if (settled) return;
+        clearTimeout(timer);
+        cleanup();
         if (this.pendingRequests.has(id)) {
           this.pendingRequests.delete(id);
-          reject(new Error("Sandbox execution timeout"));
+          this.abortExecution(id);
+          reject(new Error("canceled"));
         }
+      };
+
+      const timer = setTimeout(() => {
+        if (!this.pendingRequests.has(id)) return;
+        this.pendingRequests.delete(id);
+        cleanup();
+        this.abortExecution(id);
+        reject(new Error("Sandbox execution timeout"));
       }, EXECUTION_TIMEOUT_MS);
-      this.pendingRequests.set(id, { resolve, reject, timer });
+      this.pendingRequests.set(id, { resolve, reject, timer, cleanup });
+
+      if (signal) {
+        if (signal.aborted) {
+          onAbort();
+          return;
+        }
+        signal.addEventListener("abort", onAbort, { once: true });
+      }
 
       const jsCode = `
         (function() {
@@ -297,7 +465,7 @@ class SandboxManagerClass {
 
   unloadProvider(providerId: string) {
     this.loadedProviders.delete(providerId);
-    this.webviewRef?.current?.injectJavaScript(`
+    this.inject(`
       (function() {
         if (window.providers && window.providers[${JSON.stringify(providerId)}]) {
           delete window.providers[${JSON.stringify(providerId)}];

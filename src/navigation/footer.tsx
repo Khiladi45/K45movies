@@ -208,6 +208,7 @@ export default function BottomTabs() {
         tabBar={(props) => <CurvedTabBar {...props} />}
         screenOptions={{ headerShown: false }}
         initialRouteName="HomeTab"
+        backBehavior="initialRoute"
       >
         <Tab.Screen
           name="Providers"

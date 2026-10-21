@@ -407,7 +407,10 @@ export default function SeasonList({
               />
             )}
             <Text style={styles.detailsTitle}>{details?.title}</Text>
-            <ScrollView style={{ maxHeight: 260 }}>
+            <ScrollView
+              style={{ maxHeight: 260 }}
+              showsVerticalScrollIndicator={false}
+            >
               <Text style={styles.detailsDesc}>{details?.description}</Text>
             </ScrollView>
             <TouchableOpacity

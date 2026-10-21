@@ -1,12 +1,16 @@
 import React from "react";
-import { Alert, Text, TouchableOpacity, StyleSheet, View } from "react-native";
+import { Alert, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import {
   cancelDownload,
   deleteDownload,
+  retryDownload,
   startDownload,
 } from "@/services/downloadManager";
-import { useDownloadsStore } from "@/store/useDownloadsStore";
+import {
+  isActiveDownload,
+  useDownloadsStore,
+} from "@/store/useDownloadsStore";
 
 type Props = {
   link: string;
@@ -19,8 +23,6 @@ type Props = {
   label?: string;
 };
 
-const ACTIVE = ["downloading", "merging", "saving"];
-
 export default function DownloadButton({
   link,
   title,
@@ -32,11 +34,29 @@ export default function DownloadButton({
   label,
 }: Props) {
   const job = useDownloadsStore((s) => s.jobs.find((j) => j.id === link));
-  const active = !!job && ACTIVE.includes(job.status);
+  const active = !!job && isActiveDownload(job.status);
   const pct = Math.round((job?.progress || 0) * 100);
 
-  const begin = () =>
-    startDownload({ link, title, providerId, type, image });
+  const begin = async () => {
+    const result = await startDownload({ link, title, providerId, type, image });
+    if (!result.ok) {
+      Alert.alert(
+        "Download unavailable",
+        result.error || "This title cannot be downloaded right now.",
+      );
+    }
+  };
+
+  const confirmDelete = () => {
+    Alert.alert("Delete download", "Remove this file from your device?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => void deleteDownload(link),
+      },
+    ]);
+  };
 
   const onPress = () => {
     if (active) {
@@ -44,35 +64,44 @@ export default function DownloadButton({
       return;
     }
     if (job?.status === "completed") {
-      Alert.alert("Downloaded", "This title is saved in your gallery.");
+      Alert.alert(
+        "Already downloaded",
+        "This title is available in your Downloads. Long-press to delete it.",
+      );
       return;
     }
     if (job?.status === "error") {
       Alert.alert("Download failed", job.error || "Unknown error", [
-        { text: "Cancel", style: "cancel" },
-        { text: "Retry", onPress: begin },
+        { text: "Close", style: "cancel" },
+        {
+          text: "Retry",
+          onPress: () => {
+            void retryDownload(link).then((result) => {
+              if (!result.ok) {
+                Alert.alert(
+                  "Cannot retry",
+                  result.error || "Please try again later.",
+                );
+              }
+            });
+          },
+        },
       ]);
       return;
     }
-    begin();
+    void begin();
   };
 
   const onLongPress = () => {
-    if (job?.status === "completed") {
-      Alert.alert("Delete download", "Remove it from your gallery?", [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => deleteDownload(link),
-        },
-      ]);
-    }
+    if (job?.status === "completed") confirmDelete();
   };
 
   let iconName: any = "download-outline";
   let iconColor = color;
-  if (active) {
+  if (job?.status === "queued") {
+    iconName = "time-outline";
+    iconColor = "#f59e0b";
+  } else if (active) {
     iconName = "close-circle";
     iconColor = "#f59e0b";
   } else if (job?.status === "completed") {
@@ -81,13 +110,20 @@ export default function DownloadButton({
   } else if (job?.status === "error") {
     iconName = "alert-circle";
     iconColor = "#ef4444";
+  } else if (job?.status === "cancelled") {
+    iconName = "refresh-circle-outline";
+    iconColor = "#9ca3af";
   }
 
   const labelText = active
-    ? `${pct}%`
+    ? job?.status === "queued"
+      ? "Queued"
+      : `${pct}%`
     : job?.status === "completed"
       ? "Downloaded"
-      : label;
+      : job?.status === "cancelled"
+        ? "Retry"
+        : label;
 
   return (
     <TouchableOpacity
@@ -97,7 +133,9 @@ export default function DownloadButton({
       style={label ? styles.stack : undefined}
     >
       <Ionicons name={iconName} size={size} color={iconColor} />
-      {!!labelText && <Text style={[styles.label, { color: iconColor }]}>{labelText}</Text>}
+      {!!labelText && (
+        <Text style={[styles.label, { color: iconColor }]}>{labelText}</Text>
+      )}
     </TouchableOpacity>
   );
 }

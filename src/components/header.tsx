@@ -206,6 +206,7 @@ export default function Header() {
             <FlatList
               data={installedProviderDetails}
               keyExtractor={(item) => item.value}
+              showsVerticalScrollIndicator={false}
               contentContainerStyle={{ paddingVertical: 10 }}
               renderItem={({ item }) => {
                 const isActive = item.value === activeProvider;

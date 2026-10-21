@@ -17,11 +17,13 @@ const zustandMMKVStorage = {
 };
 
 export type DownloadStatus =
+  | "queued"
   | "downloading"
   | "merging"
   | "saving"
   | "completed"
-  | "error";
+  | "error"
+  | "cancelled";
 
 export type DownloadJob = {
   id: string;
@@ -34,12 +36,27 @@ export type DownloadJob = {
   progress: number;
   bytesReceived: number;
   bytesTotal: number;
+  segmentsDone?: number;
+  segmentsTotal?: number;
   error?: string;
+  /** Playable local URI (file:// or content:// from the chosen folder). */
   fileUri?: string;
-  assetId?: string;
+  storage: "app" | "custom";
+  /** Folder URI captured when the download started. */
+  storageUri?: string;
   createdAt: number;
   completedAt?: number;
 };
+
+export const ACTIVE_DOWNLOAD_STATUSES: DownloadStatus[] = [
+  "queued",
+  "downloading",
+  "merging",
+  "saving",
+];
+
+export const isActiveDownload = (status: DownloadStatus) =>
+  ACTIVE_DOWNLOAD_STATUSES.includes(status);
 
 type DownloadsState = {
   jobs: DownloadJob[];
@@ -48,24 +65,42 @@ type DownloadsState = {
   removeJob: (id: string) => void;
 };
 
-const ACTIVE_STATUSES: DownloadStatus[] = [
-  "downloading",
-  "merging",
-  "saving",
-];
-
-// Reconcile on boot: an in-flight job cannot survive an app restart,
-// so surface it as an error the user can retry instead of a stuck bar.
-const reconcile = (jobs: DownloadJob[]): DownloadJob[] =>
-  jobs.map((job) =>
-    ACTIVE_STATUSES.includes(job.status)
-      ? {
-          ...job,
-          status: "error" as DownloadStatus,
-          error: "Interrupted when the app closed. Please retry.",
-        }
-      : job,
-  );
+const normalizeJob = (job: Partial<DownloadJob>): DownloadJob | null => {
+  if (!job.id || !job.link) return null;
+  const active = isActiveDownload(job.status as DownloadStatus);
+  const legacyGallery =
+    job.status === "completed" && !job.fileUri && !!(job as any).assetId;
+  let status = (job.status || "error") as DownloadStatus;
+  let error = job.error;
+  if (active) {
+    status = "error";
+    error = "Interrupted when the app closed. Retry to download again.";
+  } else if (legacyGallery) {
+    status = "error";
+    error =
+      "This old download was saved to the gallery only. Download it again to play inside the app.";
+  }
+  return {
+    id: job.id,
+    link: job.link,
+    title: job.title || "Untitled",
+    providerId: job.providerId || "",
+    type: job.type,
+    image: job.image,
+    status,
+    progress: typeof job.progress === "number" ? job.progress : 0,
+    bytesReceived: job.bytesReceived || 0,
+    bytesTotal: job.bytesTotal || 0,
+    segmentsDone: job.segmentsDone,
+    segmentsTotal: job.segmentsTotal,
+    error,
+    fileUri: job.fileUri,
+    storage: job.storage === "custom" ? "custom" : "app",
+    storageUri: job.storageUri,
+    createdAt: job.createdAt || Date.now(),
+    completedAt: job.completedAt,
+  };
+};
 
 export const useDownloadsStore = create<DownloadsState>()(
   persist(
@@ -84,9 +119,7 @@ export const useDownloadsStore = create<DownloadsState>()(
 
       patchJob: (id, patch) =>
         set((state) => ({
-          jobs: state.jobs.map((j) =>
-            j.id === id ? { ...j, ...patch } : j,
-          ),
+          jobs: state.jobs.map((j) => (j.id === id ? { ...j, ...patch } : j)),
         })),
 
       removeJob: (id) =>
@@ -98,11 +131,13 @@ export const useDownloadsStore = create<DownloadsState>()(
       name: "k45-downloads-storage",
       storage: createJSONStorage(() => zustandMMKVStorage),
       merge: (persisted, current) => {
-        const persistedState = (persisted as Partial<DownloadsState>) || {};
+        const persistedState = (persisted as { jobs?: Partial<DownloadJob>[] }) || {};
+        const jobs = (persistedState.jobs || [])
+          .map(normalizeJob)
+          .filter((job): job is DownloadJob => job !== null);
         return {
           ...current,
-          ...persistedState,
-          jobs: reconcile(persistedState.jobs || []),
+          jobs,
         };
       },
     },

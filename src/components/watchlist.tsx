@@ -5,16 +5,126 @@ import {
   StyleSheet,
   FlatList,
   Image,
+  ScrollView,
   TouchableOpacity,
   Alert,
   Modal,
 } from "react-native";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useWatchlistStore, WatchlistMovie } from "@/store/useWatchlistStore";
 import { useThemeStore } from "@/store/useThemeStore";
 import { useProviderStore } from "@/store/useProviderStore";
+import {
+  DownloadJob,
+  isActiveDownload,
+  useDownloadsStore,
+} from "@/store/useDownloadsStore";
+import { deleteDownload, formatBytes } from "@/services/downloadManager";
+import { playDownloadedJob } from "@/lib/localPlayback";
+
+const downloadStatus = (job: DownloadJob): string => {
+  if (job.status === "completed") return formatBytes(job.bytesTotal);
+  if (job.status === "queued") return "Queued";
+  if (job.status === "merging") return `Processing ${Math.round(job.progress * 100)}%`;
+  if (job.status === "saving") return "Saving…";
+  return job.error || "Download failed";
+};
+
+function DownloadedSection({
+  jobs,
+  primaryColor,
+  onPress,
+  onManage,
+}: {
+  jobs: DownloadJob[];
+  primaryColor: string;
+  onPress: (job: DownloadJob) => void;
+  onManage: () => void;
+}) {
+  return (
+    <View style={styles.downloadSection}>
+      <View style={styles.downloadHeader}>
+        <Text style={styles.downloadTitle}>Downloaded</Text>
+        <View
+          style={[
+            styles.downloadCount,
+            {
+              backgroundColor: `${primaryColor}20`,
+              borderColor: `${primaryColor}40`,
+            },
+          ]}
+        >
+          <Text style={[styles.downloadCountText, { color: primaryColor }]}>
+            {jobs.length}
+          </Text>
+        </View>
+        <TouchableOpacity style={styles.manageLink} onPress={onManage}>
+          <Text style={[styles.manageLinkText, { color: primaryColor }]}>
+            Manage
+          </Text>
+          <Ionicons name="chevron-forward" size={14} color={primaryColor} />
+        </TouchableOpacity>
+      </View>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.downloadRow}
+      >
+        {jobs.map((job) => {
+          const active = isActiveDownload(job.status);
+          const pct = Math.round(job.progress * 100);
+          return (
+            <TouchableOpacity
+              key={job.id}
+              style={styles.downloadCard}
+              activeOpacity={0.85}
+              onPress={() => onPress(job)}
+            >
+              <View style={styles.downloadThumb}>
+                {job.image ? (
+                  <Image
+                    source={{ uri: job.image }}
+                    style={styles.downloadPoster}
+                  />
+                ) : (
+                  <Ionicons name="film-outline" size={22} color="#555" />
+                )}
+                <View style={styles.downloadOverlay}>
+                  <Ionicons
+                    name={active ? "cloud-download" : "play"}
+                    size={20}
+                    color="#fff"
+                  />
+                </View>
+                {active ? (
+                  <View style={styles.downloadProgress}>
+                    <View
+                      style={[
+                        styles.downloadProgressFill,
+                        {
+                          width: `${Math.max(0, Math.min(100, pct))}%`,
+                          backgroundColor: primaryColor,
+                        },
+                      ]}
+                    />
+                  </View>
+                ) : null}
+              </View>
+              <Text numberOfLines={1} style={styles.downloadName}>
+                {job.title}
+              </Text>
+              <Text numberOfLines={1} style={styles.downloadMeta}>
+                {active ? `${pct}% · Downloading` : downloadStatus(job)}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+    </View>
+  );
+}
 
 export default function Watchlist({ navigation }: any) {
   const { primaryColor } = useThemeStore();
@@ -24,6 +134,17 @@ export default function Watchlist({ navigation }: any) {
   const [movieToDelete, setMovieToDelete] = useState<WatchlistMovie | null>(
     null,
   );
+  const jobs = useDownloadsStore((state) => state.jobs);
+
+  const downloadJobs = jobs
+    .filter(
+      (job) =>
+        job.status === "completed" || isActiveDownload(job.status),
+    )
+    .sort(
+      (a, b) =>
+        (b.completedAt || b.createdAt) - (a.completedAt || a.createdAt),
+    );
 
   const withOpacity = (hex: string, opacityHex: string) =>
     `${hex}${opacityHex}`;
@@ -40,6 +161,30 @@ export default function Watchlist({ navigation }: any) {
       },
       providerId: item.providerId,
     });
+  };
+
+  const handleDownloadedPress = (job: DownloadJob) => {
+    if (isActiveDownload(job.status)) {
+      navigation.navigate("Downloads");
+      return;
+    }
+    const result = playDownloadedJob(job);
+    if (result.ok) {
+      navigation.navigate("Player");
+      return;
+    }
+    Alert.alert(
+      "File missing",
+      `${result.error} Your watchlist entry is not affected.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Remove download",
+          style: "destructive",
+          onPress: () => void deleteDownload(job.id),
+        },
+      ],
+    );
   };
 
   const confirmRemove = (item: WatchlistMovie) => {
@@ -91,7 +236,7 @@ export default function Watchlist({ navigation }: any) {
         <Ionicons name="bookmark" size={26} color={primaryColor} />
       </View>
 
-      {sortedMovies.length === 0 ? (
+      {sortedMovies.length === 0 && downloadJobs.length === 0 ? (
         /* Empty State */
         <View style={styles.emptyContainer}>
           <LinearGradient
@@ -119,8 +264,45 @@ export default function Watchlist({ navigation }: any) {
           numColumns={3}
           keyExtractor={(item) => item.link}
           columnWrapperStyle={styles.columnWrapper}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[
+            styles.listContent,
+            sortedMovies.length === 0 && styles.listContentEmpty,
+          ]}
           showsVerticalScrollIndicator={false}
+          ListHeaderComponent={
+            <>
+              {downloadJobs.length > 0 ? (
+                <DownloadedSection
+                  jobs={downloadJobs}
+                  primaryColor={primaryColor}
+                  onPress={handleDownloadedPress}
+                  onManage={() => navigation.navigate("Downloads")}
+                />
+              ) : null}
+              {sortedMovies.length > 0 ? (
+                <Text style={styles.savedTitle}>Saved titles</Text>
+              ) : (
+                <View style={styles.inlineEmpty}>
+                  <Ionicons name="bookmark-outline" size={34} color="#444" />
+                  <Text style={styles.inlineEmptyTitle}>
+                    No saved titles yet
+                  </Text>
+                  <Text style={styles.inlineEmptyHint}>
+                    Downloads still play offline from the section above.
+                  </Text>
+                  <TouchableOpacity
+                    style={[
+                      styles.inlineExplore,
+                      { backgroundColor: primaryColor },
+                    ]}
+                    onPress={() => navigation.navigate("HomeTab")}
+                  >
+                    <Text style={styles.exploreButtonText}>Explore Content</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </>
+          }
           renderItem={({ item }) => (
             <View style={styles.card}>
               <TouchableOpacity
@@ -225,6 +407,96 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   countBadgeText: { fontSize: 12, fontWeight: "800" },
+
+  downloadSection: { marginBottom: 18 },
+  downloadHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 16,
+    marginBottom: 10,
+  },
+  downloadTitle: { color: "#fff", fontSize: 16, fontWeight: "800" },
+  downloadCount: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  downloadCountText: { fontSize: 11, fontWeight: "800" },
+  manageLink: {
+    marginLeft: "auto",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 2,
+  },
+  manageLinkText: { fontSize: 12, fontWeight: "700" },
+  downloadRow: { paddingHorizontal: 16, gap: 12 },
+  downloadCard: { width: 142 },
+  downloadThumb: {
+    width: "100%",
+    height: 80,
+    borderRadius: 10,
+    overflow: "hidden",
+    backgroundColor: "#1a1a1a",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  downloadPoster: { width: "100%", height: "100%" },
+  downloadOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.34)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  downloadProgress: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 3,
+    backgroundColor: "rgba(255,255,255,0.2)",
+  },
+  downloadProgressFill: { height: "100%" },
+  downloadName: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "700",
+    marginTop: 6,
+  },
+  downloadMeta: { color: "#777", fontSize: 10.5, marginTop: 2 },
+  savedTitle: {
+    color: "#8a8a8a",
+    fontSize: 11.5,
+    fontWeight: "800",
+    letterSpacing: 1.2,
+    marginHorizontal: 16,
+    marginBottom: 10,
+  },
+  listContentEmpty: { flexGrow: 1 },
+  inlineEmpty: {
+    alignItems: "center",
+    paddingHorizontal: 40,
+    paddingTop: 26,
+    gap: 8,
+  },
+  inlineEmptyTitle: { color: "#ddd", fontSize: 16, fontWeight: "700" },
+  inlineEmptyHint: {
+    color: "#777",
+    fontSize: 12.5,
+    lineHeight: 18,
+    textAlign: "center",
+    marginBottom: 6,
+  },
+  inlineExplore: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
 
   // Empty State
   emptyContainer: {

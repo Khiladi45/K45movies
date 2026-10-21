@@ -295,8 +295,9 @@ export default function UserSettings({ navigation }: any) {
             }
             iconBg="rgba(249, 115, 22, 0.1)"
             title="Preference Settings"
-            subtitle="Content, language and playback preferences"
+            subtitle="Playback, subtitles and download preferences"
             isLast
+            onPress={() => navigation.navigate("Preferences")}
           />
         </Section>
 
