@@ -437,12 +437,47 @@ const CategorySection = memo(function CategorySection({
   const activeProvider = useProviderStore((state) => state.activeProvider);
   const { primaryColor } = useThemeStore();
 
-  const { data: posts, isLoading, isError } = usePosts(
+  const { data: posts, isLoading, isError, refetch, isRefetching } = usePosts(
     activeProvider,
     category.filter || category.id,
   );
 
-  if (isError) return null;
+  if (isError) {
+    // Was `return null` — a failing category silently vanished. Show a
+    // compact row with a retry so a flaky network doesn't blank the page.
+    return (
+      <View style={{ marginBottom: 24, marginLeft: 16, marginRight: 16 }}>
+        <Text
+          className="text-white text-xl font-bold"
+          style={{ marginBottom: 10 }}
+          numberOfLines={1}
+        >
+          {category.title}
+        </Text>
+        <TouchableOpacity
+          onPress={() => refetch()}
+          disabled={isRefetching}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 8,
+            backgroundColor: "rgba(239, 68, 68, 0.1)",
+            borderWidth: 1,
+            borderColor: "rgba(239, 68, 68, 0.3)",
+            borderRadius: 10,
+            paddingHorizontal: 12,
+            paddingVertical: 10,
+            alignSelf: "flex-start",
+          }}
+        >
+          <Ionicons name="refresh-outline" size={15} color="#ef4444" />
+          <Text style={{ color: "#ef4444", fontSize: 12.5, fontWeight: "600" }}>
+            {isRefetching ? "Retrying…" : "Couldn't load — tap to retry"}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
   if (isLoading || !posts) return <CategorySkeleton />;
   if (posts.length === 0) return null;
 

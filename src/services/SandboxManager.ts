@@ -18,6 +18,12 @@ export type OpenWebViewHandler = (
 
 const EXECUTION_TIMEOUT_MS = 30000;
 
+// Per-request ceiling when the provider does not set its own timeout, so a
+// single hung connection cannot silently consume the whole execution budget.
+const DEFAULT_REQUEST_TIMEOUT_MS = 20000;
+const MAX_REQUEST_RETRIES = 2;
+const RETRIABLE_STATUS = new Set([408, 425, 429, 500, 502, 503, 504]);
+
 // Fallback for providers that send no User-Agent — native fetch would
 // otherwise advertise "okhttp/..." which anti-bot layers block on sight.
 export const DEFAULT_UA =
@@ -61,6 +67,82 @@ class SandboxManagerClass {
   private loadWaiters: Array<() => void> = [];
   private openWebViewHandler: OpenWebViewHandler | null = null;
 
+  // Minimal per-domain cookie jar. RN fetch does not retain cookies between
+  // calls, so multi-step extractors that rely on a session cookie set on page
+  // N and sent on request N+1 (the default in browsers and in Vega's axios)
+  // otherwise break. Values are never logged anywhere.
+  private cookieJar = new Map<string, Map<string, string>>();
+  private static readonly COOKIE_JAR_DOMAIN_LIMIT = 40;
+  private static readonly COOKIE_JAR_COOKIE_LIMIT = 30;
+
+  private jarDomainFor(url: string): string | null {
+    try {
+      return new URL(url).hostname.toLowerCase();
+    } catch {
+      return null;
+    }
+  }
+
+  private jarGetCookieHeader(url: string): string | null {
+    const domain = this.jarDomainFor(url);
+    if (!domain) return null;
+    // Exact host first, then parent domains (e.g. cookies set on .example.com).
+    const jars: string[] = [];
+    for (let i = 0; i < 2; i++) {
+      const jar = this.cookieJar.get(domain);
+      if (jar) {
+        for (const [name, value] of jar) jars.push(`${name}=${value}`);
+      }
+      if (i === 0 && domain.split(".").length > 2) {
+        const parts = domain.split(".");
+        parts.shift();
+        const parent = this.cookieJar.get(parts.join("."));
+        if (parent) {
+          for (const [name, value] of parent) jars.push(`${name}=${value}`);
+        }
+      }
+      break;
+    }
+    return jars.length ? jars.join("; ") : null;
+  }
+
+  private jarStoreFromResponse(url: string, headers: Record<string, string>) {
+    const raw = headers["set-cookie"];
+    if (!raw) return;
+    const domain = this.jarDomainFor(url);
+    if (!domain) return;
+    let jar = this.cookieJar.get(domain);
+    if (!jar) {
+      if (this.cookieJar.size >= SandboxManagerClass.COOKIE_JAR_DOMAIN_LIMIT) {
+        const oldest = this.cookieJar.keys().next().value;
+        if (oldest) this.cookieJar.delete(oldest);
+      }
+      jar = new Map();
+      this.cookieJar.set(domain, jar);
+    }
+    // RN fetch joins repeated set-cookie headers; split on comma followed by
+    // a token and "=". Good enough for the session-cookie shapes providers set.
+    for (const piece of raw.split(/, (?=[A-Za-z0-9_\-]+=)/)) {
+      const eq = piece.indexOf("=");
+      if (eq <= 0) continue;
+      const name = piece.slice(0, eq).trim();
+      const rest = piece.slice(eq + 1);
+      const semi = rest.indexOf(";");
+      const value = (semi >= 0 ? rest.slice(0, semi) : rest).trim();
+      if (!name) continue;
+      if (/expires|max-age|path|domain|secure|httponly|samesite/i.test(name)) continue;
+      if (value === "" || /^\w+day/i.test(value)) {
+        jar.delete(name);
+      } else {
+        if (jar.size >= SandboxManagerClass.COOKIE_JAR_COOKIE_LIMIT) {
+          const oldest = jar.keys().next().value;
+          if (oldest) jar.delete(oldest);
+        }
+        jar.set(name, value);
+      }
+    }
+  }
+
   setWebviewRef(ref: RefObject<WebView | null>) {
     this.webviewRef = ref;
   }
@@ -81,6 +163,7 @@ class SandboxManagerClass {
   notifyLoadStart() {
     this.pageLoaded = false;
     this.loadedProviders.clear();
+    this.cookieJar.clear();
     this.pendingHttpRequests.forEach((p) => p.abort());
     this.pendingHttpRequests.clear();
     this.pendingRequests.forEach((pending) => {
@@ -204,9 +287,18 @@ class SandboxManagerClass {
     const httpId = String(req.httpId || "");
     const controller = new AbortController();
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
-    const timeoutMs = Number(req.timeout) || 0;
+    const requestedTimeout = Number(req.timeout) || 0;
+    const timeoutMs =
+      requestedTimeout > 0
+        ? Math.min(requestedTimeout, EXECUTION_TIMEOUT_MS)
+        : DEFAULT_REQUEST_TIMEOUT_MS;
+    const method = String(req.method || "GET").toUpperCase();
+    const idempotent = method === "GET" || method === "HEAD" || method === "OPTIONS";
 
     this.pendingHttpRequests.set(httpId, { abort: () => controller.abort() });
+
+    const sleep = (ms: number) =>
+      new Promise<void>((resolve) => setTimeout(resolve, ms));
 
     try {
       const rawUrl = String(req.url || "");
@@ -214,13 +306,13 @@ class SandboxManagerClass {
         throw new Error("Blocked non-HTTP request in sandbox");
       }
 
-      const headers: Record<string, string> = {};
+      const baseHeaders: Record<string, string> = {};
       const reqHeaders = req.headers || {};
       for (const key of Object.keys(reqHeaders)) {
-        headers[key] = String(reqHeaders[key]);
+        baseHeaders[key] = String(reqHeaders[key]);
       }
-      if (!this.hasHeader(headers, "user-agent")) {
-        headers["User-Agent"] = DEFAULT_UA;
+      if (!this.hasHeader(baseHeaders, "user-agent")) {
+        baseHeaders["User-Agent"] = DEFAULT_UA;
       }
 
       let body: string | FormData | undefined;
@@ -234,71 +326,114 @@ class SandboxManagerClass {
           body = fd;
         } else if (typeof reqBody.value === "string") {
           body = reqBody.value;
-          if (reqBody.contentType && !this.hasHeader(headers, "content-type")) {
-            headers["Content-Type"] = String(reqBody.contentType);
+          if (reqBody.contentType && !this.hasHeader(baseHeaders, "content-type")) {
+            baseHeaders["Content-Type"] = String(reqBody.contentType);
           }
         }
       }
 
-      if (timeoutMs > 0) {
-        timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-      }
+      let lastError: any = null;
+      const maxAttempts = idempotent ? 1 + MAX_REQUEST_RETRIES : 1;
 
-      const response = await fetch(rawUrl, {
-        method: String(req.method || "GET").toUpperCase(),
-        headers,
-        body,
-        signal: controller.signal,
-      });
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        if (controller.signal.aborted) throw new Error("canceled");
+        const headers = { ...baseHeaders };
+        if (!this.hasHeader(headers, "cookie")) {
+          const cookieHeader = this.jarGetCookieHeader(rawUrl);
+          if (cookieHeader) headers["Cookie"] = cookieHeader;
+        }
 
-      const responseHeaders: Record<string, string> = {};
-      response.headers.forEach((value, key) => {
-        responseHeaders[key] = value;
-      });
+        // Fresh controller per attempt: a timeout must not poison retries,
+        // while an external httpAbort still cancels every attempt.
+        const attemptController = new AbortController();
+        const onOuterAbort = () => attemptController.abort();
+        controller.signal.addEventListener("abort", onOuterAbort, { once: true });
 
-      const finalUrl = response.url || rawUrl;
-      const redirected = !!response.redirected || finalUrl !== rawUrl;
+        timeoutId = setTimeout(() => attemptController.abort(), timeoutMs);
+        let response: Response | null = null;
+        try {
+          response = await fetch(rawUrl, {
+            method,
+            headers,
+            body,
+            signal: attemptController.signal,
+          });
+        } catch (e: any) {
+          lastError = e;
+          response = null;
+        } finally {
+          if (timeoutId != null) clearTimeout(timeoutId);
+          timeoutId = null;
+          controller.signal.removeEventListener("abort", onOuterAbort);
+        }
 
-      // React Native's fetch follows redirects even when callers ask for
-      // "manual". Providers such as cinefreak and eonMovies inspect the 3xx
-      // status and Location header, so synthesize one from the final URL.
-      if (req.redirect === "manual" && redirected) {
+        const networkFailed = response === null;
+        const retriableStatus =
+          response !== null && RETRIABLE_STATUS.has(response.status);
+        if (
+          attempt < maxAttempts &&
+          (networkFailed || retriableStatus) &&
+          !controller.signal.aborted
+        ) {
+          await sleep(300 * attempt);
+          continue;
+        }
+
+        if (networkFailed) throw lastError;
+
+        const responseHeaders: Record<string, string> = {};
+        response!.headers.forEach((value, key) => {
+          responseHeaders[key] = value;
+        });
+        this.jarStoreFromResponse(response!.url || rawUrl, responseHeaders);
+
+        const finalUrl = response!.url || rawUrl;
+        const redirected = !!response!.redirected || finalUrl !== rawUrl;
+
+        // React Native's fetch follows redirects even when callers ask for
+        // "manual". Providers such as cinefreak and eonMovies inspect the 3xx
+        // status and Location header, so synthesize one from the final URL.
+        if (req.redirect === "manual" && redirected) {
+          this.replyHttp({
+            httpId,
+            status: 302,
+            statusText: "Found",
+            headers: { ...responseHeaders, location: finalUrl },
+            body: "",
+            url: finalUrl,
+            redirected: true,
+          });
+          return;
+        }
+
+        const wantsBinary =
+          /arraybuffer|blob|stream/i.test(String(req.responseType || "")) ||
+          BINARY_CONTENT_TYPE.test(responseHeaders["content-type"] || "");
+
+        let responseBody: string;
+        let encoding: "base64" | undefined;
+        if (wantsBinary) {
+          const buffer = await response!.arrayBuffer();
+          responseBody = bytesToBase64(new Uint8Array(buffer));
+          encoding = "base64";
+        } else {
+          responseBody = await response!.text();
+        }
+
         this.replyHttp({
           httpId,
-          status: 302,
-          statusText: "Found",
-          headers: { ...responseHeaders, location: finalUrl },
-          body: "",
+          status: response!.status,
+          statusText: response!.statusText,
+          headers: responseHeaders,
+          body: responseBody,
+          ...(encoding ? { encoding } : {}),
           url: finalUrl,
-          redirected: true,
+          redirected,
         });
         return;
       }
 
-      const wantsBinary =
-        /arraybuffer|blob|stream/i.test(String(req.responseType || "")) ||
-        BINARY_CONTENT_TYPE.test(responseHeaders["content-type"] || "");
-
-      let responseBody: string;
-      let encoding: "base64" | undefined;
-      if (wantsBinary) {
-        const buffer = await response.arrayBuffer();
-        responseBody = bytesToBase64(new Uint8Array(buffer));
-        encoding = "base64";
-      } else {
-        responseBody = await response.text();
-      }
-
-      this.replyHttp({
-        httpId,
-        status: response.status,
-        statusText: response.statusText,
-        headers: responseHeaders,
-        body: responseBody,
-        ...(encoding ? { encoding } : {}),
-        url: finalUrl,
-        redirected,
-      });
+      throw lastError || new Error("Request failed");
     } catch (e: any) {
       this.replyHttp({
         httpId,
@@ -308,6 +443,12 @@ class SandboxManagerClass {
       if (timeoutId != null) clearTimeout(timeoutId);
       this.pendingHttpRequests.delete(httpId);
     }
+  }
+
+  private isHttpAborted(httpId: string): boolean {
+    // pendingHttpRequests entries are removed by handleMessage('httpAbort')
+    // before abort() runs, so a missing entry means an external cancel.
+    return !this.pendingHttpRequests.has(httpId);
   }
 
   private async handleOpenWebViewRequest(req: any) {

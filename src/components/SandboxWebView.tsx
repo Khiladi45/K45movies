@@ -11,6 +11,7 @@ import {
 import type WebView from "react-native-webview";
 import CookieManager from "@preeternal/react-native-cookie-manager";
 import { SandboxManager, DEFAULT_UA } from "../services/SandboxManager";
+import { setWafHandler } from "../services/wafSolver";
 import { useThemeStore } from "../store/useThemeStore";
 // cheerio@1.0.0 browser build, bundled into the app so the sandbox needs no
 // CDN — the CDN script tags 404'd and were the cause of recurring load failures.
@@ -506,6 +507,51 @@ const SANDBOX_HTML = `
     });
   };
 
+  // SHA-1 (FIPS 180-1) — exposed as context.Aes.sha1 for providers that sign
+  // requests with it (primewire search). Vega injects Aes: null there, which
+  // makes that provider's search throw; a real implementation fixes it.
+  function sha1Hex(input) {
+    function rotl(n, s) { return (n << s) | (n >>> (32 - s)); }
+    var str = String(input);
+    var bytes;
+    if (typeof TextEncoder === 'function') {
+      bytes = Array.prototype.slice.call(new TextEncoder().encode(str));
+    } else {
+      var escaped = unescape(encodeURIComponent(str));
+      bytes = [];
+      for (var i = 0; i < escaped.length; i++) bytes.push(escaped.charCodeAt(i) & 0xff);
+    }
+    var bitLen = bytes.length * 8;
+    bytes.push(0x80);
+    while (bytes.length % 64 !== 56) bytes.push(0);
+    for (var j = 7; j >= 0; j--) bytes.push(Math.floor(bitLen / Math.pow(2, j * 8)) & 0xff);
+    var h0 = 0x67452301, h1 = 0xEFCDAB89, h2 = 0x98BADCFE, h3 = 0x10325476, h4 = 0xC3D2E1F0;
+    var w = new Array(80);
+    for (var block = 0; block < bytes.length; block += 64) {
+      for (var t = 0; t < 16; t++) {
+        w[t] = (bytes[block + t * 4] << 24) | (bytes[block + t * 4 + 1] << 16) |
+               (bytes[block + t * 4 + 2] << 8) | bytes[block + t * 4 + 3];
+      }
+      for (var t = 16; t < 80; t++) {
+        w[t] = rotl(w[t - 3] ^ w[t - 8] ^ w[t - 14] ^ w[t - 16], 1);
+      }
+      var a = h0, b = h1, c = h2, d = h3, e = h4;
+      for (var t = 0; t < 80; t++) {
+        var f, k;
+        if (t < 20) { f = (b & c) | (~b & d); k = 0x5A827999; }
+        else if (t < 40) { f = b ^ c ^ d; k = 0x6ED9EBA1; }
+        else if (t < 60) { f = (b & c) | (b & d) | (c & d); k = 0x8F1BBCDC; }
+        else { f = b ^ c ^ d; k = 0xCA62C1D6; }
+        var tmp = (rotl(a, 5) + f + e + k + w[t]) | 0;
+        e = d; d = c; c = rotl(b, 30); b = a; a = tmp;
+      }
+      h0 = (h0 + a) | 0; h1 = (h1 + b) | 0; h2 = (h2 + c) | 0; h3 = (h3 + d) | 0; h4 = (h4 + e) | 0;
+    }
+    function hex(n) { var s = (n >>> 0).toString(16); return '00000000'.slice(s.length) + s; }
+    return hex(h0) + hex(h1) + hex(h2) + hex(h3) + hex(h4);
+  }
+  window.sha1Hex = sha1Hex;
+
   window.executeProvider = async function (requestId, providerId, method, args) {
     try {
       if (!window.providers[providerId]) {
@@ -532,6 +578,7 @@ const SANDBOX_HTML = `
           axios: window.createAxiosShim(),
           kvStore: window.providerKvStore,
           openWebView: window.openWebView,
+          Aes: { sha1: function (value) { return Promise.resolve(sha1Hex(value)); } },
           commonHeaders: {
             'User-Agent': 'Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36'
           }
@@ -708,7 +755,7 @@ export default function SandboxWebView() {
 
   useEffect(() => {
     if (Platform.OS === "web") return;
-    SandboxManager.setOpenWebViewHandler((url, options) => {
+    const handler = (url: string, options: Record<string, any>) => {
       return new Promise<Record<string, any>>((resolve, reject) => {
         if (sessionRef.current) {
           reject(new Error("Another verification is already open"));
@@ -757,9 +804,12 @@ export default function SandboxWebView() {
             : "Complete the check, then tap Done.",
         );
       });
-    });
+    };
+    SandboxManager.setOpenWebViewHandler(handler);
+    setWafHandler(handler);
     return () => {
       SandboxManager.setOpenWebViewHandler(null);
+      setWafHandler(null);
       const active = sessionRef.current;
       if (active) settle(active, undefined, new Error("Verification closed"));
     };

@@ -1,4 +1,5 @@
 import { Directory, File, Paths } from "expo-file-system";
+import { has as isStaticallyBundled } from "../providers/registry";
 import { useProviderStore } from "../store/useProviderStore";
 
 // Replace with your provider repo (must expose /manifest.json and /bundled/{id}.js).
@@ -43,6 +44,10 @@ class ProviderManagerClass {
         // The UI reads value/display_name; your manifest uses id/name — normalize.
         const normalized: ProviderMetadata[] = list
           .filter((entry: any) => entry && (entry.id || entry.value))
+          // moviesApi is an aggregator helper (exports only mpGetStream), not
+          // a standalone provider — installing it would break Home. Upstream
+          // lists it too; we hide it instead.
+          .filter((entry: any) => (entry.value ?? entry.id) !== "moviesApi")
           .map((entry: any) => ({
             ...entry,
             value: entry.value ?? entry.id,
@@ -55,6 +60,11 @@ class ProviderManagerClass {
       });
     }
     return this.pendingManifest;
+  }
+
+  // Pull-to-refresh bypasses the TTL so the user always gets a real fetch.
+  invalidateManifest() {
+    this.manifestCache = null;
   }
 
   getProviderDir(providerId: string): Directory {
@@ -107,6 +117,16 @@ class ProviderManagerClass {
   // exists before the sandbox tries to run it. Concurrent callers for the
   // same provider share a single download.
   async ensureProviderBundle(providerId: string): Promise<void> {
+    // Statically bundled providers ship inside the app binary, so there is
+    // nothing to download and enabling one must not depend on the network.
+    if (isStaticallyBundled(providerId)) {
+      const { installedProviders, toggleInstall } = useProviderStore.getState();
+      if (!installedProviders.includes(providerId)) {
+        toggleInstall(providerId);
+      }
+      return;
+    }
+
     if (this.isProviderInstalled(providerId)) return;
 
     if (!this.pendingInstalls.has(providerId)) {

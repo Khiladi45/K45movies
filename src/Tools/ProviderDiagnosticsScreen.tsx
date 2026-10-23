@@ -12,9 +12,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useThemeStore } from "@/store/useThemeStore";
 import { useProviderStore } from "@/store/useProviderStore";
-import { useProviders, providerApi } from "@/lib/providerApi";
+import {
+  useProviders,
+  providerApi,
+  executeProvider,
+} from "@/lib/providerApi";
 import { ProviderManager } from "@/services/ProviderManager";
-import { SandboxManager } from "@/services/SandboxManager";
 import {
   groupStreams,
   normalizeStreams,
@@ -297,7 +300,7 @@ export default function ProviderDiagnosticsScreen({ navigation }: any) {
           ],
         };
       }
-      const results = await SandboxManager.execute(
+      const results = await executeProvider(
         providerId,
         "posts",
         "getSearchPosts",

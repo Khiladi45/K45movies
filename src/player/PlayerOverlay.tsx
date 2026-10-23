@@ -20,6 +20,7 @@ import Video, {
   SelectedTrackType,
   SelectedVideoTrackType,
   TextTrackType,
+  ViewType,
 } from "react-native-video";
 import { LinearGradient } from "expo-linear-gradient";
 import {
@@ -71,9 +72,17 @@ let ScreenOrientation: any = null;
 try {
   ScreenOrientation = require("expo-screen-orientation");
 } catch {}
+let NavigationBar: any = null;
+try {
+  NavigationBar = require("expo-navigation-bar");
+} catch {}
 
 const clamp = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, value));
+
+const ZOOM_MIN = 0.25;
+const ZOOM_MAX = 5;
+const ZOOM_PAN_THRESHOLD = 1.02;
 
 const fmtTime = (t: number) => {
   if (!Number.isFinite(t) || t < 0) t = 0;
@@ -401,15 +410,48 @@ export default function PlayerOverlay() {
   const seekHideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const seekAnim = useRef(new Animated.Value(0)).current;
   const lastPanEnd = useRef(0);
+  const lastPinchEnd = useRef(0);
+
+  // ── Pinch-to-zoom state (MX Player style) ─────────────────────────────
+  // The transform is applied to the <Video> wrapper only, so controls,
+  // subtitles, and overlays stay put and readable.
+  const zoomScale = useRef(new Animated.Value(1)).current;
+  const zoomTranslate = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
+  const zoomRef = useRef({ scale: 1, x: 0, y: 0 });
+  const pinchState = useRef<{
+    active: boolean;
+    startDist: number;
+    startScale: number;
+    startMidX: number;
+    startMidY: number;
+    startTx: number;
+    startTy: number;
+    didPinch: boolean;
+  }>({
+    active: false,
+    startDist: 0,
+    startScale: 1,
+    startMidX: 0,
+    startMidY: 0,
+    startTx: 0,
+    startTy: 0,
+    didPinch: false,
+  });
+  const zoomLabelTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [zoomLabel, setZoomLabel] = useState<string | null>(null);
   const currentTimeRef = useRef(0);
   const durationRef = useRef(0);
   const pendingSeekRef = useRef<number | null>(null);
   const hasLoadedOnceRef = useRef(false);
   const subtitleTouched = useRef(false);
   const qualityTouched = useRef(false);
-  const panState = useRef<{ side: "left" | "right"; base: number } | null>(
-    null,
-  );
+  const panState = useRef<{
+    side: "left" | "right";
+    base: number;
+    mode: "adjust" | "video";
+    startTx: number;
+    startTy: number;
+  } | null>(null);
   const brightnessRef = useRef(0.5);
   const volumeRef = useRef(0.5);
   const originalBrightness = useRef<number | null>(null);
@@ -462,6 +504,127 @@ export default function PlayerOverlay() {
       if (mountedRef.current) setToast("");
     }, 2800);
   }, []);
+
+  // ── Pinch-to-zoom helpers ─────────────────────────────────────────────
+  const clampZoomTranslate = useCallback(
+    (scale: number, x: number, y: number) => {
+      const { width, height } = dimensionsRef.current;
+      const maxX = Math.max(0, ((scale - 1) * width) / 2);
+      const maxY = Math.max(0, ((scale - 1) * height) / 2);
+      return { x: clamp(x, -maxX, maxX), y: clamp(y, -maxY, maxY) };
+    },
+    [],
+  );
+
+  const applyZoom = useCallback(
+    (scale: number, x: number, y: number, label: boolean) => {
+      const bounded = clampZoomTranslate(scale, x, y);
+      zoomRef.current = { scale, x: bounded.x, y: bounded.y };
+      zoomScale.setValue(scale);
+      zoomTranslate.setValue({ x: bounded.x, y: bounded.y });
+      if (label) {
+        const text = `${Math.round(scale * 100)}%`;
+        setZoomLabel((prev) => (prev === text ? prev : text));
+      }
+    },
+    [clampZoomTranslate, zoomScale, zoomTranslate],
+  );
+
+  const flashZoomLabel = useCallback((ms = 1400) => {
+    if (zoomLabelTimer.current) clearTimeout(zoomLabelTimer.current);
+    zoomLabelTimer.current = setTimeout(() => {
+      if (!mountedRef.current) return;
+      setZoomLabel(null);
+    }, ms);
+  }, []);
+
+  const resetZoom = useCallback(
+    (animate = true) => {
+      if (zoomLabelTimer.current) clearTimeout(zoomLabelTimer.current);
+      if (!animate) {
+        zoomRef.current = { scale: 1, x: 0, y: 0 };
+        zoomScale.setValue(1);
+        zoomTranslate.setValue({ x: 0, y: 0 });
+        setZoomLabel(null);
+        return;
+      }
+      setZoomLabel("100%");
+      const target = { scale: 1, x: 0, y: 0 };
+      Animated.parallel([
+        Animated.timing(zoomScale, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(zoomTranslate, {
+          toValue: target,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        zoomRef.current = target;
+      });
+      zoomLabelTimer.current = setTimeout(() => {
+        if (mountedRef.current) setZoomLabel(null);
+      }, 1000);
+    },
+    [zoomScale, zoomTranslate],
+  );
+
+  // Raw two-finger tracking. PanResponder only follows the primary pointer,
+  // so pinch lives here on the plain touch events of the gesture layer.
+  const handleZoomTouches = useCallback(
+    (event: any) => {
+      const touches: any[] = event?.nativeEvent?.touches || [];
+      const state = pinchState.current;
+      if (touches.length >= 2) {
+        const t0 = touches[0];
+        const t1 = touches[1];
+        const dist = Math.hypot(
+          (t0.pageX || 0) - (t1.pageX || 0),
+          (t0.pageY || 0) - (t1.pageY || 0),
+        );
+        const midX = ((t0.pageX || 0) + (t1.pageX || 0)) / 2;
+        const midY = ((t0.pageY || 0) + (t1.pageY || 0)) / 2;
+        if (!state.active) {
+          state.active = true;
+          state.startDist = Math.max(1, dist);
+          state.startScale = zoomRef.current.scale;
+          state.startMidX = midX;
+          state.startMidY = midY;
+          state.startTx = zoomRef.current.x;
+          state.startTy = zoomRef.current.y;
+          state.didPinch = false;
+          if (zoomLabelTimer.current) clearTimeout(zoomLabelTimer.current);
+        } else {
+          const scale = clamp(
+            state.startScale * (dist / state.startDist),
+            ZOOM_MIN,
+            ZOOM_MAX,
+          );
+          const dx = midX - state.startMidX;
+          const dy = midY - state.startMidY;
+          if (
+            !state.didPinch &&
+            (Math.abs(scale - state.startScale) > 0.01 ||
+              Math.hypot(dx, dy) > 6)
+          ) {
+            state.didPinch = true;
+          }
+          applyZoom(scale, state.startTx + dx, state.startTy + dy, true);
+        }
+        return;
+      }
+      if (state.active && touches.length < 2) {
+        state.active = false;
+        if (state.didPinch) {
+          lastPinchEnd.current = Date.now();
+          flashZoomLabel();
+        }
+      }
+    },
+    [applyZoom, flashZoomLabel],
+  );
 
   const wake = useCallback((stay = false) => {
     setShowControls(true);
@@ -618,10 +781,14 @@ export default function PlayerOverlay() {
       setPanel(null);
       setShowControls(false);
       setGesture(null);
+      resetZoom(false);
       if (ScreenOrientation?.lockAsync && ScreenOrientation?.OrientationLock) {
         ScreenOrientation.lockAsync(
           ScreenOrientation.OrientationLock.PORTRAIT_UP,
         ).catch(() => {});
+      }
+      if (Platform.OS === "android" && NavigationBar?.setHidden) {
+        NavigationBar.setHidden(false).catch(() => {});
       }
       return;
     }
@@ -631,7 +798,41 @@ export default function PlayerOverlay() {
       ScreenOrientation.unlockAsync().catch(() => {});
     }
     setOrientationLocked(false);
+    if (Platform.OS === "android" && NavigationBar?.setHidden) {
+      // Immersive fullscreen: hide the system navigation bar while the
+      // player is expanded and restore it when the effect cleans up.
+      NavigationBar.setHidden(true).catch(() => {});
+    }
+    return () => {
+      if (Platform.OS === "android" && NavigationBar?.setHidden) {
+        NavigationBar.setHidden(false).catch(() => {});
+      }
+    };
   }, [expanded, wake]);
+
+  // Re-hide the navigation bar when the app returns from background while
+  // the fullscreen player is still up (Android restores system bars).
+  useEffect(() => {
+    if (Platform.OS !== "android") return;
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active" && expandedRef.current && NavigationBar?.setHidden) {
+        NavigationBar.setHidden(true).catch(() => {});
+      }
+    });
+    return () => subscription.remove();
+  }, []);
+
+  // Keep the zoomed frame inside the screen when the dimensions change
+  // (rotation), clamping to the new bounds without dropping the zoom level.
+  useEffect(() => {
+    const { scale, x, y } = zoomRef.current;
+    if (scale <= 1) return;
+    const next = clampZoomTranslate(scale, x, y);
+    if (next.x !== x || next.y !== y) {
+      zoomRef.current = { scale, ...next };
+      zoomTranslate.setValue(next);
+    }
+  }, [screenWidth, screenHeight, clampZoomTranslate, zoomTranslate]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (state) => {
@@ -971,6 +1172,14 @@ export default function PlayerOverlay() {
       onStartShouldSetPanResponder: () => false,
       onMoveShouldSetPanResponder: (_event, gestureState) => {
         if (lockedRef.current || !expandedRef.current) return false;
+        if (pinchState.current.active) return false;
+        // Panned zoom takes over both axes so the user can reposition the
+        // enlarged frame; the brightness/volume rule only applies at 1x.
+        if (zoomRef.current.scale > ZOOM_PAN_THRESHOLD) {
+          return (
+            Math.abs(gestureState.dx) > 8 || Math.abs(gestureState.dy) > 8
+          );
+        }
         const vertical = Math.abs(gestureState.dy);
         const horizontal = Math.abs(gestureState.dx);
         return vertical > 16 && vertical > horizontal * 1.25;
@@ -979,14 +1188,32 @@ export default function PlayerOverlay() {
         const { width } = dimensionsRef.current;
         const side: "left" | "right" =
           event.nativeEvent.locationX < width / 2 ? "left" : "right";
+        const mode: "adjust" | "video" =
+          zoomRef.current.scale > ZOOM_PAN_THRESHOLD ? "video" : "adjust";
         const base =
           side === "left" ? brightnessRef.current : volumeRef.current;
-        panState.current = { side, base };
+        panState.current = {
+          side,
+          base,
+          mode,
+          startTx: zoomRef.current.x,
+          startTy: zoomRef.current.y,
+        };
+        if (mode === "video") return;
         setGesture({ side, value: base });
       },
       onPanResponderMove: (_event, gestureState) => {
         const state = panState.current;
         if (!state) return;
+        if (state.mode === "video") {
+          applyZoom(
+            zoomRef.current.scale,
+            state.startTx + gestureState.dx,
+            state.startTy + gestureState.dy,
+            false,
+          );
+          return;
+        }
         const height = Math.max(1, dimensionsRef.current.height);
         const value = clamp(state.base - gestureState.dy / (height * 0.6), 0, 1);
         setGesture({ side: state.side, value });
@@ -1060,6 +1287,8 @@ export default function PlayerOverlay() {
   const handleTap = (event?: any) => {
     if (lockedRef.current || panel || !expandedRef.current) return;
     if (Date.now() - lastPanEnd.current < 280) return;
+    if (pinchState.current.active) return;
+    if (Date.now() - lastPinchEnd.current < 350) return;
     const now = Date.now();
     const width = dimensionsRef.current.width;
     const rawX = Number(event?.nativeEvent?.locationX);
@@ -1352,6 +1581,7 @@ export default function PlayerOverlay() {
         accent,
         onPress: () => {
           setAspectIdx(index);
+          resetZoom(true);
           setPanel(null);
         },
       }));
@@ -1488,11 +1718,28 @@ export default function PlayerOverlay() {
             <Text style={styles.loadingText}>Preparing stream…</Text>
           </View>
         ) : (
-          <Video
-            key={`${streamIndex}-${loadNonce}`}
-            ref={playerRef}
-            style={StyleSheet.absoluteFill}
-            source={videoSource}
+          <Animated.View
+            style={[
+              StyleSheet.absoluteFill,
+              {
+                transform: [
+                  { translateX: zoomTranslate.x },
+                  { translateY: zoomTranslate.y },
+                  { scale: zoomScale },
+                ],
+              },
+            ]}
+          >
+            <Video
+              key={`${streamIndex}-${loadNonce}`}
+              ref={playerRef}
+              style={StyleSheet.absoluteFill}
+              // Texture view is required on Android for RN transforms (pinch
+              // zoom/pan) to reach the video surface; SurfaceView ignores them.
+              viewType={
+                Platform.OS === "android" ? ViewType.TEXTURE : undefined
+              }
+              source={videoSource}
             resizeMode={
               expanded ? ASPECTS[aspectIdx].key : ResizeMode.COVER
             }
@@ -1533,7 +1780,8 @@ export default function PlayerOverlay() {
               saveProgress(durationRef.current);
               wake(true);
             }}
-          />
+            />
+          </Animated.View>
         )}
       </View>
 
@@ -1543,7 +1791,12 @@ export default function PlayerOverlay() {
             style={styles.gestureLayer}
             pointerEvents={locked ? "none" : "auto"}
             {...(locked ? {} : panResponder.panHandlers)}
-            onTouchEnd={handleTap}
+            onTouchStart={locked ? undefined : handleZoomTouches}
+            onTouchMove={locked ? undefined : handleZoomTouches}
+            onTouchEnd={(e) => {
+              handleZoomTouches(e);
+              handleTap(e);
+            }}
           />
 
           {activeCue ? (
@@ -1573,6 +1826,17 @@ export default function PlayerOverlay() {
                 {activeCue.text}
               </Text>
             </View>
+          ) : null}
+
+          {zoomLabel ? (
+            <TouchableOpacity
+              style={styles.zoomBadge}
+              onPress={() => resetZoom(true)}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="scan-outline" size={14} color="#fff" />
+              <Text style={styles.zoomBadgeText}>{zoomLabel}</Text>
+            </TouchableOpacity>
           ) : null}
 
           {seekHint && (
@@ -1829,31 +2093,7 @@ export default function PlayerOverlay() {
                   />
                 </TouchableOpacity>
 
-                <View style={styles.centerControls}>
-                  <TouchableOpacity
-                    style={styles.iconButton}
-                    onPress={() => seekTo(currentTime - 10)}
-                  >
-                    <MaterialIcons name="replay-10" size={28} color="#fff" />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.playButton}
-                    onPress={togglePlay}
-                    accessibilityLabel={paused ? "Play" : "Pause"}
-                  >
-                    <Ionicons
-                      name={paused ? "play" : "pause"}
-                      size={34}
-                      color="#fff"
-                    />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.iconButton}
-                    onPress={() => seekTo(currentTime + 10)}
-                  >
-                    <MaterialIcons name="forward-10" size={28} color="#fff" />
-                  </TouchableOpacity>
-                </View>
+                <View style={{ flex: 1 }} />
 
                 <TouchableOpacity
                   style={styles.smallPill}
@@ -1865,9 +2105,10 @@ export default function PlayerOverlay() {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.iconButton}
-                  onPress={() =>
-                    setAspectIdx((value) => (value + 1) % ASPECTS.length)
-                  }
+                  onPress={() => {
+                    setAspectIdx((value) => (value + 1) % ASPECTS.length);
+                    resetZoom(true);
+                  }}
                   onLongPress={() => setPanel("aspect")}
                   accessibilityLabel="Change screen size"
                 >
@@ -1902,6 +2143,39 @@ export default function PlayerOverlay() {
               </View>
             </View>
           )}
+
+          {/* Centered over the video area, independent of the bottom row's
+              button widths, so the play button sits at true center. */}
+          {showControls && !locked ? (
+            <View style={styles.centerPlayback} pointerEvents="box-none">
+              <TouchableOpacity
+                style={styles.centerSideButton}
+                onPress={() => seekTo(currentTime - 10)}
+                accessibilityLabel="Back 10 seconds"
+              >
+                <MaterialIcons name="replay-10" size={30} color="#fff" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.playButtonCenter}
+                onPress={togglePlay}
+                accessibilityLabel={paused ? "Play" : "Pause"}
+              >
+                <Ionicons
+                  name={paused ? "play" : "pause"}
+                  size={38}
+                  color="#fff"
+                  style={paused ? { marginLeft: 4 } : undefined}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.centerSideButton}
+                onPress={() => seekTo(currentTime + 10)}
+                accessibilityLabel="Forward 10 seconds"
+              >
+                <MaterialIcons name="forward-10" size={30} color="#fff" />
+              </TouchableOpacity>
+            </View>
+          ) : null}
 
           {locked && (
             <TouchableOpacity
@@ -2305,14 +2579,47 @@ const styles = StyleSheet.create({
     width: "100%",
     gap: 2,
   },
-  centerControls: {
+  centerPlayback: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    flex: 1,
-    gap: 16,
+    gap: 40,
+    zIndex: 28,
   },
-  playButton: { padding: 6 },
+  centerSideButton: {
+    padding: 14,
+    borderRadius: 28,
+    backgroundColor: "rgba(0,0,0,0.35)",
+  },
+  playButtonCenter: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.28)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  zoomBadge: {
+    position: "absolute",
+    top: 56,
+    alignSelf: "center",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 18,
+    zIndex: 46,
+  },
+  zoomBadgeText: { color: "#fff", fontSize: 13, fontWeight: "700" },
   unlockButton: {
     position: "absolute",
     left: 16,

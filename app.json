@@ -6,11 +6,9 @@
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
-
     "ios": {
       "supportsTablet": true
     },
-
     "android": {
       "package": "com.k45movies.app",
       "googleServicesFile": "./google-services.json",
@@ -22,11 +20,9 @@
       },
       "predictiveBackGestureEnabled": false
     },
-
     "web": {
       "favicon": "./assets/favicon.png"
     },
-
     "plugins": [
       [
         "expo-splash-screen",
@@ -48,6 +44,12 @@
       ],
       "expo-image",
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "06d7b49d-2bd4-447e-8897-bb50f39826b7"
+      }
+    },
+    "owner": "avengers-team"
   }
 }

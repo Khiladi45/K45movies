@@ -1,6 +1,21 @@
 import { useQuery } from "@tanstack/react-query";
+import { LocalProviderRunner } from "../services/LocalProviderRunner";
 import { SandboxManager } from "../services/SandboxManager";
 import { ProviderManager } from "../services/ProviderManager";
+
+// Statically bundled providers run in the app's JS thread. Anything not in the
+// registry — a provider installed at runtime from GitHub — still has the
+// WebView sandbox to fall back on.
+export const executeProvider = (
+  providerId: string,
+  module: string,
+  method: string,
+  args: Record<string, any>,
+  signal?: AbortSignal,
+) =>
+  LocalProviderRunner.has(providerId)
+    ? LocalProviderRunner.execute(providerId, module, method, args, signal)
+    : SandboxManager.execute(providerId, module, method, args, signal);
 
 export const useProviders = () => {
   return useQuery({
@@ -11,7 +26,7 @@ export const useProviders = () => {
 
 export const providerApi = {
   getCatalog: (providerId: string, signal?: AbortSignal) =>
-    SandboxManager.execute(providerId, "catalog", "catalog", {}, signal),
+    executeProvider(providerId, "catalog", "catalog", {}, signal),
 
   getPosts: (
     providerId: string,
@@ -19,7 +34,7 @@ export const providerApi = {
     page: number = 1,
     signal?: AbortSignal,
   ) =>
-    SandboxManager.execute(
+    executeProvider(
       providerId,
       "posts",
       "getPosts",
@@ -32,7 +47,7 @@ export const providerApi = {
     ),
 
   getMeta: (providerId: string, link: string, signal?: AbortSignal) =>
-    SandboxManager.execute(
+    executeProvider(
       providerId,
       "meta",
       "getMeta",
@@ -44,7 +59,7 @@ export const providerApi = {
     ),
 
   getEpisodes: (providerId: string, url: string, signal?: AbortSignal) =>
-    SandboxManager.execute(
+    executeProvider(
       providerId,
       "episodes",
       "getEpisodes",
@@ -61,7 +76,7 @@ export const providerApi = {
     type: string = "movie",
     signal?: AbortSignal,
   ) =>
-    SandboxManager.execute(
+    executeProvider(
       providerId,
       "stream",
       "getStream",
@@ -85,7 +100,7 @@ export const providerApi = {
 
     const settled = await Promise.allSettled(
       ids.map((id) =>
-        SandboxManager.execute(
+        executeProvider(
           id,
           "posts",
           "getSearchPosts",

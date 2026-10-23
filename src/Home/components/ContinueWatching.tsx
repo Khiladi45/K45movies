@@ -106,6 +106,14 @@ const ContinueWatching = memo(function ContinueWatching({ navigation }: any) {
                     }}
                   />
                 </View>
+                <TouchableOpacity
+                  style={styles.removeButton}
+                  onPress={() => remove(item.link)}
+                  accessibilityLabel={`Remove ${item.title} from Continue Watching`}
+                  hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
+                >
+                  <Ionicons name="close" size={13} color="#fff" />
+                </TouchableOpacity>
               </View>
               <Text
                 numberOfLines={1}
@@ -119,6 +127,20 @@ const ContinueWatching = memo(function ContinueWatching({ navigation }: any) {
       />
     </View>
   );
+});
+
+const styles = StyleSheet.create({
+  removeButton: {
+    position: "absolute",
+    top: 6,
+    right: 6,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: "rgba(0,0,0,0.65)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
 });
 
 export default ContinueWatching;

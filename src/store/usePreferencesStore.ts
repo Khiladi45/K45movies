@@ -44,8 +44,13 @@ export type Preferences = {
   downloadQuality: DownloadQuality;
   downloadLocation: DownloadLocation;
   downloadDirectoryUri: string | null;
+  // True once the user has explicitly picked where downloads go. Until then
+  // the app must ask instead of silently using internal storage.
+  downloadLocationChosen: boolean;
   wifiOnlyDownloads: boolean;
 };
+
+export const DEFAULT_SUBTITLE_BOTTOM = 36;
 
 const DEFAULT_PREFERENCES: Preferences = {
   resumePlayback: true,
@@ -59,13 +64,14 @@ const DEFAULT_PREFERENCES: Preferences = {
   subtitleBackground: "#000000",
   subtitleBackgroundOpacity: 0.55,
   subtitleShadow: 2,
-  subtitleBottom: 36,
+  subtitleBottom: DEFAULT_SUBTITLE_BOTTOM,
   subtitleAlign: "center",
   controlsTimeout: 5,
   showRemainingTime: true,
   downloadQuality: "best",
   downloadLocation: "app",
   downloadDirectoryUri: null,
+  downloadLocationChosen: false,
   wifiOnlyDownloads: false,
 };
 
@@ -146,7 +152,7 @@ const normalize = (saved: Partial<Preferences>): Preferences => {
         ? Math.round(shadow)
         : DEFAULT_PREFERENCES.subtitleShadow,
     subtitleBottom:
-      Number.isFinite(bottom) && bottom >= 8 && bottom <= 160
+      Number.isFinite(bottom) && bottom >= 0 && bottom <= 320
         ? Math.round(bottom)
         : DEFAULT_PREFERENCES.subtitleBottom,
     subtitleAlign: SUBTITLE_ALIGN_VALUES.includes(saved.subtitleAlign as any)
@@ -160,6 +166,11 @@ const normalize = (saved: Partial<Preferences>): Preferences => {
       !!saved.downloadDirectoryUri
         ? "custom"
         : "app",
+    // Existing users who already configured a custom folder have made their
+    // choice — don't re-ask them on the next download.
+    downloadLocationChosen:
+      saved.downloadLocationChosen === true ||
+      (saved.downloadLocation === "custom" && !!saved.downloadDirectoryUri),
   };
 };
 

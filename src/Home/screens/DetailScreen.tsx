@@ -215,10 +215,13 @@ export default function DetailScreen({ route, navigation }: any) {
   const watchlistMovies = useWatchlistStore((s) => s.movies);
   const inWatchlist = watchlistMovies.some((m) => m.link === movie.link);
 
-  const { data: meta, isLoading: isMetaLoading } = useMeta(
-    providerId,
-    movie.link,
-  );
+  const {
+    data: meta,
+    isLoading: isMetaLoading,
+    isError: isMetaError,
+    refetch: refetchMeta,
+    isRefetching: isMetaRefetching,
+  } = useMeta(providerId, movie.link);
 
   type StartSource = "watch" | "list";
   const [streamLink, setStreamLink] = useState("");
@@ -503,7 +506,25 @@ export default function DetailScreen({ route, navigation }: any) {
           backgroundColor="transparent"
           translucent
         />
-        <DetailSkeleton />
+        {isMetaError ? (
+          <View style={styles.metaErrorWrap}>
+            <Ionicons name="cloud-offline-outline" size={52} color="#666" />
+            <Text style={styles.metaErrorText}>
+              Couldn't load the details for this title.
+            </Text>
+            <TouchableOpacity
+              style={[styles.metaErrorRetry, { backgroundColor: primaryColor }]}
+              onPress={() => refetchMeta()}
+              disabled={isMetaRefetching}
+            >
+              <Text style={styles.metaErrorRetryText}>
+                {isMetaRefetching ? "Retrying…" : "Retry"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <DetailSkeleton />
+        )}
         {/* Close button still visible during skeleton */}
         <View
           style={[styles.topBar, { paddingTop: insets.top + 10 }]}
@@ -784,6 +805,26 @@ export default function DetailScreen({ route, navigation }: any) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#141414" },
+  metaErrorWrap: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 14,
+    paddingHorizontal: 40,
+  },
+  metaErrorText: {
+    color: "#aaa",
+    fontSize: 14,
+    textAlign: "center",
+    fontWeight: "500",
+  },
+  metaErrorRetry: {
+    marginTop: 4,
+    paddingHorizontal: 30,
+    paddingVertical: 11,
+    borderRadius: 12,
+  },
+  metaErrorRetryText: { color: "#fff", fontWeight: "700", fontSize: 14 },
 
   // ✕ Close
   topBar: {

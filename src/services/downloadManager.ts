@@ -1,3 +1,4 @@
+import { Alert } from "react-native";
 import { Directory, File, FileMode, Paths } from "expo-file-system";
 import * as Network from "expo-network";
 import { providerApi } from "@/lib/providerApi";
@@ -147,6 +148,92 @@ const customDirectory = (uri?: string) => {
     );
   }
   return dir;
+};
+
+const isDirectoryReachable = (uri?: string | null): boolean => {
+  if (!uri) return false;
+  try {
+    return new Directory(uri).exists;
+  } catch {
+    return false;
+  }
+};
+
+const pickCustomFolder = async (): Promise<StartResult> => {
+  try {
+    const dir = await Directory.pickDirectoryAsync();
+    if (!dir) {
+      return { ok: false, error: "Download cancelled — no folder was selected." };
+    }
+    // Prove we can actually write here before trusting this folder.
+    const probe = dir.createFile(
+      `k45-write-test-${Date.now()}.txt`,
+      "text/plain",
+    );
+    probe.write("ok");
+    if (probe.exists) probe.delete();
+    const prefs = usePreferencesStore.getState();
+    prefs.setPreference("downloadDirectoryUri", dir.uri);
+    prefs.setPreference("downloadLocation", "custom");
+    prefs.setPreference("downloadLocationChosen", true);
+    return { ok: true };
+  } catch (e: any) {
+    const cancelled = /cancel/i.test(`${e?.code ?? ""} ${e?.message ?? ""}`);
+    return {
+      ok: false,
+      error: cancelled
+        ? "Download cancelled — no folder was selected."
+        : e?.message || "Could not use the selected folder.",
+    };
+  }
+};
+
+// The first download must never silently land in internal storage — ask
+// where to save. Also re-asks when a previously picked folder was revoked.
+const ensureDownloadLocation = async (): Promise<StartResult> => {
+  const prefs = usePreferencesStore.getState();
+  if (prefs.downloadLocationChosen) {
+    if (
+      prefs.downloadLocation === "custom" &&
+      !isDirectoryReachable(prefs.downloadDirectoryUri)
+    ) {
+      // Access was revoked (folder deleted or permission withdrawn).
+      prefs.setPreference("downloadLocationChosen", false);
+    } else {
+      return { ok: true };
+    }
+  }
+
+  return new Promise((resolve) => {
+    Alert.alert(
+      "Choose download folder",
+      "Pick where K45 saves downloaded videos. You can change this anytime in Preferences.",
+      [
+        {
+          text: "Choose folder",
+          onPress: () => void pickCustomFolder().then(resolve),
+        },
+        {
+          text: "App storage",
+          onPress: () => {
+            const current = usePreferencesStore.getState();
+            current.setPreference("downloadLocation", "app");
+            current.setPreference("downloadLocationChosen", true);
+            resolve({ ok: true });
+          },
+        },
+        {
+          text: "Cancel",
+          style: "cancel",
+          onPress: () =>
+            resolve({
+              ok: false,
+              error: "Download cancelled — no download location chosen.",
+            }),
+        },
+      ],
+    );
+  });
 };
 
 const deleteQuietly = (file: File | null | undefined) => {
@@ -695,6 +782,9 @@ export async function startDownload(
 
   const allowed = await networkAllowsDownload();
   if (!allowed.ok) return allowed;
+
+  const located = await ensureDownloadLocation();
+  if (!located.ok) return located;
 
   const prefs = usePreferencesStore.getState();
   const useCustom =

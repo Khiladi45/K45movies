@@ -9,12 +9,14 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import Slider from "@react-native-community/slider";
 import { Directory } from "expo-file-system";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useThemeStore } from "@/store/useThemeStore";
 import {
   DefaultQuality,
   DownloadQuality,
+  DEFAULT_SUBTITLE_BOTTOM,
   usePreferencesStore,
 } from "@/store/usePreferencesStore";
 import {
@@ -343,6 +345,71 @@ function StepperRow({
     </View>
   );
 }
+function SliderRow({
+  icon,
+  title,
+  subtitle,
+  value,
+  min,
+  max,
+  defaultValue,
+  onChange,
+  primaryColor,
+}: {
+  icon: any;
+  title: string;
+  subtitle: string;
+  value: number;
+  min: number;
+  max: number;
+  defaultValue: number;
+  onChange: (value: number) => void;
+  primaryColor: string;
+}) {
+  return (
+    <View style={styles.sliderRow}>
+      <View style={styles.sliderRowTop}>
+        <View
+          style={[
+            styles.iconBox,
+            { backgroundColor: withOpacity(primaryColor, "1A") },
+          ]}
+        >
+          <Ionicons name={icon} size={20} color={primaryColor} />
+        </View>
+        <View style={styles.rowText}>
+          <Text style={styles.rowTitle}>{title}</Text>
+          <Text style={styles.rowSubtitle}>{subtitle}</Text>
+        </View>
+        <View style={styles.sliderValueBox}>
+          <Text style={styles.sliderValue}>{value}</Text>
+          <TouchableOpacity
+            onPress={() => onChange(defaultValue)}
+            disabled={value === defaultValue}
+            accessibilityLabel={`Reset ${title}`}
+          >
+            <Ionicons
+              name="refresh-outline"
+              size={16}
+              color={value === defaultValue ? "#444" : primaryColor}
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+      <Slider
+        style={styles.slider}
+        minimumValue={min}
+        maximumValue={max}
+        step={1}
+        value={value}
+        onValueChange={onChange}
+        minimumTrackTintColor={primaryColor}
+        maximumTrackTintColor="rgba(255,255,255,0.18)"
+        thumbTintColor={primaryColor}
+      />
+    </View>
+  );
+}
 
 
 const folderLabel = (uri: string): string => {
@@ -590,14 +657,14 @@ export default function PreferencesScreen({ navigation }: any) {
             onChange={(value) => prefs.setPreference("subtitleShadow", value)}
             primaryColor={primaryColor}
           />
-          <StepperRow
+          <SliderRow
             icon="arrow-up-outline"
             title="Position"
             subtitle={`${prefs.subtitleBottom}px above the bottom edge`}
             value={prefs.subtitleBottom}
-            min={8}
-            max={160}
-            step={8}
+            min={0}
+            max={320}
+            defaultValue={DEFAULT_SUBTITLE_BOTTOM}
             onChange={(value) => prefs.setPreference("subtitleBottom", value)}
             primaryColor={primaryColor}
           />
@@ -882,6 +949,19 @@ const styles = StyleSheet.create({
   segmentText: { color: "#9a9a9a", fontSize: 12.5, fontWeight: "600" },
 
   stepper: { flexDirection: "row", alignItems: "center", gap: 4 },
+  sliderRow: { paddingVertical: 4 },
+  sliderRowTop: { flexDirection: "row", alignItems: "center", gap: 12 },
+  sliderValueBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "#1d1d1d",
+    borderRadius: 9,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  sliderValue: { color: "#fff", fontSize: 13, fontWeight: "700", minWidth: 26, textAlign: "center" },
+  slider: { width: "100%", height: 40, marginTop: 2 },
   stepBtn: {
     width: 30,
     height: 30,

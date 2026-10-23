@@ -13,6 +13,7 @@ import {
   Platform,
   UIManager,
   Alert,
+  RefreshControl,
 } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useThemeStore } from "../store/useThemeStore";
@@ -43,7 +44,33 @@ export default function AddProviders() {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [providerToDelete, setProviderToDelete] = useState<string | null>(null);
   const [installingId, setInstallingId] = useState<string | null>(null);
-  const { data: providers, isLoading, error } = useProviders();
+  const {
+    data: providers,
+    isLoading,
+    error,
+    refetch,
+    isRefetching,
+    dataUpdatedAt,
+  } = useProviders();
+
+  const onRefresh = async () => {
+    ProviderManager.invalidateManifest();
+    await refetch();
+  };
+
+  const updatedLabel = dataUpdatedAt
+    ? (() => {
+        const minutes = Math.floor((Date.now() - dataUpdatedAt) / 60_000);
+        if (minutes < 1) return "Updated just now";
+        if (minutes === 1) return "Updated 1 min ago";
+        if (minutes < 60) return `Updated ${minutes} min ago`;
+        return `Updated ${Math.floor(minutes / 60)} hr ago`;
+      })()
+    : null;
+
+  // With cached data and a failing refetch the user is offline — keep the
+  // list visible and show a banner instead of replacing it with an error.
+  const isOfflineWithCache = !!error && !!providers && providers.length > 0;
 
   const withOpacity = (hex: string, opacityHex: string) =>
     `${hex}${opacityHex}`;
@@ -278,9 +305,19 @@ export default function AddProviders() {
           <Text style={styles.headerTitle}>Providers</Text>
           <Text style={styles.headerSubtitle}>
             Manage your streaming sources
+            {updatedLabel ? ` · ${updatedLabel}` : ""}
           </Text>
         </View>
       </View>
+
+      {isOfflineWithCache ? (
+        <View style={styles.offlineBanner}>
+          <Ionicons name="cloud-offline-outline" size={16} color="#f59e0b" />
+          <Text style={styles.offlineBannerText}>
+            You're offline — showing saved providers. Pull down to retry.
+          </Text>
+        </View>
+      ) : null}
 
       {/* Search */}
       <View
@@ -425,13 +462,63 @@ export default function AddProviders() {
     );
   }
 
-  if (error) {
+  if (error && !providers?.length) {
+    // No cache to fall back on — full-screen error with an explicit retry.
+    // Retrying re-runs the fetch, so it doubles as the reconnect path.
     return (
-      <View style={[styles.container, styles.centerContent]}>
-        <Ionicons name="alert-circle-outline" size={48} color="#ef4444" />
-        <Text style={[styles.emptyText, { color: "#ef4444", marginTop: 12 }]}>
-          Failed to load
+      <View style={[styles.container, styles.centerContent, { padding: 32 }]}>
+        <Ionicons name="cloud-offline-outline" size={52} color="#ef4444" />
+        <Text
+          style={[
+            styles.emptyText,
+            { color: "#ef4444", marginTop: 14, textAlign: "center" },
+          ]}
+        >
+          {providers === undefined
+            ? "Couldn't reach the provider list.\nCheck your connection and try again."
+            : "Failed to load"}
         </Text>
+        <TouchableOpacity
+          style={[styles.retryButton, { backgroundColor: primaryColor }]}
+          onPress={onRefresh}
+          disabled={isRefetching}
+        >
+          {isRefetching ? (
+            <Skeleton
+              style={{
+                width: 16,
+                height: 16,
+                borderRadius: 8,
+                backgroundColor: "rgba(255,255,255,0.9)",
+              }}
+            />
+          ) : (
+            <Text style={styles.retryButtonText}>Retry</Text>
+          )}
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  if (!error && providers && providers.length === 0) {
+    return (
+      <View style={[styles.container, styles.centerContent, { padding: 32 }]}>
+        <Ionicons name="server-outline" size={52} color="#666" />
+        <Text
+          style={[
+            styles.emptyText,
+            { color: "#888", marginTop: 14, textAlign: "center" },
+          ]}
+        >
+          No providers are available right now.
+        </Text>
+        <TouchableOpacity
+          style={[styles.retryButton, { backgroundColor: primaryColor }]}
+          onPress={onRefresh}
+          disabled={isRefetching}
+        >
+          <Text style={styles.retryButtonText}>Refresh</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -451,11 +538,21 @@ export default function AddProviders() {
         ListHeaderComponent={renderHeader}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={onRefresh}
+            tintColor={primaryColor}
+            colors={[primaryColor]}
+          />
+        }
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <Ionicons name="search-outline" size={48} color="#444" />
             <Text style={[styles.emptyText, { marginTop: 12 }]}>
-              No more providers available
+              {searchQuery
+                ? "No providers match your search"
+                : "No more providers available"}
             </Text>
           </View>
         }
@@ -679,6 +776,29 @@ const styles = StyleSheet.create({
   },
   emptyState: { alignItems: "center", paddingVertical: 40 },
   emptyText: { fontSize: 14, color: "#666", fontWeight: "500" },
+  retryButton: {
+    marginTop: 18,
+    paddingHorizontal: 28,
+    paddingVertical: 12,
+    borderRadius: 12,
+    minWidth: 110,
+    alignItems: "center",
+  },
+  retryButtonText: { color: "#fff", fontWeight: "700", fontSize: 14 },
+  offlineBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginHorizontal: 20,
+    marginBottom: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderRadius: 10,
+    backgroundColor: "rgba(245, 158, 11, 0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(245, 158, 11, 0.35)",
+  },
+  offlineBannerText: { flex: 1, color: "#f59e0b", fontSize: 12, fontWeight: "600" },
 
   modalOverlay: {
     flex: 1,

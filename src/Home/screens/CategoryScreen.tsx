@@ -231,6 +231,10 @@ export default function CategoryScreen({ route, navigation }: any) {
           showsVerticalScrollIndicator={false}
           onEndReached={loadMore}
           onEndReachedThreshold={0.6}
+          initialNumToRender={12}
+          windowSize={7}
+          maxToRenderPerBatch={8}
+          removeClippedSubviews
           ListFooterComponent={ListFooter}
           refreshControl={
             <RefreshControl
