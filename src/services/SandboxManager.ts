@@ -120,15 +120,19 @@ class SandboxManagerClass {
       jar = new Map();
       this.cookieJar.set(domain, jar);
     }
-    // RN fetch joins repeated set-cookie headers; split on comma followed by
-    // a token and "=". Good enough for the session-cookie shapes providers set.
-    for (const piece of raw.split(/, (?=[A-Za-z0-9_\-]+=)/)) {
+    // [FIX] Robustly split joined Set-Cookie headers by looking for a comma
+    // followed by a valid cookie name and '=', ignoring commas inside dates.
+    const COOKIE_SPLIT_REGEX = /, (?=[a-zA-Z0-9_\-]+=)/g;
+    const pieces = raw.split(COOKIE_SPLIT_REGEX);
+
+    for (const piece of pieces) {
       const eq = piece.indexOf("=");
       if (eq <= 0) continue;
       const name = piece.slice(0, eq).trim();
       const rest = piece.slice(eq + 1);
       const semi = rest.indexOf(";");
       const value = (semi >= 0 ? rest.slice(0, semi) : rest).trim();
+
       if (!name) continue;
       if (/expires|max-age|path|domain|secure|httponly|samesite/i.test(name)) continue;
       if (value === "" || /^\w+day/i.test(value)) {

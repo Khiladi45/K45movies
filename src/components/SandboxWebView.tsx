@@ -231,6 +231,38 @@ const SANDBOX_HTML = `
     else pending.resolve(payload.result);
   };
 
+  // Providers append fresh WAF cookies onto whatever Cookie header they
+  // already built, so "cf_clearance=expired; x=1; cf_clearance=valid" reaches
+  // Cloudflare and gets rejected. Keep only the LAST occurrence of each name.
+  function cleanCookieHeader(cookieStr) {
+    if (!cookieStr) return cookieStr;
+    var map = {};
+    var parts = cookieStr.split(';');
+    for (var i = 0; i < parts.length; i++) {
+      var part = parts[i].trim();
+      if (!part) continue;
+      var eq = part.indexOf('=');
+      if (eq > 0) {
+        // Keep only the LAST occurrence (the newest valid cookie)
+        var name = part.slice(0, eq).trim().toLowerCase();
+        map[name] = part.slice(eq + 1).trim();
+      }
+    }
+    var finalParts = [];
+    for (var name in map) {
+      var origName = name;
+      for (var j = 0; j < parts.length; j++) {
+        var p = parts[j].trim();
+        if (p.toLowerCase().startsWith(name + '=')) {
+          origName = p.slice(0, p.indexOf('='));
+          break;
+        }
+      }
+      finalParts.push(origName + '=' + map[name]);
+    }
+    return finalParts.join('; ');
+  }
+
   function nativeRequest(method, url, data, config) {
     return new Promise(function (resolve, reject) {
       var httpId = 'http_' + (++window.__httpSeq) + '_' + Date.now();
@@ -245,6 +277,10 @@ const SANDBOX_HTML = `
       if (signal && signal.aborted) { onAbort(); return; }
       if (signal && signal.addEventListener) signal.addEventListener('abort', onAbort, { once: true });
       window.__pendingHttp[httpId] = { resolve: resolve, reject: reject };
+      if (config && config.headers) {
+        var cookieKey = Object.keys(config.headers).find(function(k) { return k.toLowerCase() === 'cookie'; });
+        if (cookieKey) config.headers[cookieKey] = cleanCookieHeader(config.headers[cookieKey]);
+      }
       window.ReactNativeWebView.postMessage(JSON.stringify({
         type: 'httpRequest',
         httpId: httpId,
@@ -350,6 +386,13 @@ const SANDBOX_HTML = `
         } else {
           serializedBody = { kind: 'text', value: String(body) };
         }
+      }
+      // The headers object is a fresh copy from headerObject() — cleaning it
+      // here covers both init.headers and input.headers without mutating the
+      // caller's objects.
+      if (headers) {
+        var fetchCookieKey = Object.keys(headers).find(function(k) { return k.toLowerCase() === 'cookie'; });
+        if (fetchCookieKey) headers[fetchCookieKey] = cleanCookieHeader(headers[fetchCookieKey]);
       }
       window.ReactNativeWebView.postMessage(JSON.stringify({
         type: 'httpRequest',
@@ -608,6 +651,7 @@ type WafPageCapture = {
   userAgent?: string;
   url?: string;
   html?: string;
+  cookies?: string;
 };
 
 type WafSession = {
@@ -699,7 +743,7 @@ export default function SandboxWebView() {
         webview.injectJavaScript(
           `(function(){ window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'wafCapture', id: ${JSON.stringify(
             captureId,
-          )}, userAgent: navigator.userAgent, url: location.href, html: document.documentElement.outerHTML })); })(); true;`,
+          )}, userAgent: navigator.userAgent, url: location.href, html: document.documentElement.outerHTML, cookies: document.cookie })); })(); true;`,
         );
       } catch {
         finish(null);
@@ -741,6 +785,14 @@ export default function SandboxWebView() {
           .join("; ");
       }
       const capture = await capturePage(target);
+      // If native CookieManager failed or is empty, use JS extracted document.cookie
+      if (!cookies && capture?.cookies) {
+        cookies = capture.cookies;
+        capture.cookies.split(";").forEach((p: string) => {
+          const eq = p.indexOf("=");
+          if (eq > 0) cookieMap[p.slice(0, eq).trim()] = p.slice(eq + 1).trim();
+        });
+      }
       settle(target, {
         cookies,
         cookie: cookies,
@@ -878,6 +930,7 @@ export default function SandboxWebView() {
           userAgent: payload.userAgent,
           url: payload.url,
           html: payload.html,
+          cookies: payload.cookies,
         });
       } catch {
         // Non-JSON messages from the verification page are ignored.

@@ -2125,7 +2125,7 @@ export default function PlayerOverlay() {
                 >
                   <MaterialCommunityIcons
                     name="screen-rotation"
-                    size={21}
+                    size={19}
                     color={ICON}
                   />
                 </TouchableOpacity>
@@ -2136,7 +2136,7 @@ export default function PlayerOverlay() {
                 >
                   <MaterialCommunityIcons
                     name="stop-circle-outline"
-                    size={22}
+                    size={21}
                     color={ICON}
                   />
                 </TouchableOpacity>
@@ -2153,7 +2153,7 @@ export default function PlayerOverlay() {
                 onPress={() => seekTo(currentTime - 10)}
                 accessibilityLabel="Back 10 seconds"
               >
-                <MaterialIcons name="replay-10" size={30} color="#fff" />
+                <MaterialIcons name="replay-10" size={20} color="#fff" />
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.playButtonCenter}
@@ -2162,7 +2162,7 @@ export default function PlayerOverlay() {
               >
                 <Ionicons
                   name={paused ? "play" : "pause"}
-                  size={38}
+                  size={25}
                   color="#fff"
                   style={paused ? { marginLeft: 4 } : undefined}
                 />
@@ -2172,7 +2172,7 @@ export default function PlayerOverlay() {
                 onPress={() => seekTo(currentTime + 10)}
                 accessibilityLabel="Forward 10 seconds"
               >
-                <MaterialIcons name="forward-10" size={30} color="#fff" />
+                <MaterialIcons name="forward-10" size={20} color="#fff" />
               </TouchableOpacity>
             </View>
           ) : null}
@@ -2518,7 +2518,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.48)",
     borderRadius: 14,
     paddingHorizontal: 9,
-    paddingVertical: 6,
+    paddingVertical: 4,
   },
   pillText: {
     color: ICON,
@@ -2592,13 +2592,13 @@ const styles = StyleSheet.create({
     zIndex: 28,
   },
   centerSideButton: {
-    padding: 14,
+    padding: 8,
     borderRadius: 28,
     backgroundColor: "rgba(0,0,0,0.35)",
   },
   playButtonCenter: {
-    width: 76,
-    height: 76,
+    width: 55,
+    height: 55,
     borderRadius: 38,
     backgroundColor: "rgba(0,0,0,0.45)",
     borderWidth: 1,

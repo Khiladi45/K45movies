@@ -30,7 +30,7 @@ if (
 }
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const DRAWER_WIDTH = Math.min(SCREEN_WIDTH * 0.8, 320);
+const DRAWER_WIDTH = Math.min(SCREEN_WIDTH * 0.8, 250);
 
 export default function Header() {
   const navigation = useNavigation<any>();
@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
   },
   drawerContainer: {
     height: "100%",
-    backgroundColor: "#0a0a0a",
+    backgroundColor: "#0a0a0aeb",
     paddingTop: 50,
     borderRightWidth: 1,
     borderRightColor: "#1a1a1a",

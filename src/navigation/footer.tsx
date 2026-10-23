@@ -43,7 +43,7 @@ const Tab = createBottomTabNavigator();
 
 const CURVE_HEIGHT = 20;
 const BAR_HEIGHT = 60;
-const GLOW_SIZE = 110;
+const GLOW_SIZE = 100;
 
 function CurvedTabBar({ state, navigation, descriptors, insets }: any) {
   const { width: SCREEN_WIDTH } = useWindowDimensions();
