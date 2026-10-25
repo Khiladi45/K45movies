@@ -62,16 +62,6 @@ const PROVIDERS = [
     load: () => require("./bundles/castle.js"),
   },
   {
-    id: "cinefreak",
-    modules: ["catalog","posts","meta","stream"],
-    load: () => require("./bundles/cinefreak.js"),
-  },
-  {
-    id: "cinemaLuxe",
-    modules: ["catalog","posts","meta","stream","episodes"],
-    load: () => require("./bundles/cinemaLuxe.js"),
-  },
-  {
     id: "disneyMirror",
     modules: ["catalog","posts","meta","stream","episodes"],
     load: () => require("./bundles/disneyMirror.js"),
@@ -92,24 +82,9 @@ const PROVIDERS = [
     load: () => require("./bundles/drive.js"),
   },
   {
-    id: "eonMovies",
-    modules: ["catalog","posts","meta","stream"],
-    load: () => require("./bundles/eonMovies.js"),
-  },
-  {
     id: "everything",
     modules: ["catalog","posts","meta","stream"],
     load: () => require("./bundles/everything.js"),
-  },
-  {
-    id: "filmyfly",
-    modules: ["catalog","posts","meta","stream","episodes"],
-    load: () => require("./bundles/filmyfly.js"),
-  },
-  {
-    id: "flixhq",
-    modules: ["catalog","posts","meta","stream"],
-    load: () => require("./bundles/flixhq.js"),
   },
   {
     id: "gokuHD",
@@ -137,16 +112,6 @@ const PROVIDERS = [
     load: () => require("./bundles/kartoons.js"),
   },
   {
-    id: "katMovieFix",
-    modules: ["catalog","posts","meta","stream","episodes"],
-    load: () => require("./bundles/katMovieFix.js"),
-  },
-  {
-    id: "katmovies",
-    modules: ["catalog","posts","meta","stream","episodes"],
-    load: () => require("./bundles/katmovies.js"),
-  },
-  {
     id: "kickAssAnime",
     modules: ["catalog","posts","meta","stream"],
     load: () => require("./bundles/kickAssAnime.js"),
@@ -167,21 +132,6 @@ const PROVIDERS = [
     load: () => require("./bundles/luxMovies.js"),
   },
   {
-    id: "mkvDrama",
-    modules: ["catalog","posts","meta","stream","episodes"],
-    load: () => require("./bundles/mkvDrama.js"),
-  },
-  {
-    id: "mod",
-    modules: ["catalog","posts","meta","stream","episodes"],
-    load: () => require("./bundles/mod.js"),
-  },
-  {
-    id: "movieBox",
-    modules: ["catalog","posts","meta","stream","episodes"],
-    load: () => require("./bundles/movieBox.js"),
-  },
-  {
     id: "movieBoxWeb",
     modules: ["catalog","posts","meta","stream","episodes"],
     load: () => require("./bundles/movieBoxWeb.js"),
@@ -195,11 +145,6 @@ const PROVIDERS = [
     id: "movies4u",
     modules: ["catalog","posts","meta","stream","episodes"],
     load: () => require("./bundles/movies4u.js"),
-  },
-  {
-    id: "moviesApi",
-    modules: ["stream"],
-    load: () => require("./bundles/moviesApi.js"),
   },
   {
     id: "moviezwap",
@@ -232,21 +177,6 @@ const PROVIDERS = [
     load: () => require("./bundles/primeMirror.js"),
   },
   {
-    id: "primewire",
-    modules: ["catalog","posts","meta","stream"],
-    load: () => require("./bundles/primewire.js"),
-  },
-  {
-    id: "protonMovies",
-    modules: ["catalog","posts","meta","stream"],
-    load: () => require("./bundles/protonMovies.js"),
-  },
-  {
-    id: "ridoMovies",
-    modules: ["catalog","posts","meta","stream"],
-    load: () => require("./bundles/ridoMovies.js"),
-  },
-  {
     id: "ringz",
     modules: ["catalog","posts","meta","stream"],
     load: () => require("./bundles/ringz.js"),
@@ -255,21 +185,6 @@ const PROVIDERS = [
     id: "showbox",
     modules: ["catalog","posts","meta","stream","episodes"],
     load: () => require("./bundles/showbox.js"),
-  },
-  {
-    id: "skyMovieHD",
-    modules: ["catalog","posts","meta","stream","episodes"],
-    load: () => require("./bundles/skyMovieHD.js"),
-  },
-  {
-    id: "tokyoInsider",
-    modules: ["catalog","posts","meta","stream"],
-    load: () => require("./bundles/tokyoInsider.js"),
-  },
-  {
-    id: "topmovies",
-    modules: ["catalog","posts","meta","stream","episodes"],
-    load: () => require("./bundles/topmovies.js"),
   },
   {
     id: "torrentio",
@@ -295,11 +210,6 @@ const PROVIDERS = [
     id: "vega",
     modules: ["catalog","posts","meta","stream","episodes"],
     load: () => require("./bundles/vega.js"),
-  },
-  {
-    id: "world4u",
-    modules: ["catalog","posts","meta","stream","episodes"],
-    load: () => require("./bundles/world4u.js"),
   },
   {
     id: "youtube",

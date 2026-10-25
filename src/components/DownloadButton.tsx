@@ -11,6 +11,7 @@ import {
   isActiveDownload,
   useDownloadsStore,
 } from "@/store/useDownloadsStore";
+import type { PlayableStream } from "@/lib/streams";
 
 type Props = {
   link: string;
@@ -21,6 +22,8 @@ type Props = {
   size?: number;
   color?: string;
   label?: string;
+  /** When set, new downloads ask this hook to pick a stream first. */
+  resolveDownloadStream?: () => Promise<PlayableStream | null>;
 };
 
 export default function DownloadButton({
@@ -32,13 +35,35 @@ export default function DownloadButton({
   size = 22,
   color = "#F2F2F2",
   label,
+  resolveDownloadStream,
 }: Props) {
   const job = useDownloadsStore((s) => s.jobs.find((j) => j.id === link));
   const active = !!job && isActiveDownload(job.status);
   const pct = Math.round((job?.progress || 0) * 100);
 
   const begin = async () => {
-    const result = await startDownload({ link, title, providerId, type, image });
+    let stream: PlayableStream | undefined;
+    if (resolveDownloadStream) {
+      try {
+        const picked = await resolveDownloadStream();
+        if (!picked) return;
+        stream = picked;
+      } catch (error: any) {
+        Alert.alert(
+          "Download unavailable",
+          error?.message || "Could not load the available qualities.",
+        );
+        return;
+      }
+    }
+    const result = await startDownload({
+      link,
+      title,
+      providerId,
+      type,
+      image,
+      stream,
+    });
     if (!result.ok) {
       Alert.alert(
         "Download unavailable",

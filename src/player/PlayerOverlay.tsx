@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Animated,
   AppState,
+  DeviceEventEmitter,
   PanResponder,
   Platform,
   Pressable,
@@ -12,6 +13,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  findNodeHandle,
   useWindowDimensions,
 } from "react-native";
 import Video, {
@@ -332,6 +334,10 @@ export default function PlayerOverlay() {
       : [];
   }, [streams, currentVideoUrl]);
 
+  // Watch Now navigates with a placeholder URL so the player can open before
+  // the provider resolves; the real stream replaces it via setVideo.
+  const pendingStream = currentVideoUrl.startsWith("pending://");
+
   const [streamIndex, setStreamIndex] = useState(() =>
     clamp(initialStreamIndex, 0, Math.max(0, normalizedStreams.length - 1)),
   );
@@ -399,6 +405,8 @@ export default function PlayerOverlay() {
   });
 
   const playerRef = useRef<any>(null);
+  const autoRetriedRef = useRef(false);
+  const handlePlaybackFailureRef = useRef<(event: any) => void>(() => {});
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const stallTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -478,11 +486,28 @@ export default function PlayerOverlay() {
   subtitleRef.current = subtitle;
 
   const progressKey =
-    playerMeta?.link || currentVideoUrl
+    !pendingStream && (playerMeta?.link || currentVideoUrl)
       ? `playerProgress:${playerMeta?.link || currentVideoUrl}`
       : "";
   const progressKeyRef = useRef(progressKey);
   progressKeyRef.current = progressKey;
+
+  // Backstop for the placeholder player: if nothing resolves the stream (or
+  // the screen that owns the fetch unmounts), do not strand the user on the
+  // "Starting stream…" spinner forever.
+  useEffect(() => {
+    if (!pendingStream) return;
+    const timer = setTimeout(() => {
+      if (!mountedRef.current) return;
+      const store = usePlayerStore.getState();
+      if (!store.currentVideoUrl.startsWith("pending://")) return;
+      store.close();
+      if (currentRouteName() === "Player" && !goBack()) {
+        navigate("Home");
+      }
+    }, 30000);
+    return () => clearTimeout(timer);
+  }, [pendingStream, currentVideoUrl]);
 
   const subtitleTitles = useMemo(
     () => new Set((preparedSubs || []).map((track) => track.title)),
@@ -504,6 +529,47 @@ export default function PlayerOverlay() {
       if (mountedRef.current) setToast("");
     }, 2800);
   }, []);
+
+  // expo-navigation-bar 57 exposes only setVisibilityAsync/setHidden; the
+  // older setBehaviorAsync/setPositionAsync helpers no longer exist. The
+  // native module still applies immersive-sticky while hidden.
+  const setNavBarVisibility = useCallback((hidden: boolean) => {
+    if (Platform.OS !== "android" || !NavigationBar) return;
+    try {
+      if (typeof NavigationBar.setVisibilityAsync === "function") {
+        Promise.resolve(
+          NavigationBar.setVisibilityAsync(hidden ? "hidden" : "visible"),
+        ).catch(() => {});
+      } else if (typeof NavigationBar.setHidden === "function") {
+        NavigationBar.setHidden(hidden);
+      }
+    } catch {}
+  }, []);
+
+  const hideNavBarSoon = useCallback(() => {
+    if (Platform.OS !== "android") return;
+    setTimeout(() => {
+      if (mountedRef.current && expandedRef.current) setNavBarVisibility(true);
+    }, 100);
+  }, [setNavBarVisibility]);
+
+  // The native decoder patch swaps to a software decoder when the hardware
+  // one rejects a codec (e.g. 4K HEVC). Tell the user the stream will resume.
+  useEffect(() => {
+    if (Platform.OS !== "android") return;
+    const subscription = DeviceEventEmitter.addListener(
+      "VegaVideoDecoderFallback",
+      (event: any) => {
+        const tags: number[] = Array.isArray(event?.viewTags)
+          ? event.viewTags
+          : [];
+        const handle = findNodeHandle(playerRef.current);
+        if (tags.length > 0 && handle != null && !tags.includes(handle)) return;
+        showToast("Hardware decoder unavailable — switched to software");
+      },
+    );
+    return () => subscription.remove();
+  }, [showToast]);
 
   // ── Pinch-to-zoom helpers ─────────────────────────────────────────────
   const clampZoomTranslate = useCallback(
@@ -672,6 +738,7 @@ export default function PlayerOverlay() {
   // Prepare the initial stream's external subtitles before mounting the
   // native player so the tracks exist on the very first load.
   useEffect(() => {
+    if (pendingStream) return;
     let cancelled = false;
     (async () => {
       const result = await withTimeout(
@@ -743,19 +810,19 @@ export default function PlayerOverlay() {
 
   useEffect(() => {
     if (stallTimer.current) clearTimeout(stallTimer.current);
-    if (!buffering || paused || ended || error || switching) return;
+    if (pendingStream || !buffering || paused || ended || error || switching) {
+      return;
+    }
     const startedAt = currentTime;
     stallTimer.current = setTimeout(() => {
       if (!mountedRef.current || pausedRef.current) return;
       if (Math.abs(currentTimeRef.current - startedAt) > 1) return;
-      setBuffering(false);
-      setError({
-        message:
-          "This stream did not start. The server may be unavailable — pick another server or retry.",
+      handlePlaybackFailureRef.current({
+        error: {
+          errorString:
+            "This stream did not start. The server may be unavailable.",
+        },
       });
-      setFailedStreams((previous) => ({ ...previous, [streamIndex]: true }));
-      wake(true);
-      showToast("This server is not responding — pick another server");
     }, 20000);
     return () => {
       if (stallTimer.current) clearTimeout(stallTimer.current);
@@ -768,6 +835,7 @@ export default function PlayerOverlay() {
     switching,
     currentTime,
     streamIndex,
+    pendingStream,
     wake,
     showToast,
   ]);
@@ -787,8 +855,8 @@ export default function PlayerOverlay() {
           ScreenOrientation.OrientationLock.PORTRAIT_UP,
         ).catch(() => {});
       }
-      if (Platform.OS === "android" && NavigationBar?.setHidden) {
-        NavigationBar.setHidden(false).catch(() => {});
+      if (Platform.OS === "android") {
+        setNavBarVisibility(false);
       }
       return;
     }
@@ -798,29 +866,31 @@ export default function PlayerOverlay() {
       ScreenOrientation.unlockAsync().catch(() => {});
     }
     setOrientationLocked(false);
-    if (Platform.OS === "android" && NavigationBar?.setHidden) {
-      // Immersive fullscreen: hide the system navigation bar while the
-      // player is expanded and restore it when the effect cleans up.
-      NavigationBar.setHidden(true).catch(() => {});
-    }
+    setNavBarVisibility(true);
     return () => {
-      if (Platform.OS === "android" && NavigationBar?.setHidden) {
-        NavigationBar.setHidden(false).catch(() => {});
-      }
+      setNavBarVisibility(false);
     };
-  }, [expanded, wake]);
+  }, [expanded, wake, setNavBarVisibility]);
 
   // Re-hide the navigation bar when the app returns from background while
   // the fullscreen player is still up (Android restores system bars).
   useEffect(() => {
     if (Platform.OS !== "android") return;
+    let timer: ReturnType<typeof setTimeout> | null = null;
     const subscription = AppState.addEventListener("change", (state) => {
-      if (state === "active" && expandedRef.current && NavigationBar?.setHidden) {
-        NavigationBar.setHidden(true).catch(() => {});
-      }
+      if (state !== "active") return;
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        if (mountedRef.current && expandedRef.current) {
+          setNavBarVisibility(true);
+        }
+      }, 100);
     });
-    return () => subscription.remove();
-  }, []);
+    return () => {
+      if (timer) clearTimeout(timer);
+      subscription.remove();
+    };
+  }, [setNavBarVisibility]);
 
   // Keep the zoomed frame inside the screen when the dimensions change
   // (rotation), clamping to the new bounds without dropping the zoom level.
@@ -999,18 +1069,51 @@ export default function PlayerOverlay() {
 
   const handleError = (event: any) => {
     setBuffering(false);
-    const message =
+    const message = String(
       event?.error?.errorString ||
-      event?.error?.localizedDescription ||
-      event?.error?.errorException ||
-      "Playback failed";
-    setError({ message: String(message).slice(0, 220) });
+        event?.error?.localizedDescription ||
+        event?.error?.errorException ||
+        "Playback failed",
+    ).slice(0, 220);
+
+    // Stage 1: one silent retry, which covers transient decoder/network
+    // failures without bothering the user.
+    if (!autoRetriedRef.current) {
+      autoRetriedRef.current = true;
+      setBuffering(true);
+      setLoadNonce((value) => value + 1);
+      wake(true);
+      showToast("Stream hiccup — retrying this server…");
+      return;
+    }
+
+    // Stage 2: move to the next server that has not failed yet.
+    const positions = [
+      ...normalizedStreams.map((_, index) => index).filter(
+        (index) => index > streamIndex,
+      ),
+      ...normalizedStreams.map((_, index) => index).filter(
+        (index) => index < streamIndex,
+      ),
+    ];
+    const nextIndex = positions.find((index) => !failedStreams[index]);
+    if (!switching && nextIndex != null && normalizedStreams[nextIndex]?.link) {
+      setFailedStreams((previous) => ({ ...previous, [streamIndex]: true }));
+      showToast("This server failed — switching to another…");
+      wake(true);
+      void switchStream(nextIndex);
+      return;
+    }
+
+    // Stage 3: nothing left to try; surface the error and let the user pick.
+    setError({ message });
     setFailedStreams((previous) => ({ ...previous, [streamIndex]: true }));
     wake(true);
     if (normalizedStreams.length > 1) {
-      showToast("This server failed — pick another server to continue");
+      showToast("All servers failed — choose one manually");
     }
   };
+  handlePlaybackFailureRef.current = handleError;
 
   const prepareForStream = async (index: number) => {
     const targetStream = normalizedStreams[index];
@@ -1035,6 +1138,7 @@ export default function PlayerOverlay() {
     setPanel(null);
     setSwitching(true);
     setError(null);
+    autoRetriedRef.current = false;
     const position = currentTimeRef.current;
     const previousSubtitle = subtitleRef.current;
     try {
@@ -1085,6 +1189,7 @@ export default function PlayerOverlay() {
 
   const retryStream = () => {
     setError(null);
+    autoRetriedRef.current = false;
     pendingSeekRef.current = currentTimeRef.current;
     setBuffering(true);
     setFailedStreams((previous) => {
@@ -1127,8 +1232,10 @@ export default function PlayerOverlay() {
 
   const minimizeAndBack = () => {
     saveProgress();
-    minimize();
-    goBack();
+    closePlayer();
+    if (currentRouteName() !== "Player" || !goBack()) {
+      navigate("Home");
+    }
   };
 
   const stopPlayback = () => {
@@ -1712,10 +1819,12 @@ export default function PlayerOverlay() {
     <View style={rootStyle as any} pointerEvents="auto">
       <StatusBar hidden={expanded} />
       <View style={StyleSheet.absoluteFill}>
-        {preparedSubs === null ? (
+        {preparedSubs === null || pendingStream ? (
           <View style={styles.loadingScreen}>
             <ActivityIndicator size="large" color="#fff" />
-            <Text style={styles.loadingText}>Preparing stream…</Text>
+            <Text style={styles.loadingText}>
+              {pendingStream ? "Starting stream…" : "Preparing stream…"}
+            </Text>
           </View>
         ) : (
           <Animated.View
@@ -1791,7 +1900,14 @@ export default function PlayerOverlay() {
             style={styles.gestureLayer}
             pointerEvents={locked ? "none" : "auto"}
             {...(locked ? {} : panResponder.panHandlers)}
-            onTouchStart={locked ? undefined : handleZoomTouches}
+            onTouchStart={
+              locked
+                ? undefined
+                : (e) => {
+                    handleZoomTouches(e);
+                    hideNavBarSoon();
+                  }
+            }
             onTouchMove={locked ? undefined : handleZoomTouches}
             onTouchEnd={(e) => {
               handleZoomTouches(e);
@@ -2371,7 +2487,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
   },
-  gestureLayer: { ...absoluteFillStyle, zIndex: 10 },
+  gestureLayer: { ...absoluteFillStyle },
   subtitleLayer: {
     position: "absolute",
     left: 0,

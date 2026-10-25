@@ -2,7 +2,7 @@ import { Alert } from "react-native";
 import { Directory, File, FileMode, Paths } from "expo-file-system";
 import * as Network from "expo-network";
 import { providerApi } from "@/lib/providerApi";
-import { selectPlaybackStreams } from "@/lib/streams";
+import { PlayableStream, selectPlaybackStreams } from "@/lib/streams";
 import { DEFAULT_UA } from "@/services/SandboxManager";
 import {
   DownloadJob,
@@ -101,6 +101,69 @@ const abortError = () => {
 const assertNotAborted = (signal: AbortSignal) => {
   if (signal.aborted) throw abortError();
 };
+
+const delay = (ms: number, signal: AbortSignal) =>
+  new Promise<void>((resolve, reject) => {
+    if (signal.aborted) {
+      reject(abortError());
+      return;
+    }
+    const onAbort = () => {
+      clearTimeout(timer);
+      reject(abortError());
+    };
+    const timer = setTimeout(() => {
+      signal.removeEventListener("abort", onAbort);
+      resolve();
+    }, ms);
+    signal.addEventListener("abort", onAbort, { once: true });
+  });
+
+// Keep provider errors in logs without leaking signed URLs or headers.
+const safeErrorText = (error: any) =>
+  String(error?.message || error || "Unknown error")
+    .replace(/https?:\/\/\S+/gi, "<url>")
+    .slice(0, 200);
+
+const PROVIDER_STREAM_ATTEMPTS = 3;
+const PROVIDER_RETRY_BASE_MS = 2000;
+
+async function resolveProviderStreams(
+  job: DownloadJob,
+  id: string,
+  signal: AbortSignal,
+): Promise<any> {
+  let lastError: any = null;
+  for (let attempt = 1; attempt <= PROVIDER_STREAM_ATTEMPTS; attempt++) {
+    try {
+      const data = await providerApi.getStream(
+        job.providerId,
+        job.link,
+        job.type || "movie",
+      );
+      assertNotAborted(signal);
+      return data;
+    } catch (error) {
+      if (signal.aborted) throw error;
+      lastError = error;
+      console.warn(
+        `[downloads] provider ${job.providerId || "unknown"} stream lookup failed ` +
+          `(${attempt}/${PROVIDER_STREAM_ATTEMPTS}): ${safeErrorText(error)}`,
+      );
+      if (attempt === PROVIDER_STREAM_ATTEMPTS) break;
+      useDownloadsStore.getState().patchJob(id, {
+        status: "downloading",
+        progress: 0,
+      });
+      await delay(PROVIDER_RETRY_BASE_MS * attempt, signal);
+    }
+  }
+  throw new Error(
+    `Could not reach this provider after ${PROVIDER_STREAM_ATTEMPTS} attempts: ${safeErrorText(
+      lastError,
+    )}`,
+  );
+}
 
 const networkAllowsDownload = async (): Promise<StartResult> => {
   const prefs = usePreferencesStore.getState();
@@ -554,58 +617,71 @@ const ensureVerified = (file: File, expectedBytes?: number) => {
 async function runJob(id: string) {
   const store = useDownloadsStore.getState();
   const job = store.jobs.find((item) => item.id === id);
-  if (!job || job.status !== "queued") return;
-
-  const allowed = await networkAllowsDownload();
-  if (!allowed.ok) {
-    store.patchJob(id, {
-      status: "error",
-      error: allowed.error,
-    });
-    return;
-  }
-
-  const controller = new AbortController();
-  abortControllers.set(id, controller);
-  if (cancelRequested.has(id)) controller.abort();
-  store.patchJob(id, {
-    status: "downloading",
-    error: undefined,
-    progress: 0,
-    bytesReceived: 0,
-    bytesTotal: 0,
-    segmentsDone: undefined,
-    segmentsTotal: undefined,
-  });
-
+  let controller: AbortController | null = null;
   let createdFile: File | null = null;
   let hlsTempDir: Directory | null = null;
 
   try {
-    assertNotAborted(controller.signal);
-    const prefs = usePreferencesStore.getState();
-    const data: any = await providerApi.getStream(
-      job.providerId,
-      job.link,
-      job.type || "movie",
-    );
-    assertNotAborted(controller.signal);
+    if (!job || job.status !== "queued") return;
 
-    const streams: any[] = Array.isArray(data) ? data : data ? [data] : [];
-    // Pick a verified candidate instead of blindly using the first URL; this
-    // also applies the best/smallest quality preference to separate-quality
-    // servers. HLS variants are still selected inside downloadHls.
-    const selection = await selectPlaybackStreams(streams, {
-      preference:
-        prefs.downloadQuality === "smallest" ? "lowest" : "highest",
-      signal: controller.signal,
-      budgetMs: 7000,
-      includeDownloadOnly: true,
+    const allowed = await networkAllowsDownload();
+    if (!allowed.ok) {
+      store.patchJob(id, {
+        status: "error",
+        error: allowed.error,
+      });
+      return;
+    }
+
+    controller = new AbortController();
+    abortControllers.set(id, controller);
+    if (cancelRequested.has(id)) controller.abort();
+    store.patchJob(id, {
+      status: "downloading",
+      error: undefined,
+      progress: 0,
+      bytesReceived: 0,
+      bytesTotal: 0,
+      segmentsDone: undefined,
+      segmentsTotal: undefined,
     });
-    assertNotAborted(controller.signal);
-    const chosen =
-      selection.streams[selection.startIndex] || selection.streams[0];
-    if (!chosen) throw new Error("This provider returned no playable stream.");
+
+    const signal = controller.signal;
+    assertNotAborted(signal);
+    const prefs = usePreferencesStore.getState();
+
+    let chosen: {
+      link: string;
+      headers?: Record<string, string>;
+      format?: string;
+    };
+    if (job.direct?.link) {
+      // The user picked this exact stream in the quality sheet; downloading it
+      // directly avoids a second provider round-trip.
+      chosen = job.direct;
+    } else {
+      const data = await resolveProviderStreams(job, id, signal);
+      const streams: any[] = Array.isArray(data) ? data : data ? [data] : [];
+      // Pick a verified candidate instead of blindly using the first URL; this
+      // also applies the best/smallest quality preference to separate-quality
+      // servers. HLS variants are still selected inside downloadHls.
+      const selection = await selectPlaybackStreams(streams, {
+        preference:
+          prefs.downloadQuality === "smallest" ? "lowest" : "highest",
+        signal,
+        budgetMs: 7000,
+        includeDownloadOnly: true,
+      });
+      assertNotAborted(signal);
+      const picked =
+        selection.streams[selection.startIndex] || selection.streams[0];
+      if (!picked) throw new Error("This provider returned no playable stream.");
+      chosen = {
+        link: picked.link,
+        headers: picked.headers,
+        format: picked.format,
+      };
+    }
 
     const url = chosen.link;
     if (chosen.format === "dash") {
@@ -699,7 +775,7 @@ async function runJob(id: string) {
       });
     }
   } catch (error: any) {
-    const cancelled = controller.signal.aborted;
+    const cancelled = controller?.signal.aborted ?? false;
     if (cancelled) {
       const current = useDownloadsStore
         .getState()
@@ -717,10 +793,16 @@ async function runJob(id: string) {
       }
       deleteQuietly(createdFile);
     } else {
+      console.warn(
+        `[downloads] job ${id.slice(0, 24)} failed (${job?.providerId || "unknown"}): ${safeErrorText(
+          error,
+        )}`,
+      );
       deleteQuietly(createdFile);
       useDownloadsStore.getState().patchJob(id, {
         status: "error",
         error: error?.message || "Download failed.",
+        progress: 0,
       });
     }
   } finally {
@@ -729,6 +811,10 @@ async function runJob(id: string) {
         if (hlsTempDir.exists) hlsTempDir.delete();
       } catch {}
     }
+    abortControllers.delete(id);
+    cancelRequested.delete(id);
+    running.delete(id);
+    pumpQueue();
   }
 }
 
@@ -739,14 +825,7 @@ function pumpQueue() {
     const job = useDownloadsStore.getState().jobs.find((item) => item.id === id);
     if (!job || job.status !== "queued") continue;
     running.add(id);
-    void runJob(id)
-      .catch(() => {})
-      .finally(() => {
-        abortControllers.delete(id);
-        cancelRequested.delete(id);
-        running.delete(id);
-        pumpQueue();
-      });
+    void runJob(id).catch(() => {});
   }
 }
 
@@ -761,6 +840,8 @@ type StartOptions = {
   providerId: string;
   type?: string;
   image?: string;
+  /** Stream picked in the quality sheet; downloaded without re-resolving. */
+  stream?: PlayableStream;
 };
 
 export async function startDownload(
@@ -801,6 +882,13 @@ export async function startDownload(
     progress: 0,
     bytesReceived: 0,
     bytesTotal: 0,
+    direct: options.stream
+      ? {
+          link: options.stream.link,
+          headers: options.stream.headers,
+          format: options.stream.format,
+        }
+      : undefined,
     storage: useCustom ? "custom" : "app",
     storageUri: useCustom ? prefs.downloadDirectoryUri! : undefined,
     createdAt: Date.now(),

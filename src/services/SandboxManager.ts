@@ -20,8 +20,8 @@ const EXECUTION_TIMEOUT_MS = 30000;
 
 // Per-request ceiling when the provider does not set its own timeout, so a
 // single hung connection cannot silently consume the whole execution budget.
-const DEFAULT_REQUEST_TIMEOUT_MS = 20000;
-const MAX_REQUEST_RETRIES = 2;
+const DEFAULT_REQUEST_TIMEOUT_MS = 10000;
+const MAX_REQUEST_RETRIES = 1;
 const RETRIABLE_STATUS = new Set([408, 425, 429, 500, 502, 503, 504]);
 
 // Fallback for providers that send no User-Agent — native fetch would

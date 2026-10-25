@@ -20,6 +20,7 @@ const OUT_DIR = path.join(ROOT, "src", "providers", "bundles");
 const REGISTRY_FILE = path.join(ROOT, "src", "providers", "registry.js");
 const REGISTRY_TYPES = path.join(ROOT, "src", "providers", "registry.d.ts");
 const CRYPTO_SHIM = path.join(ROOT, "src", "providers", "shims", "nodeCrypto.js");
+const SAFE_CONSOLE = path.join(ROOT, "src", "providers", "shims", "safeConsole.js");
 
 // Merged into a single bundle per provider, in export-merge order.
 const MODULES = ["catalog", "posts", "meta", "stream", "episodes"];
@@ -60,7 +61,30 @@ function discoverProviders(srcDir, only) {
     .sort();
 }
 
-function buildProvider(name, srcDir, minify) {
+// Provider code logs raw extraction results, including signed CDN URLs and
+// tokens. esbuild's `inject` refuses `console` (it is a known global) and
+// `define` runs after injection, so shadow it in every provider module as it
+// is loaded. The shim is bundled like any other import and scrubs URLs,
+// credential query parameters, and auth/cookie headers before logcat sees them.
+function safeConsolePlugin(srcDir) {
+  const root = path.resolve(srcDir) + path.sep;
+  return {
+    name: "safe-console",
+    setup(build) {
+      build.onLoad({ filter: /\.(ts|tsx|js|mjs|cjs)$/ }, (args) => {
+        if (!args.path.startsWith(root)) return null;
+        const source = fs.readFileSync(args.path, "utf8");
+        return {
+          contents: `const console = require(${JSON.stringify(SAFE_CONSOLE)}).console;\n${source}`,
+          loader: /\.tsx?$/.test(args.path) ? "ts" : "js",
+          resolveDir: path.dirname(args.path),
+        };
+      });
+    },
+  };
+}
+
+async function buildProvider(name, srcDir, minify) {
   const providerPath = path.join(srcDir, name);
   const present = MODULES.filter((mod) =>
     fs.existsSync(path.join(providerPath, `${mod}.ts`)),
@@ -73,7 +97,7 @@ function buildProvider(name, srcDir, minify) {
     .map((mod) => `Object.assign(exports, require('./${mod}.ts'));`)
     .join("\n");
 
-  const result = esbuild.buildSync({
+  const result = await esbuild.build({
     stdin: { contents, resolveDir: providerPath, sourcefile: `${name}.entry.js` },
     bundle: true,
     write: false,
@@ -82,6 +106,7 @@ function buildProvider(name, srcDir, minify) {
     target: "es2015",
     external: [],
     alias: { crypto: CRYPTO_SHIM },
+    plugins: [safeConsolePlugin(srcDir)],
     minify,
     legalComments: "none",
     logLevel: "silent",
@@ -158,7 +183,7 @@ export declare function load(id: string): Record<string, any>;
   );
 }
 
-function main() {
+async function main() {
   const opts = parseArgs(process.argv);
   const srcDir = path.resolve(opts.src);
   const minify = !opts.dev;
@@ -177,7 +202,7 @@ function main() {
 
   for (const name of names) {
     try {
-      const built = buildProvider(name, srcDir, minify);
+      const built = await buildProvider(name, srcDir, minify);
       if (!built) {
         console.log(`⏭  skipped (no modules): ${name}`);
         continue;
@@ -218,4 +243,7 @@ function main() {
   }
 }
 
-main();
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

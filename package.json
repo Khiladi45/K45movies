@@ -10,7 +10,8 @@
     "build:providers": "node scripts/build-providers.js",
     "build:providers:dev": "node scripts/build-providers.js --dev",
     "start": "expo start",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@8man/react-native-media-console": "^2.2.4-alpha.35",

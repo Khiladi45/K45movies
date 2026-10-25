@@ -25,6 +25,12 @@ export type DownloadStatus =
   | "error"
   | "cancelled";
 
+export type DownloadDirectSource = {
+  link: string;
+  headers?: Record<string, string>;
+  format?: string;
+};
+
 export type DownloadJob = {
   id: string;
   link: string;
@@ -41,6 +47,8 @@ export type DownloadJob = {
   error?: string;
   /** Playable local URI (file:// or content:// from the chosen folder). */
   fileUri?: string;
+  /** Quality picked in the download sheet; skips re-resolving the provider. */
+  direct?: DownloadDirectSource;
   storage: "app" | "custom";
   /** Folder URI captured when the download started. */
   storageUri?: string;
@@ -95,6 +103,7 @@ const normalizeJob = (job: Partial<DownloadJob>): DownloadJob | null => {
     segmentsTotal: job.segmentsTotal,
     error,
     fileUri: job.fileUri,
+    direct: job.direct,
     storage: job.storage === "custom" ? "custom" : "app",
     storageUri: job.storageUri,
     createdAt: job.createdAt || Date.now(),

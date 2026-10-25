@@ -43,7 +43,8 @@
         }
       ],
       "expo-image",
-      "expo-font"
+      "expo-font",
+      "./plugins/with-video-decoder"
     ],
     "extra": {
       "eas": {

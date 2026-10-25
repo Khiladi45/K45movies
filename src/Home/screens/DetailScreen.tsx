@@ -3,6 +3,9 @@ import {
   View,
   Text,
   Image,
+  Alert,
+  Modal,
+  Pressable,
   TouchableOpacity,
   ScrollView,
   StyleSheet,
@@ -22,7 +25,13 @@ import { useProviderStore } from "@/store/useProviderStore";
 import { useWatchlistStore } from "@/store/useWatchlistStore";
 import { useThemeStore } from "@/store/useThemeStore";
 import { usePreferencesStore } from "@/store/usePreferencesStore";
-import { selectPlaybackStreams } from "@/lib/streams";
+import {
+  normalizeStreams,
+  selectPlaybackStreams,
+  type PlayableStream,
+} from "@/lib/streams";
+import { providerApi } from "@/lib/providerApi";
+import { currentRouteName, goBack } from "@/navigation/navigationRef";
 import SeasonList, { LinkItem } from "@/components/SeasonList";
 import DownloadButton from "@/components/DownloadButton";
 import Skeleton from "@/components/Skeleton";
@@ -198,6 +207,18 @@ const formatRuntime = (val?: string | number) => {
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
 };
 
+const formatStreamSize = (stream: PlayableStream) => {
+  const raw = stream.raw || {};
+  const value = raw.size ?? raw.sizeBytes ?? raw.filesize ?? raw.fileSize;
+  if (typeof value === "number" && value > 0) {
+    return value >= 1024 ** 3
+      ? `${(value / 1024 ** 3).toFixed(2)} GB`
+      : `${Math.round(value / 1024 ** 2)} MB`;
+  }
+  if (typeof value === "string" && value.trim()) return value.trim();
+  return "";
+};
+
 export default function DetailScreen({ route, navigation }: any) {
   const insets = useSafeAreaInsets();
   const [rated, setRated] = useState(false);
@@ -263,6 +284,27 @@ export default function DetailScreen({ route, navigation }: any) {
     refetch: refetchPendingEpisodes,
   } = useEpisodes(providerId, pendingEpisodesUrl);
 
+  // When the provider fails after the placeholder player already opened, the
+  // spinner would otherwise stay on screen forever with the error hidden
+  // behind it. Close the pending player and surface the failure here.
+  const failPendingStart = useCallback(
+    (message: string) => {
+      setStarting(null);
+      setPlaybackError(message);
+      const playerState = usePlayerStore.getState();
+      if (
+        playerState.currentVideoUrl === "pending://stream" &&
+        playerState.playerMeta?.link === streamLink
+      ) {
+        playerState.close();
+        if (currentRouteName() === "Player" && !goBack()) {
+          navigation.navigate("Home" as never);
+        }
+      }
+    },
+    [navigation, streamLink],
+  );
+
   const startPlayback = useCallback(
     (link: string, type: string, source: StartSource) => {
       if (!link || startInFlight.current || launchingRef.current) return;
@@ -270,11 +312,24 @@ export default function DetailScreen({ route, navigation }: any) {
       setPlaybackError(null);
       setStarting({ link, source, stage: "Preparing stream…" });
       lastAttempt.current = { kind: "stream", link, type, source };
+      // Open the player immediately with a placeholder; the real stream
+      // replaces it when the provider resolves.
+      setVideo("pending://stream", [], 0, {
+        title: meta?.title || movie.title,
+        episode: type === "series" ? "Now Playing" : undefined,
+        link,
+        providerId,
+        type,
+        image: meta?.poster || meta?.image || movie.image,
+      });
+      if (navigation.isFocused()) {
+        navigation.navigate("Player");
+      }
       setStreamLink(link);
       setStreamType(type);
       setShouldFetchStream(true);
     },
-    [],
+    [meta, movie, navigation, setVideo, providerId],
   );
 
   useEffect(() => {
@@ -353,8 +408,7 @@ export default function DetailScreen({ route, navigation }: any) {
         const { data, error } = await fetchStream();
         if (!mountedRef.current || controller.signal.aborted) return;
         if (error || !data) {
-          setStarting(null);
-          setPlaybackError(
+          failPendingStart(
             error instanceof Error
               ? error.message
               : "Could not get a playable stream from this provider.",
@@ -368,11 +422,12 @@ export default function DetailScreen({ route, navigation }: any) {
         const selection = await selectPlaybackStreams(streams, {
           preference: usePreferencesStore.getState().defaultQuality,
           signal: controller.signal,
+          budgetMs: 3000,
+          probeTimeoutMs: 2600,
         });
         if (!mountedRef.current || controller.signal.aborted) return;
         if (selection.streams.length === 0) {
-          setStarting(null);
-          setPlaybackError(
+          failPendingStart(
             selection.skippedDownloadOnly > 0
               ? "This provider only offers download-only servers. Use Download to save it for offline playback."
               : "This provider returned no playable stream.",
@@ -381,6 +436,16 @@ export default function DetailScreen({ route, navigation }: any) {
         }
         const chosen =
           selection.streams[selection.startIndex] || selection.streams[0];
+        const playerState = usePlayerStore.getState();
+        if (
+          playerState.currentVideoUrl !== "pending://stream" ||
+          playerState.playerMeta?.link !== streamLink
+        ) {
+          // The user closed or replaced the pending player while the provider
+          // was resolving; do not hijack whatever is on screen now.
+          setStarting(null);
+          return;
+        }
         setPlaybackError(null);
         setVideo(chosen.link, selection.streams, selection.startIndex, {
           title: meta?.title || movie.title,
@@ -396,8 +461,7 @@ export default function DetailScreen({ route, navigation }: any) {
         }
       } catch (err) {
         if (!mountedRef.current || controller.signal.aborted) return;
-        setStarting(null);
-        setPlaybackError(
+        failPendingStart(
           err instanceof Error
             ? err.message
             : "Could not start playback for this stream.",
@@ -422,6 +486,7 @@ export default function DetailScreen({ route, navigation }: any) {
     meta,
     movie,
     providerId,
+    failPendingStart,
   ]);
 
   const filteredLinkList: LinkItem[] = useMemo(() => {
@@ -479,6 +544,56 @@ export default function DetailScreen({ route, navigation }: any) {
     setStarting({ link: attempt.link, source: "watch" });
     void refetchPendingEpisodes();
   };
+
+  // ── Download quality picker ───────────────────────────────────────────
+  const downloadPickerResolve = useRef<
+    ((stream: PlayableStream | null) => void) | null
+  >(null);
+  const downloadPickerBusy = useRef(false);
+  const [downloadStreams, setDownloadStreams] = useState<
+    PlayableStream[] | null
+  >(null);
+
+  const closeDownloadPicker = (stream: PlayableStream | null) => {
+    downloadPickerResolve.current?.(stream);
+    downloadPickerResolve.current = null;
+    setDownloadStreams(null);
+  };
+
+  const pickDownloadStream = useCallback(async () => {
+    if (downloadPickerBusy.current) return null;
+    downloadPickerBusy.current = true;
+    try {
+      const type =
+        (meta?.type || movie.type) === "series" ? "series" : "movie";
+      const data = await providerApi.getStream(providerId, movie.link, type);
+      const normalized = normalizeStreams(
+        Array.isArray(data) ? data : data ? [data] : [],
+      );
+      const playable = normalized.filter((stream) => !stream.downloadOnly);
+      const list = playable.length > 0 ? playable : normalized;
+      if (list.length === 0) {
+        Alert.alert(
+          "Download unavailable",
+          "This provider returned no downloadable stream.",
+        );
+        return null;
+      }
+      if (list.length === 1) return list[0];
+      return await new Promise<PlayableStream | null>((resolve) => {
+        downloadPickerResolve.current = resolve;
+        setDownloadStreams(list);
+      });
+    } catch (error: any) {
+      Alert.alert(
+        "Download unavailable",
+        error?.message || "Could not load the available qualities.",
+      );
+      return null;
+    } finally {
+      downloadPickerBusy.current = false;
+    }
+  }, [meta?.type, movie.link, movie.type, providerId]);
 
   const handleToggleWatchlist = () => {
     toggleWatchlist({
@@ -743,6 +858,7 @@ export default function DetailScreen({ route, navigation }: any) {
                 type={meta.type || movie.type}
                 image={poster}
                 label="Download"
+                resolveDownloadStream={pickDownloadStream}
               />
             </View>
             <TouchableOpacity
@@ -799,6 +915,70 @@ export default function DetailScreen({ route, navigation }: any) {
           />
         </TouchableOpacity>
       </View>
+
+      <Modal
+        visible={downloadStreams !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => closeDownloadPicker(null)}
+      >
+        <Pressable
+          style={modalStyles.backdrop}
+          onPress={() => closeDownloadPicker(null)}
+        >
+          <Pressable style={modalStyles.sheet} onPress={() => {}}>
+            <Text style={modalStyles.title}>Choose download quality</Text>
+            <Text style={modalStyles.subtitle} numberOfLines={1}>
+              {meta.title || movie.title}
+            </Text>
+            <ScrollView
+              style={modalStyles.list}
+              showsVerticalScrollIndicator={false}
+            >
+              {(downloadStreams || []).map((stream, index) => (
+                <TouchableOpacity
+                  key={`${stream.link}-${index}`}
+                  style={modalStyles.row}
+                  activeOpacity={0.75}
+                  onPress={() => closeDownloadPicker(stream)}
+                >
+                  <View
+                    style={[modalStyles.badge, { borderColor: primaryColor }]}
+                  >
+                    <Text
+                      style={[modalStyles.badgeText, { color: primaryColor }]}
+                    >
+                      {stream.qualityLabel ||
+                        (stream.height ? `${stream.height}p` : "Source")}
+                    </Text>
+                  </View>
+                  <View style={modalStyles.rowText}>
+                    <Text style={modalStyles.rowTitle} numberOfLines={1}>
+                      {stream.server || "Server"}
+                    </Text>
+                    <Text style={modalStyles.rowDetail} numberOfLines={1}>
+                      {[stream.formatLabel, formatStreamSize(stream)]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </Text>
+                  </View>
+                  <Ionicons
+                    name="download-outline"
+                    size={20}
+                    color={primaryColor}
+                  />
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <TouchableOpacity
+              style={modalStyles.cancel}
+              onPress={() => closeDownloadPicker(null)}
+            >
+              <Text style={modalStyles.cancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -955,4 +1135,64 @@ const styles = StyleSheet.create({
   actionLabel: { color: "#B3B3B3", fontSize: 12, marginTop: 6 },
 
   contentSection: { paddingHorizontal: 16 },
+});
+
+const modalStyles = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.66)",
+    justifyContent: "flex-end",
+  },
+  sheet: {
+    backgroundColor: "#1b1b1b",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingHorizontal: 16,
+    paddingTop: 18,
+    paddingBottom: 26,
+    borderTopWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+  },
+  title: {
+    color: "#fff",
+    fontSize: 17,
+    fontWeight: "800",
+    textAlign: "center",
+  },
+  subtitle: {
+    color: "#8a8a8a",
+    fontSize: 12,
+    textAlign: "center",
+    marginTop: 4,
+    marginBottom: 12,
+  },
+  list: { maxHeight: 360 },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 11,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "rgba(255,255,255,0.08)",
+  },
+  badge: {
+    minWidth: 62,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    alignItems: "center",
+  },
+  badgeText: { fontSize: 12, fontWeight: "800" },
+  rowText: { flex: 1 },
+  rowTitle: { color: "#f0f0f0", fontSize: 14, fontWeight: "700" },
+  rowDetail: { color: "#8a8a8a", fontSize: 11.5, marginTop: 2 },
+  cancel: {
+    marginTop: 14,
+    paddingVertical: 12,
+    alignItems: "center",
+    borderRadius: 10,
+    backgroundColor: "rgba(255,255,255,0.06)",
+  },
+  cancelText: { color: "#ddd", fontSize: 14, fontWeight: "700" },
 });
