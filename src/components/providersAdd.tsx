@@ -75,12 +75,17 @@ export default function AddProviders() {
   const withOpacity = (hex: string, opacityHex: string) =>
     `${hex}${opacityHex}`;
 
-  const filteredProviders =
-    providers?.filter((provider: any) =>
+  const filteredProviders = (providers || [])
+    .filter((provider: any) =>
       provider.display_name
         ?.toLowerCase()
         ?.includes(searchQuery?.toLowerCase()),
-    ) || [];
+    )
+    .sort((a: any, b: any) => {
+      const left = String(a.display_name || a.value || "").toLowerCase();
+      const right = String(b.display_name || b.value || "").toLowerCase();
+      return left < right ? -1 : left > right ? 1 : 0;
+    });
 
   const installedCount = installedProviders?.length;
   const availableCount = Math.max((providers?.length ?? 0) - installedCount, 0);

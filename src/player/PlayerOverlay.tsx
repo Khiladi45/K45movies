@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Animated,
   AppState,
+  BackHandler,
   DeviceEventEmitter,
   PanResponder,
   Platform,
@@ -361,8 +362,16 @@ export default function PlayerOverlay() {
     null,
   );
   const [loadNonce, setLoadNonce] = useState(0);
+  // TextureView keeps pinch-zoom working, but some devices cannot init a 4K /
+  // HDR / Dolby Vision decoder on it. Streams that fail that way are retried on
+  // a SurfaceView (native HDR/4K path) and remembered for this session.
+  const [surfaceStreams, setSurfaceStreams] = useState<Record<number, boolean>>({});
   const [switching, setSwitching] = useState(false);
   const [buffering, setBuffering] = useState(true);
+  // A loaded stream can still show nothing: ExoPlayer reports buffering=false
+  // while the first decoder output never arrives, which used to leave a silent
+  // black 0:00 screen. Track whether a frame actually reached the surface.
+  const [hasRendered, setHasRendered] = useState(false);
   const [paused, setPaused] = useState(false);
   const [ended, setEnded] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -406,6 +415,7 @@ export default function PlayerOverlay() {
 
   const playerRef = useRef<any>(null);
   const autoRetriedRef = useRef(false);
+  const hasRenderedRef = useRef(false);
   const handlePlaybackFailureRef = useRef<(event: any) => void>(() => {});
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const stallTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -563,7 +573,13 @@ export default function PlayerOverlay() {
         const tags: number[] = Array.isArray(event?.viewTags)
           ? event.viewTags
           : [];
-        const handle = findNodeHandle(playerRef.current);
+        // react-native-video's ref is not a host component under Fabric, so
+        // findNodeHandle throws; without a tag the event still belongs to the
+        // only active player, so fall through and show the toast.
+        let handle: number | null = null;
+        try {
+          handle = findNodeHandle(playerRef.current);
+        } catch {}
         if (tags.length > 0 && handle != null && !tags.includes(handle)) return;
         showToast("Hardware decoder unavailable — switched to software");
       },
@@ -810,20 +826,25 @@ export default function PlayerOverlay() {
 
   useEffect(() => {
     if (stallTimer.current) clearTimeout(stallTimer.current);
-    if (pendingStream || !buffering || paused || ended || error || switching) {
+    if (pendingStream || preparedSubs === null || paused || ended || error || switching) {
       return;
     }
-    const startedAt = currentTime;
+    const startedAt = currentTimeRef.current;
+    // Before the first frame the server gets a shorter window; mid-playback a
+    // stall is retried later so a short rebuffer is not treated as a failure.
+    const timeout = hasRenderedRef.current ? 30000 : 20000;
     stallTimer.current = setTimeout(() => {
       if (!mountedRef.current || pausedRef.current) return;
       if (Math.abs(currentTimeRef.current - startedAt) > 1) return;
       handlePlaybackFailureRef.current({
+        __k45Stall: true,
         error: {
-          errorString:
-            "This stream did not start. The server may be unavailable.",
+          errorString: hasRenderedRef.current
+            ? "This stream stopped responding."
+            : "This server did not start the video.",
         },
       });
-    }, 20000);
+    }, timeout);
     return () => {
       if (stallTimer.current) clearTimeout(stallTimer.current);
     };
@@ -836,8 +857,8 @@ export default function PlayerOverlay() {
     currentTime,
     streamIndex,
     pendingStream,
-    wake,
-    showToast,
+    preparedSubs,
+    hasRendered,
   ]);
 
   useEffect(() => {
@@ -939,6 +960,8 @@ export default function PlayerOverlay() {
     setDuration(total);
     setBuffering(false);
     setEnded(false);
+    hasRenderedRef.current = false;
+    setHasRendered(false);
     if (incomingAudio.length) setAudioTracks(incomingAudio);
     if (incomingVideo.length) setVideoTracks(incomingVideo);
     if (incomingText.length) setEmbeddedTextTracks(incomingText);
@@ -1055,6 +1078,10 @@ export default function PlayerOverlay() {
       Number(data?.seekableDuration) || durationRef.current || 0;
     currentTimeRef.current = time;
     durationRef.current = total;
+    if (time > 0.2 && !hasRenderedRef.current) {
+      hasRenderedRef.current = true;
+      setHasRendered(true);
+    }
 
     const now = Date.now();
     if (now - lastUiTick.current > 400) {
@@ -1076,10 +1103,70 @@ export default function PlayerOverlay() {
         "Playback failed",
     ).slice(0, 220);
 
+    // Watchdog: the stream loaded but is not sending video. Reloading the same
+    // dead URL only wastes another timeout, so jump to the next server.
+    if (event?.__k45Stall) {
+      const positions = [
+        ...normalizedStreams.map((_, index) => index).filter(
+          (index) => index > streamIndex,
+        ),
+        ...normalizedStreams.map((_, index) => index).filter(
+          (index) => index < streamIndex,
+        ),
+      ];
+      const nextIndex = positions.find(
+        (index) => !failedStreams[index] && normalizedStreams[index]?.link,
+      );
+      if (!switching && nextIndex != null) {
+        setFailedStreams((previous) => ({ ...previous, [streamIndex]: true }));
+        showToast("This server is not sending video — switching to another…");
+        wake(true);
+        void switchStream(nextIndex);
+        return;
+      }
+      if (!autoRetriedRef.current) {
+        autoRetriedRef.current = true;
+        hasRenderedRef.current = false;
+        setHasRendered(false);
+        setBuffering(true);
+        setLoadNonce((value) => value + 1);
+        wake(true);
+        showToast("Retrying this server…");
+        return;
+      }
+      setFailedStreams((previous) => ({ ...previous, [streamIndex]: true }));
+      setError({
+        message:
+          "This video did not start. Try another server or pick a different quality.",
+      });
+      wake(true);
+      return;
+    }
+
+    // Stage 0: decoder rejected the stream on TextureView -> retry the SAME
+    // server on SurfaceView, resuming from the current position.
+    if (
+      Platform.OS === "android" &&
+      !surfaceStreams[streamIndex] &&
+      /DECODER_INIT_FAILED|DECODING_FAILED|DECODING_FORMAT/i.test(message)
+    ) {
+      pendingSeekRef.current =
+        currentTimeRef.current > 2 ? currentTimeRef.current : null;
+      setSurfaceStreams((previous) => ({ ...previous, [streamIndex]: true }));
+      hasRenderedRef.current = false;
+      setHasRendered(false);
+      setBuffering(true);
+      setLoadNonce((value) => value + 1);
+      showToast("Switching video output for this stream…");
+      return;
+    }
+
     // Stage 1: one silent retry, which covers transient decoder/network
     // failures without bothering the user.
     if (!autoRetriedRef.current) {
       autoRetriedRef.current = true;
+      hasRenderedRef.current = false;
+      setHasRendered(false);
       setBuffering(true);
       setLoadNonce((value) => value + 1);
       wake(true);
@@ -1106,7 +1193,24 @@ export default function PlayerOverlay() {
     }
 
     // Stage 3: nothing left to try; surface the error and let the user pick.
-    setError({ message });
+    // Diagnostics: the native error carries the failing renderer/decoder in
+    // errorException / errorStackTrace. Show it so the real cause is visible.
+    const detail = [
+      event?.error?.errorCode != null ? `code ${event.error.errorCode}` : "",
+      event?.error?.errorException,
+      String(event?.error?.errorStackTrace || "")
+        .split("\n")
+        .filter((line: string) =>
+          /Decoder|Codec|Renderer|ffmpeg|Ffmpeg|Format|Caused by/i.test(line),
+        )
+        .slice(0, 4)
+        .join("\n"),
+    ]
+      .filter(Boolean)
+      .join("\n")
+      .slice(0, 600);
+    console.log("[player] error", JSON.stringify(event?.error || event));
+    setError({ message: detail ? `${message}\n${detail}` : message });
     setFailedStreams((previous) => ({ ...previous, [streamIndex]: true }));
     wake(true);
     if (normalizedStreams.length > 1) {
@@ -1179,6 +1283,8 @@ export default function PlayerOverlay() {
       setSelectedAudioIndex(null);
       setStreamIndex(index);
       setLoadNonce((value) => value + 1);
+      hasRenderedRef.current = false;
+      setHasRendered(false);
       setBuffering(true);
       setEnded(false);
       if (result.failed > 0) showToast("Some subtitles could not be loaded");
@@ -1190,6 +1296,8 @@ export default function PlayerOverlay() {
   const retryStream = () => {
     setError(null);
     autoRetriedRef.current = false;
+    hasRenderedRef.current = false;
+    setHasRendered(false);
     pendingSeekRef.current = currentTimeRef.current;
     setBuffering(true);
     setFailedStreams((previous) => {
@@ -1238,6 +1346,15 @@ export default function PlayerOverlay() {
     }
   };
 
+  // Shrink to the floating mini-player and reveal the screen underneath.
+  const minimizePlayer = () => {
+    saveProgress();
+    minimize();
+    if (currentRouteName() === "Player" && !goBack()) {
+      navigate("Home");
+    }
+  };
+
   const stopPlayback = () => {
     saveProgress();
     if (currentRouteName() === "Player") {
@@ -1246,6 +1363,22 @@ export default function PlayerOverlay() {
     minimize();
     closePlayer();
   };
+
+  // Android back now stops playback instead of minimizing; the dedicated mini
+  // button in the bottom bar is the way into mini-player mode.
+  const stopPlaybackRef = useRef(stopPlayback);
+  stopPlaybackRef.current = stopPlayback;
+  useEffect(() => {
+    if (!expanded) return;
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        stopPlaybackRef.current();
+        return true;
+      },
+    );
+    return () => subscription.remove();
+  }, [expanded]);
 
   const handleLock = () => {
     const next = !locked;
@@ -1802,6 +1935,9 @@ export default function PlayerOverlay() {
 
   const miniWidth = Math.min(240, Math.max(190, screenWidth * 0.52));
   const miniBottom = Math.max(insets.bottom + 82, 88);
+  // The full-screen loader owns the screen while the stream placeholder or
+  // subtitles resolve; the buffering indicator must not stack on top of it.
+  const startupLoading = pendingStream || preparedSubs === null;
 
   const rootStyle = expanded
     ? styles.fullscreen
@@ -1819,7 +1955,7 @@ export default function PlayerOverlay() {
     <View style={rootStyle as any} pointerEvents="auto">
       <StatusBar hidden={expanded} />
       <View style={StyleSheet.absoluteFill}>
-        {preparedSubs === null || pendingStream ? (
+        {startupLoading ? (
           <View style={styles.loadingScreen}>
             <ActivityIndicator size="large" color="#fff" />
             <Text style={styles.loadingText}>
@@ -1843,10 +1979,15 @@ export default function PlayerOverlay() {
               key={`${streamIndex}-${loadNonce}`}
               ref={playerRef}
               style={StyleSheet.absoluteFill}
-              // Texture view is required on Android for RN transforms (pinch
-              // zoom/pan) to reach the video surface; SurfaceView ignores them.
+              // TextureView by default so pinch-zoom/pan transforms reach the
+              // video; falls back to SurfaceView per stream if the decoder
+              // cannot start (see handleError).
               viewType={
-                Platform.OS === "android" ? ViewType.TEXTURE : undefined
+                Platform.OS === "android"
+                  ? surfaceStreams[streamIndex]
+                    ? ViewType.SURFACE
+                    : ViewType.TEXTURE
+                  : undefined
               }
               source={videoSource}
             resizeMode={
@@ -1983,7 +2124,7 @@ export default function PlayerOverlay() {
                   name={
                     seekHint.side === "left" ? "play-back" : "play-forward"
                   }
-                  size={30}
+                  size={20}
                   color="#fff"
                 />
                 <Text style={styles.seekHintAmount}>
@@ -2008,11 +2149,19 @@ export default function PlayerOverlay() {
             </View>
           )}
 
-          {!switching && buffering && !paused && !error && (
-            <View style={styles.centerOverlay} pointerEvents="none">
-              <ActivityIndicator size="large" color="#fff" />
-            </View>
-          )}
+          {!switching &&
+            !startupLoading &&
+            !paused &&
+            !ended &&
+            !error &&
+            (buffering || !hasRendered) && (
+              <View style={styles.centerOverlay} pointerEvents="none">
+                <ActivityIndicator size="large" color="#fff" />
+                {!hasRendered ? (
+                  <Text style={styles.loadingText}>Starting stream…</Text>
+                ) : null}
+              </View>
+            )}
 
           {ended && !switching && (
             <View style={styles.centerOverlay} pointerEvents="box-none">
@@ -2091,7 +2240,7 @@ export default function PlayerOverlay() {
               <TouchableOpacity
                 style={styles.iconButton}
                 onPress={minimizeAndBack}
-                accessibilityLabel="Minimize player"
+                accessibilityLabel="Close player"
               >
                 <Ionicons name="chevron-down" size={26} color="#fff" />
               </TouchableOpacity>
@@ -2247,11 +2396,11 @@ export default function PlayerOverlay() {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.iconButton}
-                  onPress={stopPlayback}
-                  accessibilityLabel="Stop playback"
+                  onPress={minimizePlayer}
+                  accessibilityLabel="Minimize to mini-player"
                 >
                   <MaterialCommunityIcons
-                    name="stop-circle-outline"
+                    name="picture-in-picture-bottom-right-outline"
                     size={21}
                     color={ICON}
                   />
@@ -2262,14 +2411,14 @@ export default function PlayerOverlay() {
 
           {/* Centered over the video area, independent of the bottom row's
               button widths, so the play button sits at true center. */}
-          {showControls && !locked ? (
+          {showControls && !locked && !startupLoading && hasRendered ? (
             <View style={styles.centerPlayback} pointerEvents="box-none">
               <TouchableOpacity
                 style={styles.centerSideButton}
                 onPress={() => seekTo(currentTime - 10)}
                 accessibilityLabel="Back 10 seconds"
               >
-                <MaterialIcons name="replay-10" size={20} color="#fff" />
+                <MaterialIcons name="fast-rewind" size={30} color="#fff" />
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.playButtonCenter}
@@ -2278,7 +2427,7 @@ export default function PlayerOverlay() {
               >
                 <Ionicons
                   name={paused ? "play" : "pause"}
-                  size={25}
+                  size={40}
                   color="#fff"
                   style={paused ? { marginLeft: 4 } : undefined}
                 />
@@ -2288,7 +2437,7 @@ export default function PlayerOverlay() {
                 onPress={() => seekTo(currentTime + 10)}
                 accessibilityLabel="Forward 10 seconds"
               >
-                <MaterialIcons name="forward-10" size={20} color="#fff" />
+                <MaterialIcons name="fast-forward" size={30} color="#fff" />
               </TouchableOpacity>
             </View>
           ) : null}
@@ -2511,8 +2660,8 @@ const styles = StyleSheet.create({
   seekHintLeft: { left: "8%", right: "54%" },
   seekHintRight: { left: "54%", right: "8%" },
   seekHintCircle: {
-    width: 104,
-    height: 104,
+    width: 54,
+    height: 54,
     borderRadius: 52,
     borderWidth: 1.5,
     backgroundColor: "rgba(0,0,0,0.55)",
@@ -2520,10 +2669,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 2,
   },
-  seekHintAmount: { color: "#fff", fontSize: 15, fontWeight: "800" },
+  seekHintAmount: { color: "#fff", fontSize: 10, fontWeight: "800" },
   seekHintTime: {
     color: "rgba(255,255,255,0.85)",
-    fontSize: 12,
+    fontSize: 8,
     fontWeight: "600",
     marginTop: 8,
   },
@@ -2704,21 +2853,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 40,
+    gap: 100,
     zIndex: 28,
   },
   centerSideButton: {
-    padding: 8,
-    borderRadius: 28,
-    backgroundColor: "rgba(0,0,0,0.35)",
+    borderRadius: 2,
   },
   playButtonCenter: {
-    width: 55,
-    height: 55,
-    borderRadius: 38,
-    backgroundColor: "rgba(0,0,0,0.45)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.28)",
     alignItems: "center",
     justifyContent: "center",
   },

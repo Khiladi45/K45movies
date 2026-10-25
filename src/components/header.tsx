@@ -52,20 +52,26 @@ export default function Header() {
   const withOpacity = (hex: string, opacityHex: string) =>
     `${hex}${opacityHex}`;
 
-  const installedProviderDetails = installedProviders.map((installedValue) => {
-    const fullDetails = allProviders?.find(
-      (p: any) => p.value === installedValue,
-    );
-    return (
-      fullDetails || {
-        value: installedValue,
-        display_name:
-          installedValue.charAt(0).toUpperCase() + installedValue.slice(1),
-        version: "1.0",
-        type: "global",
-      }
-    );
-  });
+  const installedProviderDetails = installedProviders
+    .map((installedValue) => {
+      const fullDetails = allProviders?.find(
+        (p: any) => p.value === installedValue,
+      );
+      return (
+        fullDetails || {
+          value: installedValue,
+          display_name:
+            installedValue.charAt(0).toUpperCase() + installedValue.slice(1),
+          version: "1.0",
+          type: "global",
+        }
+      );
+    })
+    .sort((a: any, b: any) => {
+      const left = String(a.display_name || a.value).toLowerCase();
+      const right = String(b.display_name || b.value).toLowerCase();
+      return left < right ? -1 : left > right ? 1 : 0;
+    });
 
   // ---------- Drawer Logic ----------
   const openDrawer = () => {
