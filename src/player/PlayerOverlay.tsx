@@ -34,6 +34,12 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { createMMKV } from "react-native-mmkv";
 import { usePlayerStore } from "@/store/usePlayerStore";
+import {
+  getNextEpisode,
+  playEpisode,
+  playerQualityOptions,
+  switchQuality,
+} from "@/lib/playerSwitch";
 import { usePreferencesStore } from "@/store/usePreferencesStore";
 import { useThemeStore } from "@/store/useThemeStore";
 import { useContinueWatchingStore } from "@/store/useContinueWatchingStore";
@@ -83,9 +89,15 @@ try {
 const clamp = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, value));
 
+// Brightness bookkeeping lives outside the component: switching quality or
+// episode remounts the player, and that must not reset the user's brightness.
+const brightnessState: { touched: boolean; original: number | null } = {
+  touched: false,
+  original: null,
+};
+
 const ZOOM_MIN = 0.25;
 const ZOOM_MAX = 5;
-const ZOOM_PAN_THRESHOLD = 1.02;
 
 const fmtTime = (t: number) => {
   if (!Number.isFinite(t) || t < 0) t = 0;
@@ -472,7 +484,6 @@ export default function PlayerOverlay() {
   } | null>(null);
   const brightnessRef = useRef(0.5);
   const volumeRef = useRef(0.5);
-  const originalBrightness = useRef<number | null>(null);
   const mountedRef = useRef(true);
   const expandedRef = useRef(expanded);
   const lockedRef = useRef(locked);
@@ -515,7 +526,9 @@ export default function PlayerOverlay() {
       if (currentRouteName() === "Player" && !goBack()) {
         navigate("Home");
       }
-    }, 30000);
+      // Longer than the provider's own 30s limit, so a slow provider reports
+      // its real error on the detail screen instead of the player vanishing.
+    }, 45000);
     return () => clearTimeout(timer);
   }, [pendingStream, currentVideoUrl]);
 
@@ -684,16 +697,11 @@ export default function PlayerOverlay() {
             ZOOM_MIN,
             ZOOM_MAX,
           );
-          const dx = midX - state.startMidX;
-          const dy = midY - state.startMidY;
-          if (
-            !state.didPinch &&
-            (Math.abs(scale - state.startScale) > 0.01 ||
-              Math.hypot(dx, dy) > 6)
-          ) {
+          if (!state.didPinch && Math.abs(scale - state.startScale) > 0.01) {
             state.didPinch = true;
           }
-          applyZoom(scale, state.startTx + dx, state.startTy + dy, true);
+          // Zoom only: the frame always stays centred (no panning).
+          applyZoom(scale, 0, 0, true);
         }
         return;
       }
@@ -780,13 +788,40 @@ export default function PlayerOverlay() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Brightness is only changed while the player is on screen. It is handed
+  // back to the phone's own setting when the player closes or is minimized;
+  // the overlay stays mounted after close, so unmount alone is not enough.
+  const restoreSystemBrightness = useCallback(() => {
+    if (Platform.OS === "android") {
+      Brightness?.restoreSystemBrightnessAsync?.().catch(() => {});
+    } else if (brightnessState.touched && brightnessState.original != null) {
+      Brightness?.setBrightnessAsync?.(brightnessState.original).catch(
+        () => {},
+      );
+    }
+    brightnessState.touched = false;
+    brightnessState.original = null;
+  }, []);
+  const playerVisible = expanded && !!currentVideoUrl;
+  useEffect(() => {
+    if (playerVisible) {
+      if (brightnessState.touched) {
+        Brightness?.setBrightnessAsync?.(brightnessRef.current).catch(() => {});
+      }
+      return;
+    }
+    restoreSystemBrightness();
+  }, [playerVisible, restoreSystemBrightness]);
+
   useEffect(() => {
     mountedRef.current = true;
     Brightness?.getBrightnessAsync?.()
       .then((value: number) => {
         if (typeof value === "number") {
           brightnessRef.current = value;
-          originalBrightness.current = value;
+          if (!brightnessState.touched && brightnessState.original == null) {
+            brightnessState.original = value;
+          }
         }
       })
       .catch(() => {});
@@ -800,11 +835,10 @@ export default function PlayerOverlay() {
 
     return () => {
       mountedRef.current = false;
-      if (originalBrightness.current != null) {
-        Brightness?.setBrightnessAsync?.(
-          originalBrightness.current,
-        ).catch(() => {});
-      }
+      // A new playback session (quality / next episode) also unmounts this
+      // instance; only hand brightness back when the player is really gone.
+      const store = usePlayerStore.getState();
+      if (!store.currentVideoUrl || !store.expanded) restoreSystemBrightness();
       if (hideTimer.current) clearTimeout(hideTimer.current);
       if (stallTimer.current) clearTimeout(stallTimer.current);
       if (toastTimer.current) clearTimeout(toastTimer.current);
@@ -1052,6 +1086,13 @@ export default function PlayerOverlay() {
 
     let target = pendingSeekRef.current;
     pendingSeekRef.current = null;
+    if (
+      target == null &&
+      !hasLoadedOnceRef.current &&
+      playerMeta?.resumeAt != null
+    ) {
+      target = playerMeta.resumeAt;
+    }
     if (target == null && !hasLoadedOnceRef.current && prefsRef.current.resumePlayback) {
       try {
         const cached = JSON.parse(
@@ -1293,6 +1334,45 @@ export default function PlayerOverlay() {
     }
   };
 
+  const qualityOptions = useMemo(
+    () => playerQualityOptions(playerMeta),
+    [playerMeta],
+  );
+  const nextEpisode = useMemo(() => getNextEpisode(playerMeta), [playerMeta]);
+  const switchBusy = useRef(false);
+
+  const changeQuality = async (index: number) => {
+    if (switchBusy.current || index === playerMeta?.qualityIndex) return;
+    switchBusy.current = true;
+    saveProgress();
+    showToast("Switching quality…");
+    try {
+      await switchQuality(index, currentTimeRef.current);
+    } catch (err) {
+      showToast(
+        err instanceof Error ? err.message : "Could not switch quality",
+      );
+    } finally {
+      switchBusy.current = false;
+    }
+  };
+
+  const playNextEpisode = async () => {
+    if (!nextEpisode || switchBusy.current) return;
+    switchBusy.current = true;
+    saveProgress();
+    showToast("Loading next episode…");
+    try {
+      await playEpisode(nextEpisode);
+    } catch (err) {
+      showToast(
+        err instanceof Error ? err.message : "Could not load next episode",
+      );
+    } finally {
+      switchBusy.current = false;
+    }
+  };
+
   const retryStream = () => {
     setError(null);
     autoRetriedRef.current = false;
@@ -1413,13 +1493,6 @@ export default function PlayerOverlay() {
       onMoveShouldSetPanResponder: (_event, gestureState) => {
         if (lockedRef.current || !expandedRef.current) return false;
         if (pinchState.current.active) return false;
-        // Panned zoom takes over both axes so the user can reposition the
-        // enlarged frame; the brightness/volume rule only applies at 1x.
-        if (zoomRef.current.scale > ZOOM_PAN_THRESHOLD) {
-          return (
-            Math.abs(gestureState.dx) > 8 || Math.abs(gestureState.dy) > 8
-          );
-        }
         const vertical = Math.abs(gestureState.dy);
         const horizontal = Math.abs(gestureState.dx);
         return vertical > 16 && vertical > horizontal * 1.25;
@@ -1428,8 +1501,7 @@ export default function PlayerOverlay() {
         const { width } = dimensionsRef.current;
         const side: "left" | "right" =
           event.nativeEvent.locationX < width / 2 ? "left" : "right";
-        const mode: "adjust" | "video" =
-          zoomRef.current.scale > ZOOM_PAN_THRESHOLD ? "video" : "adjust";
+        const mode: "adjust" | "video" = "adjust";
         const base =
           side === "left" ? brightnessRef.current : volumeRef.current;
         panState.current = {
@@ -1439,26 +1511,17 @@ export default function PlayerOverlay() {
           startTx: zoomRef.current.x,
           startTy: zoomRef.current.y,
         };
-        if (mode === "video") return;
         setGesture({ side, value: base });
       },
       onPanResponderMove: (_event, gestureState) => {
         const state = panState.current;
         if (!state) return;
-        if (state.mode === "video") {
-          applyZoom(
-            zoomRef.current.scale,
-            state.startTx + gestureState.dx,
-            state.startTy + gestureState.dy,
-            false,
-          );
-          return;
-        }
         const height = Math.max(1, dimensionsRef.current.height);
         const value = clamp(state.base - gestureState.dy / (height * 0.6), 0, 1);
         setGesture({ side: state.side, value });
         if (state.side === "left") {
           brightnessRef.current = value;
+          brightnessState.touched = true;
           Brightness?.setBrightnessAsync?.(value).catch(() => {});
         } else {
           volumeRef.current = value;
@@ -1583,6 +1646,22 @@ export default function PlayerOverlay() {
 
   const qualityRows = () => {
     const rows: PanelRowProps[] = [];
+    // Every quality from the details-page dropdown.
+    qualityOptions.forEach((option) => {
+      rows.push({
+        icon: "video-high-definition",
+        title: option.label,
+        detail: playerMeta?.isSeries
+          ? `Keeps ${playerMeta.episode || "this episode"}`
+          : "Switch quality",
+        selected: option.index === playerMeta?.qualityIndex,
+        accent: primaryColor,
+        onPress: () => {
+          setPanel(null);
+          void changeQuality(option.index);
+        },
+      });
+    });
     const adaptive = !!currentStream?.adaptive;
     const resolutionTracks = videoTracks
       .filter((track: any) => Number(track?.height) > 0)
@@ -2124,7 +2203,7 @@ export default function PlayerOverlay() {
                   name={
                     seekHint.side === "left" ? "play-back" : "play-forward"
                   }
-                  size={20}
+                  size={15}
                   color="#fff"
                 />
                 <Text style={styles.seekHintAmount}>
@@ -2133,12 +2212,6 @@ export default function PlayerOverlay() {
                 </Text>
               </View>
               <Text style={styles.seekHintTime}>{fmtTime(seekHint.target)}</Text>
-              {seekHint.total > seekHint.amount ? (
-                <Text style={styles.seekHintTotal}>
-                  Total {seekHint.side === "left" ? "−" : "+"}
-                  {seekHint.total}s
-                </Text>
-              ) : null}
             </Animated.View>
           )}
 
@@ -2242,7 +2315,7 @@ export default function PlayerOverlay() {
                 onPress={minimizeAndBack}
                 accessibilityLabel="Close player"
               >
-                <Ionicons name="chevron-down" size={26} color="#fff" />
+                <Ionicons name="arrow-back" size={20} color="#fff" />
               </TouchableOpacity>
               <View style={styles.titleWrap}>
                 <Text numberOfLines={1} style={styles.title}>
@@ -2343,7 +2416,7 @@ export default function PlayerOverlay() {
                       : fmtTime(duration)}
                   </Text>
                 </TouchableOpacity>
-              </View>
+              </View>     
 
               <View style={styles.bottomRow}>
                 <TouchableOpacity
@@ -2379,7 +2452,7 @@ export default function PlayerOverlay() {
                 >
                   <MaterialCommunityIcons
                     name="fit-to-screen-outline"
-                    size={21}
+                    size={25}
                     color={ICON}
                   />
                 </TouchableOpacity>
@@ -2405,6 +2478,17 @@ export default function PlayerOverlay() {
                     color={ICON}
                   />
                 </TouchableOpacity>
+                  {nextEpisode ? (
+                <TouchableOpacity
+                  style={styles.nextEpisodeButton}
+                  onPress={playNextEpisode}
+                  accessibilityLabel="Play next episode"
+                >
+                  <Text style={styles.nextEpisodeText}>Next Episode</Text>
+                  <Ionicons name="play-skip-forward" size={16} color="#000" />
+                </TouchableOpacity>
+              ) : null}
+                
               </View>
             </View>
           )}
@@ -2652,7 +2736,7 @@ const styles = StyleSheet.create({
   },
   seekHintWrap: {
     position: "absolute",
-    top: "36%",
+    top: "43%",
     alignItems: "center",
     justifyContent: "center",
     zIndex: 14,
@@ -2669,7 +2753,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 2,
   },
-  seekHintAmount: { color: "#fff", fontSize: 10, fontWeight: "800" },
+  seekHintAmount: { color: "#fff", fontSize: 9, fontWeight: "800" },
   seekHintTime: {
     color: "rgba(255,255,255,0.85)",
     fontSize: 8,
@@ -2757,7 +2841,7 @@ const styles = StyleSheet.create({
   titleWrap: { flex: 1, marginHorizontal: 8 },
   title: {
     color: "#fff",
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: "700",
     textShadowColor: "rgba(0,0,0,0.8)",
     textShadowOffset: { width: 0, height: 1 },
@@ -2778,6 +2862,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 9,
     paddingVertical: 6,
     marginLeft: 5,
+  },
+  nextEpisodeButton: {
+    alignSelf: "flex-end",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "rgba(0,0,0,0.48)",
+    borderRadius: 16,
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+    marginLeft: 5,
+    marginBottom: 5,
+  },
+  nextEpisodeText: {
+    color: "#fff",
+    fontSize: 11,
+    fontWeight: "700",
   },
   smallPill: {
     backgroundColor: "rgba(0,0,0,0.48)",

@@ -33,13 +33,27 @@ export interface LinkItem {
   quality?: string;
 }
 
+// Tells the caller which dropdown entry and which row was played, so the
+// player can offer the same qualities and the next episode.
+export interface PlayCtx {
+  qualityIndex: number;
+  itemIndex: number;
+  items: DirectLink[];
+  isEpisode: boolean;
+}
+
 interface SeasonListProps {
   linkList: LinkItem[];
   providerValue: string;
   metaTitle: string;
   sortKey: string;
   poster?: string;
-  onPlay: (link: string, type: string, episodeData: any[]) => void;
+  onPlay: (
+    link: string,
+    type: string,
+    episodeData: any[],
+    ctx?: PlayCtx,
+  ) => void;
   fetchingLink?: string | null;
 }
 
@@ -140,7 +154,21 @@ export default function SeasonList({
           <TouchableOpacity
             style={styles.rowPress}
             activeOpacity={0.65}
-            onPress={() => onPlay(item.link, type, data)}
+            onPress={() => {
+              const items: DirectLink[] = isEpisode
+                ? episodeList
+                : activeSeason?.directLinks || [];
+              const found = linkList.indexOf(activeSeason);
+              onPlay(item.link, type, data, {
+                qualityIndex: found >= 0 ? found : 0,
+                itemIndex: Math.max(
+                  0,
+                  items.findIndex((entry) => entry?.link === item.link),
+                ),
+                items,
+                isEpisode,
+              });
+            }}
           >
             {item.image ? (
               <View style={styles.thumbBox}>

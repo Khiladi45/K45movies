@@ -496,13 +496,13 @@ const CategorySection = memo(function CategorySection({
           style={{
             width: 4,
             height: 18,
-            borderRadius: 2,
+            borderRadius: 2,marginBottom: 10,
             backgroundColor: primaryColor,
           }}
         />
         <Text
           className="text-white text-xl font-bold"
-          style={{ flex: 1, marginBottom: 12 }}
+          style={{ flex: 1, marginBottom: 10 }}
           numberOfLines={1}
         >
           {category.title}

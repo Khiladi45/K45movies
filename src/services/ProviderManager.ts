@@ -161,13 +161,22 @@ class ProviderManagerClass {
     const { installedProviders, activeProvider, toggleInstall } =
       useProviderStore.getState();
 
+    // Statically bundled providers ship inside the app and never have a
+    // downloaded bundle.js, so a missing file does NOT mean "not installed".
+    // Only downloaded (remote) providers can be phantom entries.
     installedProviders.forEach((id) => {
+      if (isStaticallyBundled(id)) return;
       if (!this.isProviderInstalled(id)) {
         toggleInstall(id);
       }
     });
 
-    if (this.isProviderInstalled(activeProvider)) return;
+    if (
+      isStaticallyBundled(activeProvider) ||
+      this.isProviderInstalled(activeProvider)
+    ) {
+      return;
+    }
 
     try {
       await this.ensureProviderBundle(activeProvider);

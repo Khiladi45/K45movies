@@ -19,7 +19,8 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { usePlayerStore } from "@/store/usePlayerStore";
+import { usePlayerStore, type PlayerMeta } from "@/store/usePlayerStore";
+import { episodeLabel, toPlayerEpisodes } from "@/lib/episodes";
 import { useMeta, useStream, useEpisodes } from "@/hooks/useProvider";
 import { useProviderStore } from "@/store/useProviderStore";
 import { useWatchlistStore } from "@/store/useWatchlistStore";
@@ -32,7 +33,7 @@ import {
 } from "@/lib/streams";
 import { providerApi } from "@/lib/providerApi";
 import { currentRouteName, goBack } from "@/navigation/navigationRef";
-import SeasonList, { LinkItem } from "@/components/SeasonList";
+import SeasonList, { LinkItem, type PlayCtx } from "@/components/SeasonList";
 import DownloadButton from "@/components/DownloadButton";
 import Skeleton from "@/components/Skeleton";
 
@@ -257,9 +258,39 @@ export default function DetailScreen({ route, navigation }: any) {
   const startInFlight = useRef(false);
   const playbackAbort = useRef<AbortController | null>(null);
   const launchingRef = useRef(false);
+  const playCtxRef = useRef<PlayCtx | null>(null);
+  // Assigned after filteredLinkList exists; builds the player's meta
+  // (qualities, episodes, "Episode N" label) for a link being played.
+  const buildMetaRef = useRef<(link: string, type: string) => PlayerMeta>(
+    () => null,
+  );
+  // Quality/episode info is a bonus: if building it ever fails, playback must
+  // still start with the basic title info.
+  const safeMeta = (link: string, type: string): PlayerMeta => {
+    try {
+      return buildMetaRef.current(link, type);
+    } catch (error) {
+      console.log("[play] meta build failed, using basic meta", error);
+      return {
+        title: meta?.title || movie.title,
+        link,
+        providerId,
+        type,
+        image: meta?.poster || meta?.image || movie.image,
+      };
+    }
+  };
+  const safeMetaRef = useRef(safeMeta);
+  safeMetaRef.current = safeMeta;
   const mountedRef = useRef(true);
   const lastAttempt = useRef<
-    | { kind: "stream"; link: string; type: string; source: StartSource }
+    | {
+        kind: "stream";
+        link: string;
+        type: string;
+        source: StartSource;
+        ctx?: PlayCtx;
+      }
     | { kind: "episodes"; link: string }
     | null
   >(null);
@@ -306,22 +337,21 @@ export default function DetailScreen({ route, navigation }: any) {
   );
 
   const startPlayback = useCallback(
-    (link: string, type: string, source: StartSource) => {
+    (link: string, type: string, source: StartSource, ctx?: PlayCtx) => {
       if (!link || startInFlight.current || launchingRef.current) return;
       launchingRef.current = true;
+      playCtxRef.current = ctx ?? null;
       setPlaybackError(null);
       setStarting({ link, source, stage: "Preparing stream…" });
-      lastAttempt.current = { kind: "stream", link, type, source };
+      lastAttempt.current = { kind: "stream", link, type, source, ctx };
       // Open the player immediately with a placeholder; the real stream
       // replaces it when the provider resolves.
-      setVideo("pending://stream", [], 0, {
-        title: meta?.title || movie.title,
-        episode: type === "series" ? "Now Playing" : undefined,
-        link,
-        providerId,
-        type,
-        image: meta?.poster || meta?.image || movie.image,
-      });
+      setVideo(
+        "pending://stream",
+        [],
+        0,
+        safeMetaRef.current(link, type),
+      );
       if (navigation.isFocused()) {
         navigation.navigate("Player");
       }
@@ -344,7 +374,12 @@ export default function DetailScreen({ route, navigation }: any) {
     if (pendingEpisodes.length > 0) {
       setPendingEpisodesUrl("");
       launchingRef.current = false;
-      startPlayback(pendingEpisodes[0].link, "series", "watch");
+      startPlayback(pendingEpisodes[0].link, "series", "watch", {
+        qualityIndex: 0,
+        itemIndex: 0,
+        items: pendingEpisodes,
+        isEpisode: true,
+      });
     } else {
       launchingRef.current = false;
       setStarting(null);
@@ -416,6 +451,7 @@ export default function DetailScreen({ route, navigation }: any) {
           return;
         }
         const streams: any[] = Array.isArray(data) ? data : [data];
+        console.log(`[play] provider returned ${streams.length} stream(s)`);
         setStarting((current) =>
           current ? { ...current, stage: "Checking servers…" } : current,
         );
@@ -443,18 +479,20 @@ export default function DetailScreen({ route, navigation }: any) {
         ) {
           // The user closed or replaced the pending player while the provider
           // was resolving; do not hijack whatever is on screen now.
+          console.log("[play] player changed while resolving; not opening");
           setStarting(null);
           return;
         }
         setPlaybackError(null);
-        setVideo(chosen.link, selection.streams, selection.startIndex, {
-          title: meta?.title || movie.title,
-          episode: streamType === "series" ? "Now Playing" : undefined,
-          link: streamLink,
-          providerId,
-          type: streamType,
-          image: meta?.poster || meta?.image || movie.image,
-        });
+        console.log(
+          `[play] opening player: ${selection.streams.length} playable stream(s), start #${selection.startIndex}`,
+        );
+        setVideo(
+          chosen.link,
+          selection.streams,
+          selection.startIndex,
+          safeMetaRef.current(streamLink, streamType),
+        );
         setStarting(null);
         if (navigation.isFocused()) {
           navigation.navigate("Player");
@@ -507,8 +545,40 @@ export default function DetailScreen({ route, navigation }: any) {
     return meta.linkList;
   }, [meta?.linkList, meta?.title, meta?.type, movie.link]);
 
-  const handlePlay = (link: string, type: string) => {
-    startPlayback(link, type, "list");
+  buildMetaRef.current = (link: string, type: string): PlayerMeta => {
+    const isSeries = (meta?.type || movie.type) === "series";
+    const ctx = playCtxRef.current;
+    const items = toPlayerEpisodes(ctx?.items);
+    const current = items.find((item) => item.link === link);
+    const itemIndex = ctx ? Math.max(0, ctx.itemIndex) : 0;
+    return {
+      title: meta?.title || movie.title,
+      link,
+      providerId,
+      type,
+      image: meta?.poster || meta?.image || movie.image,
+      isSeries,
+      qualities: filteredLinkList.map((entry) => ({
+        label: entry.title || entry.quality || "Quality",
+        episodesLink: entry.episodesLink,
+        directLinks: toPlayerEpisodes(entry.directLinks),
+      })),
+      qualityIndex: ctx?.qualityIndex ?? 0,
+      episodes: items,
+      episodeNumber: isSeries ? (current?.number ?? null) : null,
+      linkIndex: isSeries ? undefined : itemIndex,
+      // Movies show just the title; series show "Episode N".
+      episode: isSeries ? episodeLabel(current, itemIndex) : undefined,
+    };
+  };
+
+  const handlePlay = (
+    link: string,
+    type: string,
+    _episodeData?: any[],
+    ctx?: PlayCtx,
+  ) => {
+    startPlayback(link, type, "list", ctx);
   };
 
   const handleWatchNow = () => {
@@ -521,7 +591,12 @@ export default function DetailScreen({ route, navigation }: any) {
     const first = list[0];
     if (first.directLinks && first.directLinks.length > 0) {
       const item = first.directLinks[0];
-      startPlayback(item.link, item.type || "series", "watch");
+      startPlayback(item.link, item.type || "series", "watch", {
+        qualityIndex: 0,
+        itemIndex: 0,
+        items: first.directLinks,
+        isEpisode: false,
+      });
     } else if (first.episodesLink) {
       launchingRef.current = true;
       setPlaybackError(null);
@@ -536,7 +611,7 @@ export default function DetailScreen({ route, navigation }: any) {
     const attempt = lastAttempt.current;
     if (!attempt) return;
     if (attempt.kind === "stream") {
-      startPlayback(attempt.link, attempt.type, attempt.source);
+      startPlayback(attempt.link, attempt.type, attempt.source, attempt.ctx);
       return;
     }
     launchingRef.current = true;

@@ -214,7 +214,7 @@ export default function ThemeSettingsScreen({ navigation }: any) {
         {renderDivider()}
 
         {/* ---------- VIBRANT ---------- */}
-        {renderSectionHeader("lightning", "ion", "#F59E0B", "Vibrant")}
+        {renderSectionHeader("lightning-bolt", "mci", "#F59E0B", "Vibrant")}
         <View style={styles.rowWrap}>{VIBRANT.map(renderColorCard)}</View>
 
         {renderDivider()}
@@ -375,7 +375,7 @@ const styles = StyleSheet.create({
   rowWrap: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "flex-start",
+    justifyContent: "space-around",
     gap: CARD_GAP,
     marginBottom: 6,
   },
@@ -439,7 +439,7 @@ const styles = StyleSheet.create({
 
   // ---------- BOTTOM BANNER ----------
   banner: {
-    marginTop: 16,
+    marginTop: 26,
     flexDirection: "row",
     alignItems: "center",
     borderRadius: 14,
@@ -448,9 +448,9 @@ const styles = StyleSheet.create({
     gap: 12,
     overflow: "hidden",
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.35,
+    shadowOpacity: 0.5,
     shadowRadius: 14,
-    elevation: 8,
+    elevation: 0,
   },
   bannerIcon: {
     width: 46,
