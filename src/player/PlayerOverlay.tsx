@@ -1487,6 +1487,51 @@ export default function PlayerOverlay() {
     }
   };
 
+const renderSeekButton = (side: "left" | "right") => {
+  const active = seekHint?.side === side;
+  const dir = side === "left" ? -1 : 1;
+  const visible = showControls || active;
+
+  return (
+    <TouchableOpacity
+      style={[styles.centerSideButton, { opacity: visible ? 1 : 0 }]}
+      disabled={!visible}
+      onPress={() => seekTo(currentTime + dir * 10)}
+      accessibilityLabel={side === "left" ? "Back 10 seconds" : "Forward 10 seconds"}
+      activeOpacity={0.8}
+    >
+      <Animated.View
+        style={
+          active
+            ? {
+                transform: [
+                  {
+                    scale: seekAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [1, 1.25],
+                    }),
+                  },
+                  {
+                    translateX: seekAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, dir * 6],
+                    }),
+                  },
+                ],
+              }
+            : undefined
+        }
+      >
+        <MaterialIcons
+          name={side === "left" ? "fast-rewind" : "fast-forward"}
+          size={30}
+          color={active ? primaryColor : "#fff"}
+        />
+      </Animated.View>
+    </TouchableOpacity>
+  );
+};
+
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => false,
@@ -2175,45 +2220,7 @@ export default function PlayerOverlay() {
             </TouchableOpacity>
           ) : null}
 
-          {seekHint && (
-            <Animated.View
-              pointerEvents="none"
-              style={[
-                styles.seekHintWrap,
-                seekHint.side === "left"
-                  ? styles.seekHintLeft
-                  : styles.seekHintRight,
-                {
-                  opacity: seekAnim,
-                  transform: [
-                    {
-                      scale: seekAnim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0.82, 1],
-                      }),
-                    },
-                  ],
-                },
-              ]}
-            >
-              <View
-                style={[styles.seekHintCircle, { borderColor: primaryColor }]}
-              >
-                <Ionicons
-                  name={
-                    seekHint.side === "left" ? "play-back" : "play-forward"
-                  }
-                  size={15}
-                  color="#fff"
-                />
-                <Text style={styles.seekHintAmount}>
-                  {seekHint.side === "left" ? "−" : "+"}
-                  {seekHint.amount}s
-                </Text>
-              </View>
-              <Text style={styles.seekHintTime}>{fmtTime(seekHint.target)}</Text>
-            </Animated.View>
-          )}
+    
 
           {switching && (
             <View style={styles.centerOverlay} pointerEvents="none">
@@ -2495,36 +2502,28 @@ export default function PlayerOverlay() {
 
           {/* Centered over the video area, independent of the bottom row's
               button widths, so the play button sits at true center. */}
-          {showControls && !locked && !startupLoading && hasRendered ? (
-            <View style={styles.centerPlayback} pointerEvents="box-none">
-              <TouchableOpacity
-                style={styles.centerSideButton}
-                onPress={() => seekTo(currentTime - 10)}
-                accessibilityLabel="Back 10 seconds"
-              >
-                <MaterialIcons name="fast-rewind" size={30} color="#fff" />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.playButtonCenter}
-                onPress={togglePlay}
-                accessibilityLabel={paused ? "Play" : "Pause"}
-              >
-                <Ionicons
-                  name={paused ? "play" : "pause"}
-                  size={40}
-                  color="#fff"
-                  style={paused ? { marginLeft: 4 } : undefined}
-                />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.centerSideButton}
-                onPress={() => seekTo(currentTime + 10)}
-                accessibilityLabel="Forward 10 seconds"
-              >
-                <MaterialIcons name="fast-forward" size={30} color="#fff" />
-              </TouchableOpacity>
-            </View>
-          ) : null}
+      {!locked && !startupLoading && hasRendered && (showControls || seekHint) ? (
+       <View style={styles.centerPlayback} pointerEvents="box-none">
+          {renderSeekButton("left")}
+         <TouchableOpacity
+            style={[
+               styles.playButtonCenter,
+               (seekHint || !showControls) && { opacity: 0 },
+             ]}
+            onPress={togglePlay}
+            disabled={!!seekHint || !showControls}
+            accessibilityLabel={paused ? "Play" : "Pause"}
+         >
+        <Ionicons
+            name={paused ? "play" : "pause"}
+            size={40}
+            color="#fff"
+            style={paused ? { marginLeft: 4 } : undefined}
+        />
+        </TouchableOpacity>
+       {renderSeekButton("right")}
+      </View>
+      ) : null}
 
           {locked && (
             <TouchableOpacity
@@ -2956,9 +2955,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 100,
     zIndex: 28,
+    overflow: "visible",
   },
   centerSideButton: {
     borderRadius: 2,
+    overflow: "visible",
   },
   playButtonCenter: {
     alignItems: "center",

@@ -9,6 +9,8 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.dnsoverhttps.DnsOverHttps
 import java.io.File
+import java.net.Inet4Address
+import java.net.Inet6Address
 import java.net.InetAddress
 import java.net.UnknownHostException
 import java.util.concurrent.TimeUnit
@@ -49,6 +51,17 @@ class K45DohOkHttpFactory(private val cacheDir: File) : OkHttpClientFactory {
         )
     }
 
+    /**
+     * DoH answers include AAAA records even when the current network has no usable IPv6
+     * route (common on Indian mobile ISPs and on emulators). OkHttp connects in the order
+     * the Dns returns, so an unreachable IPv6 address burns the whole connect timeout before
+     * IPv4 is tried. Keep IPv6 as a fallback but never hand it back ahead of IPv4.
+     */
+    private fun ipv4First(addresses: List<InetAddress>): List<InetAddress> {
+        val v4 = addresses.filterIsInstance<Inet4Address>()
+        return if (v4.isEmpty()) addresses else v4 + addresses.filterIsInstance<Inet6Address>()
+    }
+
     private val dns = object : Dns {
         override fun lookup(hostname: String): List<InetAddress> {
             // Never send loopback / literal IPs through DoH.
@@ -56,13 +69,13 @@ class K45DohOkHttpFactory(private val cacheDir: File) : OkHttpClientFactory {
             for (resolver in resolvers) {
                 try {
                     val result = resolver.lookup(hostname)
-                    if (result.isNotEmpty()) return result
+                    if (result.isNotEmpty()) return ipv4First(result)
                 } catch (_: Exception) {
                     // try the next resolver
                 }
             }
             return try {
-                Dns.SYSTEM.lookup(hostname)
+                ipv4First(Dns.SYSTEM.lookup(hostname))
             } catch (e: UnknownHostException) {
                 throw e
             }
