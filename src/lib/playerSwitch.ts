@@ -159,3 +159,43 @@ export async function playEpisode(episode: PlayerEpisode) {
   };
   return openStream(episode.link, type, nextMeta, meta.link);
 }
+
+// ---- Codec fallback ------------------------------------------------------
+// Many phones cannot decode HEVC Main10 / HDR / Dolby Vision / 4K. Quality
+// labels tell us which files are risky, so we can pick a safer one.
+
+const failedQualities = new Set<string>();
+
+const qualityKey = (meta: PlayerMeta, label: string) =>
+  `${meta?.providerId || ""}|${meta?.title || ""}|${label}`;
+
+/** Higher = more likely to fail on a weak decoder. */
+export function qualityRisk(label?: string): number {
+  const text = String(label || "");
+  let risk = 0;
+  if (/hevc|x\.?265|h\.?265/i.test(text)) risk += 2;
+  if (/10\s?-?bit/i.test(text)) risk += 3;
+  if (/hdr|dolby|\bdv\b|dovi|vision/i.test(text)) risk += 3;
+  if (/2160p|\b4k\b|uhd/i.test(text)) risk += 3;
+  if (/x\.?264|h\.?264|avc/i.test(text)) risk -= 2;
+  return risk;
+}
+
+export function markQualityFailed(meta: PlayerMeta) {
+  const label = meta?.qualities?.[meta?.qualityIndex ?? 0]?.label;
+  if (label) failedQualities.add(qualityKey(meta, label));
+}
+
+/** Safest not-yet-failed quality other than the current one, or null. */
+export function pickFallbackQuality(meta: PlayerMeta): number | null {
+  const options = playerQualityOptions(meta).filter(
+    (option) =>
+      option.index !== meta?.qualityIndex &&
+      !failedQualities.has(qualityKey(meta, option.label)),
+  );
+  if (options.length === 0) return null;
+  const sorted = [...options].sort(
+    (a, b) => qualityRisk(a.label) - qualityRisk(b.label),
+  );
+  return sorted[0].index;
+}

@@ -384,7 +384,7 @@ export default function UserSettings({ navigation }: any) {
         </View>
 
         {/* Account */}
-        <Section title="ACCOUNT" primaryColor={primaryColor}>
+        {/* <Section title="ACCOUNT" primaryColor={primaryColor}>
           <SettingItem
             icon={<Ionicons name="log-out-outline" size={24} color="#ef4444" />}
             iconBg="rgba(239, 68, 68, 0.1)"
@@ -393,7 +393,7 @@ export default function UserSettings({ navigation }: any) {
             titleColor="#ef4444"
             isLast
           />
-        </Section>
+        </Section> */}
       </ScrollView>
 
       {/* Add/Edit Profile Modal */}

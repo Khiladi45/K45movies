@@ -462,7 +462,7 @@ export default function AddProviders() {
             },
           ]}
         />
-        <Text style={[styles.emptyText, { color: "#888" }]}>Loading...</Text>
+        <Text style={[styles.emptyText, { color: "#fff" }]}>Loading...</Text>
       </View>
     );
   }
@@ -512,7 +512,7 @@ export default function AddProviders() {
         <Text
           style={[
             styles.emptyText,
-            { color: "#888", marginTop: 14, textAlign: "center" },
+            { color: "#fff", marginTop: 14, textAlign: "center" },
           ]}
         >
           No providers are available right now.
@@ -622,7 +622,7 @@ export default function AddProviders() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  centerContent: { flex: 1, justifyContent: "center", alignItems: "center" },
+  centerContent: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor:'#000' },
   listContent: { paddingBottom: 40 },
 
   header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 16 },

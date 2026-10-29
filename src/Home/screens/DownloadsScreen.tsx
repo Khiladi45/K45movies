@@ -290,7 +290,7 @@ export default function DownloadsScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#141414" },
+  container: { flex: 1, backgroundColor: "#111" },
   header: {
     flexDirection: "row",
     alignItems: "center",

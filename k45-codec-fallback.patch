@@ -1,0 +1,125 @@
+diff --git a/src/lib/playerSwitch.ts b/src/lib/playerSwitch.ts
+index 78cf90a..3563b83 100644
+--- a/src/lib/playerSwitch.ts
++++ b/src/lib/playerSwitch.ts
+@@ -159,3 +159,43 @@ export async function playEpisode(episode: PlayerEpisode) {
+   };
+   return openStream(episode.link, type, nextMeta, meta.link);
+ }
++
++// ---- Codec fallback ------------------------------------------------------
++// Many phones cannot decode HEVC Main10 / HDR / Dolby Vision / 4K. Quality
++// labels tell us which files are risky, so we can pick a safer one.
++
++const failedQualities = new Set<string>();
++
++const qualityKey = (meta: PlayerMeta, label: string) =>
++  `${meta?.providerId || ""}|${meta?.title || ""}|${label}`;
++
++/** Higher = more likely to fail on a weak decoder. */
++export function qualityRisk(label?: string): number {
++  const text = String(label || "");
++  let risk = 0;
++  if (/hevc|x\.?265|h\.?265/i.test(text)) risk += 2;
++  if (/10\s?-?bit/i.test(text)) risk += 3;
++  if (/hdr|dolby|\bdv\b|dovi|vision/i.test(text)) risk += 3;
++  if (/2160p|\b4k\b|uhd/i.test(text)) risk += 3;
++  if (/x\.?264|h\.?264|avc/i.test(text)) risk -= 2;
++  return risk;
++}
++
++export function markQualityFailed(meta: PlayerMeta) {
++  const label = meta?.qualities?.[meta?.qualityIndex ?? 0]?.label;
++  if (label) failedQualities.add(qualityKey(meta, label));
++}
++
++/** Safest not-yet-failed quality other than the current one, or null. */
++export function pickFallbackQuality(meta: PlayerMeta): number | null {
++  const options = playerQualityOptions(meta).filter(
++    (option) =>
++      option.index !== meta?.qualityIndex &&
++      !failedQualities.has(qualityKey(meta, option.label)),
++  );
++  if (options.length === 0) return null;
++  const sorted = [...options].sort(
++    (a, b) => qualityRisk(a.label) - qualityRisk(b.label),
++  );
++  return sorted[0].index;
++}
+diff --git a/src/player/PlayerOverlay.tsx b/src/player/PlayerOverlay.tsx
+index fc71d81..2055232 100644
+--- a/src/player/PlayerOverlay.tsx
++++ b/src/player/PlayerOverlay.tsx
+@@ -36,8 +36,11 @@ import { createMMKV } from "react-native-mmkv";
+ import { usePlayerStore } from "@/store/usePlayerStore";
+ import {
+   getNextEpisode,
++  markQualityFailed,
++  pickFallbackQuality,
+   playEpisode,
+   playerQualityOptions,
++  qualityRisk,
+   switchQuality,
+ } from "@/lib/playerSwitch";
+ import { usePreferencesStore } from "@/store/usePreferencesStore";
+@@ -1184,6 +1187,44 @@ export default function PlayerOverlay() {
+       return;
+     }
+ 
++    // Codec fallback: this device cannot decode the file (HEVC 10-bit, HDR,
++    // 4K...). Retrying the same file is pointless, so jump to another quality.
++    const rawError = [
++      message,
++      event?.error?.errorException,
++      event?.error?.errorStackTrace,
++    ]
++      .filter(Boolean)
++      .join(" ");
++    const codecFail =
++      /DECODER_INIT_FAILED|DECODING_FAILED|DECODING_FORMAT|EXCEEDS_CAPABILITIES|FORMAT_UNSUPPORTED/i.test(
++        rawError,
++      );
++    if (
++      codecFail &&
++      (/EXCEEDS_CAPABILITIES|FORMAT_UNSUPPORTED/i.test(rawError) ||
++        surfaceStreams[streamIndex])
++    ) {
++      const meta = usePlayerStore.getState().playerMeta;
++      if (meta) {
++        markQualityFailed(meta);
++        const alt = pickFallbackQuality(meta);
++        if (alt != null && !switchBusy.current) {
++          showToast("This device can't play this format — trying another quality…");
++          wake(true);
++          void changeQuality(alt);
++          return;
++        }
++      }
++      setFailedStreams((previous) => ({ ...previous, [streamIndex]: true }));
++      setError({
++        message:
++          "This device can't decode this video (HEVC 10-bit / HDR / 4K). Pick a lower quality such as 1080p x264, or try on a real phone if you're using an emulator.",
++      });
++      wake(true);
++      return;
++    }
++
+     // Stage 0: decoder rejected the stream on TextureView -> retry the SAME
+     // server on SurfaceView, resuming from the current position.
+     if (
+@@ -1696,9 +1737,12 @@ const renderSeekButton = (side: "left" | "right") => {
+       rows.push({
+         icon: "video-high-definition",
+         title: option.label,
+-        detail: playerMeta?.isSeries
+-          ? `Keeps ${playerMeta.episode || "this episode"}`
+-          : "Switch quality",
++        detail:
++          qualityRisk(option.label) >= 3
++            ? "May not play on this device"
++            : playerMeta?.isSeries
++              ? `Keeps ${playerMeta.episode || "this episode"}`
++              : "Switch quality",
+         selected: option.index === playerMeta?.qualityIndex,
+         accent: primaryColor,
+         onPress: () => {

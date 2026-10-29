@@ -22,6 +22,7 @@ import { useProviderStore } from "@/store/useProviderStore";
 import { useThemeStore } from "@/store/useThemeStore";
 import { useWatchlistStore } from "@/store/useWatchlistStore";
 import ContinueWatching from "@/Home/components/ContinueWatching";
+import InstalledProvidersRail from "@/Home/components/InstalledProvidersRail";
 import Skeleton from "@/components/Skeleton";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -150,6 +151,7 @@ export default function HomeScreen({ navigation }: any) {
               <CarouselSkeleton />
             ) : null}
             <ContinueWatching navigation={navigation} />
+            <InstalledProvidersRail />
           </>
         }
         renderItem={({ item }) => (
@@ -395,8 +397,6 @@ const HotstarCarousel = memo(function HotstarCarousel({
                       onPress={() => handleAddToWatchlist(item)}
                       style={[
                         styles.watchlistCircleButton,
-                        isInWatchlist(item.link) &&
-                          styles.watchlistCircleButtonActive,
                       ]}
                     >
                       <Ionicons

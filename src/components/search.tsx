@@ -14,12 +14,17 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useThemeStore } from "../store/useThemeStore";
 import { useProviderStore } from "../store/useProviderStore";
+import { useSearchHistoryStore } from "../store/useSearchHistoryStore";
 import { useSearch } from "../hooks/useSearch";
 import Skeleton from "./Skeleton";
 
 export default function GlobalSearch({ navigation }: any) {
   const { primaryColor } = useThemeStore();
   const { installedProviders, activeProvider } = useProviderStore();
+  const searchHistory = useSearchHistoryStore((s) => s.history);
+  const addSearch = useSearchHistoryStore((s) => s.addSearch);
+  const removeSearch = useSearchHistoryStore((s) => s.removeSearch);
+  const clearHistory = useSearchHistoryStore((s) => s.clearHistory);
   const [query, setQuery] = useState("");
   const [activeSearch, setActiveSearch] = useState("");
   const inputRef = useRef<TextInput>(null);
@@ -53,6 +58,7 @@ export default function GlobalSearch({ navigation }: any) {
   const handleSearch = () => {
     if (query.trim().length > 2) {
       Keyboard.dismiss();
+      addSearch(query);
       setActiveSearch(query);
     }
   };
@@ -62,9 +68,14 @@ export default function GlobalSearch({ navigation }: any) {
     setActiveSearch("");
   };
 
-  const handleTrendingPress = (term: string) => {
+  const handleTermPress = (term: string) => {
     setQuery(term);
+    addSearch(term);
     setActiveSearch(term);
+  };
+
+  const handleTrendingPress = (term: string) => {
+    handleTermPress(term);
   };
 
   // ✅ Navigate to DetailScreen with correct parameters
@@ -155,8 +166,64 @@ export default function GlobalSearch({ navigation }: any) {
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           activeSearch.length === 0 ? (
-            <View style={styles.trendingContainer}>
-              <View style={styles.trendingHeader}>
+            <View>
+              {searchHistory.length > 0 && (
+                <View style={styles.historyContainer}>
+                  <View style={styles.historyHeader}>
+                    <View style={styles.historyHeaderLeft}>
+                      <Ionicons
+                        name="time-outline"
+                        size={18}
+                        color={primaryColor}
+                      />
+                      <Text style={[styles.sectionTitle, { color: "#fff" }]}>
+                        Recent Searches
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={clearHistory}
+                      hitSlop={8}
+                      style={styles.clearHistoryButton}
+                    >
+                      <Ionicons name="trash-outline" size={14} color="#ef4444" />
+                      <Text style={styles.clearHistoryText}>Clear all</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.historyList}>
+                    {searchHistory.map((term) => (
+                      <View key={term} style={styles.historyRow}>
+                        <TouchableOpacity
+                          style={styles.historyRowMain}
+                          onPress={() => handleTermPress(term)}
+                          activeOpacity={0.7}
+                        >
+                          <Ionicons
+                            name="search"
+                            size={15}
+                            color="#8b93a0"
+                            style={{ marginRight: 10 }}
+                          />
+                          <Text
+                            style={styles.historyTerm}
+                            numberOfLines={1}
+                          >
+                            {term}
+                          </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={() => removeSearch(term)}
+                          hitSlop={8}
+                          style={styles.historyRemove}
+                        >
+                          <Ionicons name="close" size={16} color="#666" />
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              )}
+              <View style={styles.trendingContainer}>
+                <View style={styles.trendingHeader}>
                 <Text style={[styles.sectionTitle, { color: "#fff" }]}>
                   Trending Searches
                 </Text>
@@ -195,6 +262,7 @@ export default function GlobalSearch({ navigation }: any) {
                     </Text>
                   </TouchableOpacity>
                 ))}
+              </View>
               </View>
             </View>
           ) : isLoading ? (
@@ -345,6 +413,54 @@ const styles = StyleSheet.create({
 
   content: { flex: 1 },
   listContent: { paddingBottom: 40 },
+
+  historyContainer: { paddingHorizontal: 16, paddingTop: 10 },
+  historyHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+  historyHeaderLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  clearHistoryButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: "rgba(239, 68, 68, 0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(239, 68, 68, 0.3)",
+  },
+  clearHistoryText: { color: "#ef4444", fontSize: 11.5, fontWeight: "700" },
+  historyList: {
+    backgroundColor: "#0a0a0a",
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+    paddingHorizontal: 4,
+    marginBottom: 8,
+  },
+  historyRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "rgba(255,255,255,0.07)",
+  },
+  historyRowMain: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 13,
+  },
+  historyTerm: { color: "#ddd", fontSize: 14, fontWeight: "500", flex: 1 },
+  historyRemove: { padding: 12 },
 
   trendingContainer: { padding: 16, paddingTop: 10 },
   trendingHeader: {

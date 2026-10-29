@@ -1,10 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Animated,
   AppState,
   BackHandler,
   DeviceEventEmitter,
+  Easing,
   PanResponder,
   Platform,
   Pressable,
@@ -36,8 +36,11 @@ import { createMMKV } from "react-native-mmkv";
 import { usePlayerStore } from "@/store/usePlayerStore";
 import {
   getNextEpisode,
+  markQualityFailed,
+  pickFallbackQuality,
   playEpisode,
   playerQualityOptions,
+  qualityRisk,
   switchQuality,
 } from "@/lib/playerSwitch";
 import { usePreferencesStore } from "@/store/usePreferencesStore";
@@ -108,6 +111,161 @@ const fmtTime = (t: number) => {
   const ss = String(s).padStart(2, "0");
   return h > 0 ? `${h}:${mm}:${ss}` : `${m}:${ss}`;
 };
+
+function LoadingIndicator({ text, color }: { text: string; color: string }) {
+  const spin = useRef(new Animated.Value(0)).current;
+  const pulse = useRef(new Animated.Value(0.6)).current;
+
+  useEffect(() => {
+    const spinLoop = Animated.loop(
+      Animated.timing(spin, {
+        toValue: 1,
+        duration: 1000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }),
+    );
+    const pulseLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, {
+          toValue: 1,
+          duration: 700,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulse, {
+          toValue: 0.6,
+          duration: 700,
+          easing: Easing.in(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    spinLoop.start();
+    pulseLoop.start();
+    return () => {
+      spinLoop.stop();
+      pulseLoop.stop();
+    };
+  }, [spin, pulse]);
+
+  const rotate = spin.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "360deg"],
+  });
+
+  return (
+    <View style={loaderStyles.wrap} pointerEvents="none">
+      <Animated.View style={[loaderStyles.ringWrap, { opacity: pulse }]}>
+        <View style={loaderStyles.ringTrack} />
+        <Animated.View
+          style={[loaderStyles.ringArc, { transform: [{ rotate }] }]}
+        >
+          <View
+            style={[
+              loaderStyles.arcSegment,
+              { borderTopColor: color, borderRightColor: color },
+            ]}
+          />
+        </Animated.View>
+        <View style={[loaderStyles.ringDot, { backgroundColor: color }]} />
+      </Animated.View>
+      <View style={loaderStyles.textRow}>
+        <Text style={loaderStyles.text}>{text}</Text>
+        <LoadingDots />
+      </View>
+    </View>
+  );
+}
+
+function LoadingDots() {
+  const dots = [useRef(new Animated.Value(0)).current, useRef(new Animated.Value(0)).current, useRef(new Animated.Value(0)).current];
+  useEffect(() => {
+    const loops = dots.map((dot, index) =>
+      Animated.loop(
+        Animated.sequence([
+          Animated.delay(index * 200),
+          Animated.timing(dot, {
+            toValue: 1,
+            duration: 260,
+            useNativeDriver: true,
+          }),
+          Animated.timing(dot, {
+            toValue: 0,
+            duration: 260,
+            useNativeDriver: true,
+          }),
+        ]),
+      ),
+    );
+    loops.forEach((loop) => loop.start());
+    return () => loops.forEach((loop) => loop.stop());
+  }, []);
+  return (
+    <View style={{ flexDirection: "row", marginLeft: 3 }}>
+      {dots.map((dot, index) => (
+        <Animated.Text
+          key={index}
+          style={[loaderStyles.dot, { opacity: dot }]}
+        >
+          •
+        </Animated.Text>
+      ))}
+    </View>
+  );
+}
+
+const LOADER_RING = 72;
+
+const loaderStyles = StyleSheet.create({
+  wrap: { alignItems: "center", justifyContent: "center", gap: 18 },
+  ringWrap: {
+    width: LOADER_RING,
+    height: LOADER_RING,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ringTrack: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: LOADER_RING / 2,
+    borderWidth: 3,
+    borderColor: "rgba(255,255,255,0.12)",
+  },
+  ringArc: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  arcSegment: {
+    width: LOADER_RING,
+    height: LOADER_RING,
+    borderRadius: LOADER_RING / 2,
+    borderWidth: 3,
+    borderColor: "transparent",
+  },
+  ringDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    opacity: 0.9,
+  },
+  textRow: { flexDirection: "row", alignItems: "center" },
+  text: {
+    color: "rgba(255,255,255,0.85)",
+    fontSize: 13.5,
+    fontWeight: "700",
+    letterSpacing: 0.3,
+  },
+  dot: { color: "rgba(255,255,255,0.85)", fontSize: 13.5, marginHorizontal: 1 },
+});
 
 const formatQuality = (quality?: string | number, height?: number) => {
   const numericHeight =
@@ -917,10 +1075,16 @@ export default function PlayerOverlay() {
     }
     setShowControls(true);
     wake();
-    if (ScreenOrientation?.unlockAsync) {
+    // Fullscreen playback is landscape-first: lock it so opening the player
+    // never briefly sits in portrait. The rotate button unlocks/toggles.
+    if (ScreenOrientation?.lockAsync && ScreenOrientation?.OrientationLock) {
+      ScreenOrientation.lockAsync(
+        ScreenOrientation.OrientationLock.LANDSCAPE,
+      ).catch(() => {});
+    } else if (ScreenOrientation?.unlockAsync) {
       ScreenOrientation.unlockAsync().catch(() => {});
     }
-    setOrientationLocked(false);
+    setOrientationLocked(true);
     setNavBarVisibility(true);
     return () => {
       setNavBarVisibility(false);
@@ -1179,6 +1343,44 @@ export default function PlayerOverlay() {
       setError({
         message:
           "This video did not start. Try another server or pick a different quality.",
+      });
+      wake(true);
+      return;
+    }
+
+    // Codec fallback: this device cannot decode the file (HEVC 10-bit, HDR,
+    // 4K...). Retrying the same file is pointless, so jump to another quality.
+    const rawError = [
+      message,
+      event?.error?.errorException,
+      event?.error?.errorStackTrace,
+    ]
+      .filter(Boolean)
+      .join(" ");
+    const codecFail =
+      /DECODER_INIT_FAILED|DECODING_FAILED|DECODING_FORMAT|EXCEEDS_CAPABILITIES|FORMAT_UNSUPPORTED/i.test(
+        rawError,
+      );
+    if (
+      codecFail &&
+      (/EXCEEDS_CAPABILITIES|FORMAT_UNSUPPORTED/i.test(rawError) ||
+        surfaceStreams[streamIndex])
+    ) {
+      const meta = usePlayerStore.getState().playerMeta;
+      if (meta) {
+        markQualityFailed(meta);
+        const alt = pickFallbackQuality(meta);
+        if (alt != null && !switchBusy.current) {
+          showToast("This device can't play this format — trying another quality…");
+          wake(true);
+          void changeQuality(alt);
+          return;
+        }
+      }
+      setFailedStreams((previous) => ({ ...previous, [streamIndex]: true }));
+      setError({
+        message:
+          "This device can't decode this video (HEVC 10-bit / HDR / 4K). Pick a lower quality such as 1080p x264, or try on a real phone if you're using an emulator.",
       });
       wake(true);
       return;
@@ -1696,9 +1898,12 @@ const renderSeekButton = (side: "left" | "right") => {
       rows.push({
         icon: "video-high-definition",
         title: option.label,
-        detail: playerMeta?.isSeries
-          ? `Keeps ${playerMeta.episode || "this episode"}`
-          : "Switch quality",
+        detail:
+          qualityRisk(option.label) >= 3
+            ? "May not play on this device"
+            : playerMeta?.isSeries
+              ? `Keeps ${playerMeta.episode || "this episode"}`
+              : "Switch quality",
         selected: option.index === playerMeta?.qualityIndex,
         accent: primaryColor,
         onPress: () => {
@@ -2081,10 +2286,10 @@ const renderSeekButton = (side: "left" | "right") => {
       <View style={StyleSheet.absoluteFill}>
         {startupLoading ? (
           <View style={styles.loadingScreen}>
-            <ActivityIndicator size="large" color="#fff" />
-            <Text style={styles.loadingText}>
-              {pendingStream ? "Starting stream…" : "Preparing stream…"}
-            </Text>
+            <LoadingIndicator
+              text={pendingStream ? "Starting stream" : "Preparing stream"}
+              color={primaryColor}
+            />
           </View>
         ) : (
           <Animated.View
@@ -2224,8 +2429,7 @@ const renderSeekButton = (side: "left" | "right") => {
 
           {switching && (
             <View style={styles.centerOverlay} pointerEvents="none">
-              <ActivityIndicator size="large" color="#fff" />
-              <Text style={styles.loadingText}>Switching server…</Text>
+              <LoadingIndicator text="Switching server" color={primaryColor} />
             </View>
           )}
 
@@ -2236,10 +2440,10 @@ const renderSeekButton = (side: "left" | "right") => {
             !error &&
             (buffering || !hasRendered) && (
               <View style={styles.centerOverlay} pointerEvents="none">
-                <ActivityIndicator size="large" color="#fff" />
-                {!hasRendered ? (
-                  <Text style={styles.loadingText}>Starting stream…</Text>
-                ) : null}
+                <LoadingIndicator
+                  text={!hasRendered ? "Starting stream" : "Buffering"}
+                  color={primaryColor}
+                />
               </View>
             )}
 
@@ -2492,7 +2696,7 @@ const renderSeekButton = (side: "left" | "right") => {
                   accessibilityLabel="Play next episode"
                 >
                   <Text style={styles.nextEpisodeText}>Next Episode</Text>
-                  <Ionicons name="play-skip-forward" size={16} color="#000" />
+                  <Ionicons name="play-skip-forward" size={12} color="#fff" />
                 </TouchableOpacity>
               ) : null}
                 
@@ -2713,11 +2917,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 12,
     backgroundColor: "#000",
-  },
-  loadingText: {
-    color: "rgba(255,255,255,0.82)",
-    fontSize: 13,
-    fontWeight: "600",
   },
   gestureLayer: { ...absoluteFillStyle },
   subtitleLayer: {

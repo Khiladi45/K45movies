@@ -8,26 +8,26 @@ import {
 } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import Svg, { Path } from "react-native-svg";
+import Svg, { Path, Polygon } from "react-native-svg";
 import { useThemeStore } from "../store/useThemeStore";
 
 // ---------- THEME DATA ----------
 const POPULAR = [
-  { name: "Ocean", hex: "#007AFF", icon: "waves", family: "mci" },
+  { name: "Orange", hex: "#F97316", icon: "cannabis", family: "mci" },
   { name: "Royal Blue", hex: "#2563EB", icon: "crown", family: "mci" },
-  { name: "Emerald", hex: "#10B981", icon: "gem", family: "mci" },
-  { name: "Purple", hex: "#A855F7", icon: "diamond", family: "mci" },
-  { name: "Rose", hex: "#E11D48", icon: "rose", family: "mci" },
+  { name: "Emerald", hex: "#10B981", icon: "mace", family: "mci" },
+  { name: "Purple", hex: "#A855F7", icon: "diamond-stone", family: "mci" },
+  { name: "Rose", hex: "#E11D48", icon: "rose", family: "ion" },
 ];
 
 const VIBRANT = [
   { name: "Crimson", hex: "#FF0033", icon: "flame-outline", family: "ion" },
   { name: "Coral", hex: "#FF6B6B", icon: "flower-outline", family: "ion" },
-  { name: "Orange", hex: "#F97316", icon: "circle-slice-8", family: "mci" },
+   { name: "Ocean", hex: "#007AFF", icon: "waves", family: "mci" },
   { name: "Gold", hex: "#F59E0B", icon: "star-outline", family: "ion" },
   { name: "Lime", hex: "#84CC16", icon: "leaf-outline", family: "ion" },
-  { name: "Teal", hex: "#14B8A6", icon: "water-outline", family: "ion" },
-  { name: "Cyan", hex: "#06B6D4", icon: "lightning-outline", family: "ion" },
+  { name: "Teal", hex: "#14B8A6", icon: "ferris-wheel", family: "mci" },
+  { name: "Cyan", hex: "#06B6D4", icon: "ice-cream", family: "ion" },
   { name: "Sky", hex: "#0EA5E9", icon: "cloud-outline", family: "ion" },
   { name: "Indigo", hex: "#6366F1", icon: "planet-outline", family: "ion" },
   { name: "Violet", hex: "#8B5CF6", icon: "sparkles-outline", family: "ion" },
@@ -35,11 +35,18 @@ const VIBRANT = [
 
 const SOFT = [
   { name: "Pink", hex: "#EC4899", icon: "heart-outline", family: "ion" },
-  { name: "Magenta", hex: "#D946EF", icon: "hexagon-outline", family: "ion" },
-  { name: "Slate", hex: "#64748B", icon: "triangle-outline", family: "ion" },
-  { name: "Mint", hex: "#34D399", icon: "leaf-outline", family: "ion" },
-];
+  { name: "Magenta", hex: "#D946EF", icon: "cards-playing", family: "mci" },
+  { name: "Slate", hex: "#64748B", icon: "castle", family: "mci" },
+  { name: "Mint", hex: "#34D399", icon: "bird", family: "mci" },
+  { name: "Mellow", hex: "#FACC15", icon: "sunny-outline", family: "ion" },
 
+  // New soft colors
+  { name: "Lavender", hex: "#C4B5FD", icon: "cookie", family: "mci" },
+  { name: "Peach", hex: "#FDBA74", icon: "fire", family: "mci" },
+  { name: "Blush", hex: "#FDA4AF", icon: "heart-outline", family: "ion" },
+  { name: "Sage", hex: "#A3B18A", icon: "flower", family: "mci" },
+  { name: "Ice", hex: "#BAE6FD", icon: "snow-outline", family: "ion" },
+];
 const ALL_COLORS = [...POPULAR, ...VIBRANT, ...SOFT];
 
 const withOpacity = (hex: string, opacity: string) => `${hex}${opacity}`;
@@ -87,11 +94,22 @@ export default function ThemeSettingsScreen({ navigation }: any) {
         ]}
       >
         {/* Decorative diagonal stripe */}
-        <View style={[styles.stripe, { backgroundColor: item.hex }]} />
+      <Svg
+         width={CARD_SIZE}
+         height={CARD_SIZE}
+         style={StyleSheet.absoluteFill}
+         pointerEvents="none"
+      >
+         <Polygon
+             points={`${CARD_SIZE},${CARD_SIZE * 0.25} ${CARD_SIZE},${CARD_SIZE} ${CARD_SIZE * 0.25},${CARD_SIZE}`}
+             fill={item.hex}
+         />
+     </Svg>
+
 
         {selected && (
           <View style={[styles.checkBadge, { backgroundColor: item.hex }]}>
-            <Ionicons name="checkmark" size={10} color="#fff" />
+            <Ionicons name="checkmark" size={8} color="#fff" />
           </View>
         )}
 
@@ -424,8 +442,8 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 5,
     right: 5,
-    width: 16,
-    height: 16,
+    width: 12,
+    height: 12,
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
