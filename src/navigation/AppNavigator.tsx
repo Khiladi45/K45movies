@@ -11,6 +11,7 @@ import DownloadsScreen from "@/Home/screens/DownloadsScreen";
 import CategoryScreen from "@/Home/screens/CategoryScreen";
 import PreferencesScreen from "@/Tools/PreferencesScreen";
 import ProviderDiagnosticsScreen from "@/Tools/ProviderDiagnosticsScreen";
+import TmdbDetailScreen from "@/Tmdb/screens/TmdbDetailScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -42,6 +43,16 @@ export default function AppNavigator() {
           component={DetailScreen}
           options={{
             title: "Movie Details",
+            animation: "slide_from_bottom",
+          }}
+        />
+
+        {/* Movie Based layout only: TMDB movie / series details */}
+        <Stack.Screen
+          name="TmdbDetail"
+          component={TmdbDetailScreen}
+          options={{
+            title: "Details",
             animation: "slide_from_bottom",
           }}
         />

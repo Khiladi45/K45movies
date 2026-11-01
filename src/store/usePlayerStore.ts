@@ -33,6 +33,19 @@ export type PlayerMeta = {
   linkIndex?: number;
   // Seconds to resume from after a quality switch.
   resumeAt?: number;
+  // Set only by the Movie Based layout. `tmdb` routes progress to the TMDB
+  // continue-watching list; `preferredAudioLanguage` (ISO 639-1) selects that
+  // audio track when the stream offers several.
+  tmdb?: {
+    id: number;
+    mediaType: "movie" | "tv";
+    season?: number;
+    episode?: number;
+    episodeTitle?: string;
+    poster?: string | null;
+    backdrop?: string | null;
+  };
+  preferredAudioLanguage?: string;
 } | null;
 
 type PlayerState = {

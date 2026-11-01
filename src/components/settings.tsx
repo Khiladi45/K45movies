@@ -15,6 +15,7 @@ import {
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useThemeStore } from "../store/useThemeStore";
+import LayoutSettingsSection from "./LayoutSettingsSection";
 import {
   useProfileStore,
   PRESET_AVATARS,
@@ -250,6 +251,9 @@ export default function UserSettings({ navigation }: any) {
             onPress={() => navigation.navigate("ThemeSettings")}
           />
         </Section>
+
+        {/* Layout (Provider Based / Movie Based) */}
+        <LayoutSettingsSection />
 
         {/* Playback & Download */}
         <Section title="PLAYBACK & DOWNLOAD" primaryColor={primaryColor}>

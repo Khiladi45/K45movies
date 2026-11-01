@@ -47,6 +47,11 @@ import { usePreferencesStore } from "@/store/usePreferencesStore";
 import { useThemeStore } from "@/store/useThemeStore";
 import { useContinueWatchingStore } from "@/store/useContinueWatchingStore";
 import {
+  continueKey as tmdbContinueKey,
+  useTmdbContinueWatchingStore,
+} from "@/store/useTmdbContinueWatchingStore";
+import { normalizeLangCode } from "@/lib/languages";
+import {
   prepareSubtitles,
   PreparedSubtitle,
   languageCodeFor,
@@ -899,6 +904,35 @@ export default function PlayerOverlay() {
       const meta = usePlayerStore.getState().playerMeta;
       if (!meta?.link || !meta.title) return;
       if (meta.providerId === "__local") return;
+      // Movie Based layout: progress goes to its own continue-watching list.
+      if (meta.tmdb) {
+        const tmdb = meta.tmdb;
+        const key = tmdbContinueKey(tmdb.mediaType, tmdb.id);
+        const tmdbStore = useTmdbContinueWatchingStore.getState();
+        if (total > 0 && position / total >= 0.9) {
+          tmdbStore.remove(key);
+          return;
+        }
+        if (position < 10) return;
+        // "Next episode" reuses this meta, so trust the live episode number.
+        const episode =
+          tmdb.mediaType === "tv"
+            ? (meta.episodeNumber ?? tmdb.episode)
+            : undefined;
+        tmdbStore.upsert({
+          id: tmdb.id,
+          mediaType: tmdb.mediaType,
+          title: meta.title,
+          poster: tmdb.poster ?? null,
+          backdrop: tmdb.backdrop ?? null,
+          season: tmdb.season,
+          episode,
+          episodeTitle: episode === tmdb.episode ? tmdb.episodeTitle : undefined,
+          position,
+          duration: total,
+        });
+        return;
+      }
       if (total > 0 && position / total >= 0.9) {
         removeContinueWatching(meta.link);
         return;
@@ -1163,7 +1197,22 @@ export default function PlayerOverlay() {
     if (incomingAudio.length) setAudioTracks(incomingAudio);
     if (incomingVideo.length) setVideoTracks(incomingVideo);
     if (incomingText.length) setEmbeddedTextTracks(incomingText);
-    setSelectedAudioIndex(null);
+    // Movie Based layout: start on the user's preferred audio track when the
+    // stream offers it. Without a preference this is exactly `null` as before.
+    const preferredAudio =
+      usePlayerStore.getState().playerMeta?.preferredAudioLanguage;
+    let autoAudio: number | null = null;
+    if (preferredAudio && incomingAudio.length > 1) {
+      const hit = incomingAudio.find(
+        (track: any) =>
+          normalizeLangCode(track?.language) === preferredAudio ||
+          normalizeLangCode(track?.title) === preferredAudio,
+      );
+      if (hit && !hit.selected && hit.index != null) {
+        autoAudio = Number(hit.index);
+      }
+    }
+    setSelectedAudioIndex(autoAudio);
 
     const pendingEmbedded = pendingEmbeddedSubtitle.current;
     if (pendingEmbedded) {

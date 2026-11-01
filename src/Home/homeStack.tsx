@@ -1,9 +1,8 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
-import HomeScreen from "./screens/HomeScreen";
 import DetailScreen from "./screens/DetailScreen";
-import Header from "@/components/header";
+import { HomeGate, HomeHeaderGate } from "@/Tmdb/LayoutGates";
 
 const Stack = createNativeStackNavigator();
 
@@ -12,9 +11,9 @@ export default function HomeStack() {
     <Stack.Navigator>
       <Stack.Screen
         name="HomeScreen"
-        component={HomeScreen}
+        component={HomeGate}
         options={{
-          header: () => <Header />,
+          header: () => <HomeHeaderGate />,
         }}
       />
     </Stack.Navigator>

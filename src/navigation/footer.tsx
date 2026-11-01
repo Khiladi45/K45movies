@@ -26,9 +26,8 @@ import Svg, {
 import { useThemeStore } from "@/store/useThemeStore";
 
 import HomeStack from "../Home/homeStack";
-import GlobalSearch from "@/components/search";
+import { SearchGate, WatchlistGate } from "@/Tmdb/LayoutGates";
 import AddProviders from "@/components/providersAdd";
-import Watchlist from "@/components/watchlist";
 import UserSettings from "@/components/settings";
 import { useProfileStore } from "@/store/useProfileStore";
 
@@ -226,7 +225,7 @@ export default function BottomTabs() {
         />
         <Tab.Screen
           name="Search"
-          component={GlobalSearch}
+          component={SearchGate}
           options={{
             title: "Search",
             tabBarIcon: ({ color, size }) => (
@@ -247,7 +246,7 @@ export default function BottomTabs() {
         />
         <Tab.Screen
           name="Watchlist"
-          component={Watchlist}
+          component={WatchlistGate}
           options={{
             title: "Watchlist",
             tabBarIcon: ({ color, size }) => (
