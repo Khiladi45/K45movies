@@ -19,6 +19,9 @@ type Props = {
   providers: ProviderStatus[];
   loading: boolean;
   checkingAudio: boolean;
+  // Rows still being verified / rows dropped because their stream was dead.
+  pending?: number;
+  hidden?: number;
   preferredCode: string | null;
   noProviders: boolean;
   playingId: string | null;
@@ -131,6 +134,8 @@ export default function SourcesPanel({
   providers,
   loading,
   checkingAudio,
+  pending = 0,
+  hidden = 0,
   preferredCode,
   noProviders,
   playingId,
@@ -141,13 +146,20 @@ export default function SourcesPanel({
   const nameOf = (providerId: string) =>
     providers.find((p) => p.providerId === providerId)?.name || providerId;
 
+  // Options arrive already in strict order; this only draws the group labels.
   const preferredRows = preferredCode
     ? options.filter((o) => o.languages.includes(preferredCode))
     : [];
-  const otherRows = preferredCode
-    ? options.filter((o) => !o.languages.includes(preferredCode))
-    : options;
-  const split = preferredRows.length > 0 && otherRows.length > 0;
+  const multiRows = options.filter(
+    (o) => !preferredRows.includes(o) && o.multiAudio,
+  );
+  const otherRows = options.filter(
+    (o) => !preferredRows.includes(o) && !o.multiAudio,
+  );
+  const groups = [preferredRows, multiRows, otherRows].filter(
+    (g) => g.length > 0,
+  ).length;
+  const split = groups > 1;
   const busy = playingId != null;
 
   const renderRow = (option: SourceOption) => (
@@ -194,7 +206,16 @@ export default function SourcesPanel({
           <Ionicons name="language-outline" size={14} color="#38bdf8" />
           <Text style={styles.audioNoteText}>
             {languageName(preferredCode)} audio first
-            {checkingAudio ? " · checking audio tracks…" : ""}
+            {checkingAudio ? ` · verifying ${pending} stream${pending === 1 ? "" : "s"}…` : ""}
+          </Text>
+        </View>
+      ) : null}
+
+      {!preferredCode && checkingAudio ? (
+        <View style={styles.audioNote}>
+          <ActivityIndicator size="small" color="#7dd3fc" style={styles.chipSpinner} />
+          <Text style={styles.audioNoteText}>
+            Verifying {pending} stream{pending === 1 ? "" : "s"}…
           </Text>
         </View>
       ) : null}
@@ -212,20 +233,28 @@ export default function SourcesPanel({
           <Ionicons name="cloud-offline-outline" size={40} color="#444" />
           <Text style={styles.emptyTitle}>No streams found</Text>
           <Text style={styles.emptyText}>
-            {emptyText ||
-              "None of your installed providers returned this title. Try installing more providers."}
+            {hidden > 0
+              ? `${hidden} stream${hidden === 1 ? " was" : "s were"} found but none are working right now, so they were hidden.`
+              : emptyText ||
+                "None of your installed providers returned this title. Try installing more providers."}
           </Text>
         </View>
       ) : null}
 
       <View style={{ gap: 8 }}>
-        {split ? (
+        {split && preferredRows.length > 0 ? (
           <Text style={styles.groupLabel}>
             {languageName(preferredCode)} audio
           </Text>
         ) : null}
         {preferredRows.map(renderRow)}
-        {split ? <Text style={styles.groupLabel}>Other qualities</Text> : null}
+        {split && multiRows.length > 0 ? (
+          <Text style={styles.groupLabel}>Multi audio</Text>
+        ) : null}
+        {multiRows.map(renderRow)}
+        {split && otherRows.length > 0 ? (
+          <Text style={styles.groupLabel}>Other qualities</Text>
+        ) : null}
         {otherRows.map(renderRow)}
         {options.length > 0 && loading ? (
           <Skeleton style={{ height: 72, borderRadius: 14 }} />

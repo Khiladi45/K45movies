@@ -23,6 +23,7 @@ import {
   hasMultiAudioHint,
 } from "@/lib/audioLanguages";
 import { TEXT_LANGUAGE_NAMES } from "@/lib/languages";
+import { fuzzyTitleScore, searchVariants } from "@/lib/fuzzy";
 import type { LinkItem, DirectLink } from "@/components/SeasonList";
 import type { PlayerEpisode } from "@/store/usePlayerStore";
 import type { TmdbMediaType } from "@/lib/tmdbApi";
@@ -152,23 +153,14 @@ export function scoreTitle(
   const candidates = [media.title, media.originalTitle].filter(
     (value, index, list) => !!value && list.indexOf(value) === index,
   );
-  const postTokens = coreTokens(postTitle);
-  if (postTokens.length === 0) return 0;
-  const postSet = new Set(postTokens);
+  const postCore = coreTokens(postTitle).join(" ");
+  if (!postCore) return 0;
 
+  // Fuzzy: tolerant of "&" vs "and", spelling variants, years and quality
+  // tags in the post title (see lib/fuzzy.ts).
   let best = 0;
   for (const candidate of candidates) {
-    const wanted = tokenize(candidate);
-    if (wanted.length === 0) continue;
-    const wantedSet = new Set(wanted);
-    const hits = wanted.filter((token) => postSet.has(token)).length;
-    const recall = hits / wanted.length;
-    const precision =
-      postTokens.filter((token) => wantedSet.has(token)).length /
-      postTokens.length;
-    if (recall === 0 || precision === 0) continue;
-    const f = (2 * recall * precision) / (recall + precision);
-    best = Math.max(best, f);
+    best = Math.max(best, fuzzyTitleScore(candidate, postCore));
   }
 
   // Movies: a different release year is almost always a different film.
@@ -189,15 +181,21 @@ const MAX_MATCHES: Record<TmdbMediaType, number> = { movie: 2, tv: 4 };
 const isLatin = (text: string) => !/[^\u0000-ɏ]/.test(text);
 
 function searchQueries(media: BridgeMedia): string[] {
-  const queries = [media.title];
+  const queries = searchVariants(media.title).slice(0, 4);
   if (
     media.originalTitle &&
     media.originalTitle !== media.title &&
     isLatin(media.originalTitle)
   ) {
-    queries.push(media.originalTitle);
+    queries.push(...searchVariants(media.originalTitle).slice(0, 2));
   }
-  return queries;
+  const seen = new Set<string>();
+  return queries.filter((query) => {
+    const key = query.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 async function searchProvider(

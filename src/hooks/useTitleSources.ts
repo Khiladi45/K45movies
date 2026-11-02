@@ -3,11 +3,10 @@ import { useProviders } from "@/lib/providerApi";
 import { useProviderStore } from "@/store/useProviderStore";
 import { useLayoutStore } from "@/store/useLayoutStore";
 import { NO_LANGUAGE } from "@/lib/languages";
-import { sortByPreferredLanguage } from "@/lib/audioLanguages";
+import { sortQualitiesStrict } from "@/lib/audioLanguages";
+import { validateOptions, type ValidationResult } from "@/lib/streamValidation";
 import {
-  MAX_LANGUAGE_PROBES,
   buildMovieOptions,
-  enrichLanguages,
   matchProviders,
   resolveEpisodeOptions,
   type BridgeMedia,
@@ -81,74 +80,69 @@ export function useProviderMatches(media: BridgeMedia | null) {
 }
 
 /**
- * Adds language-awareness to a stream of rows: probes unknown rows (bounded)
- * and sorts rows whose audio matches the preferred language to the top.
+ * Validates every row in the background (resolve stream + probe URL), keeps
+ * only rows confirmed working, then sorts them strictly:
+ *   1. audio matches the preferred language
+ *   2. multi-audio streams
+ *   3. everything else
+ * Rows appear one by one as they are confirmed; nothing blocks the UI.
  */
-function useLanguageAwareOptions(
-  raw: SourceOption[],
-  resetKey: string,
-  ready: boolean,
-) {
+function useValidatedOptions(raw: SourceOption[], resetKey: string) {
   const preferred = useLayoutStore((s) => s.preferredLanguage);
   const preferredCode = preferred && preferred !== NO_LANGUAGE ? preferred : null;
-  const [resolved, setResolved] = useState<Record<string, string[]>>({});
-  const [pending, setPending] = useState(0);
-  const probed = useRef(new Set<string>());
-  const budget = useRef(MAX_LANGUAGE_PROBES);
+  const [results, setResults] = useState<Record<string, ValidationResult>>({});
+  const queued = useRef(new Set<string>());
   const controller = useRef<AbortController | null>(null);
 
   useEffect(() => {
     controller.current?.abort();
     controller.current = new AbortController();
-    probed.current = new Set();
-    budget.current = MAX_LANGUAGE_PROBES;
-    setResolved({});
-    setPending(0);
+    queued.current = new Set();
+    setResults({});
     return () => controller.current?.abort();
-  }, [resetKey, preferredCode]);
+  }, [resetKey]);
 
   useEffect(() => {
-    if (!preferredCode || !ready || budget.current <= 0) return;
     const signal = controller.current?.signal;
     if (!signal) return;
-    const targets = raw
-      .filter(
-        (option) =>
-          !probed.current.has(option.id) &&
-          !option.languages.includes(preferredCode) &&
-          (option.languages.length === 0 || option.multiAudio),
-      )
-      .slice(0, budget.current);
-    if (targets.length === 0) return;
-    targets.forEach((option) => probed.current.add(option.id));
-    budget.current -= targets.length;
-    setPending((count) => count + targets.length);
-    void enrichLanguages(
-      targets,
-      (id, codes) => {
-        if (signal.aborted) return;
-        setResolved((prev) => ({ ...prev, [id]: codes }));
-      },
+    const fresh = raw.filter((option) => !queued.current.has(option.id));
+    if (fresh.length === 0) return;
+    fresh.forEach((option) => queued.current.add(option.id));
+    void validateOptions(
+      fresh,
+      (id, result) => setResults((prev) => ({ ...prev, [id]: result })),
       signal,
-    ).finally(() => {
-      if (!signal.aborted) setPending((count) => Math.max(0, count - targets.length));
-    });
-  }, [raw, preferredCode, ready]);
+    );
+  }, [raw]);
 
   const options = useMemo(() => {
-    const merged = raw.map((option) =>
-      option.id in resolved
-        ? {
-            ...option,
-            languages: unique([...option.languages, ...resolved[option.id]]),
-            languageChecked: true,
-          }
-        : option,
-    );
-    return sortByPreferredLanguage(merged, preferredCode, (o) => o.languages);
-  }, [raw, resolved, preferredCode]);
+    const live = raw
+      .filter((option) => results[option.id]?.status === "ok")
+      .map((option) => {
+        const languages = unique([
+          ...option.languages,
+          ...results[option.id].languages,
+        ]);
+        return {
+          ...option,
+          languages,
+          multiAudio: option.multiAudio || languages.length > 1,
+          languageChecked: true,
+        };
+      });
+    return sortQualitiesStrict(live, preferredCode);
+  }, [raw, results, preferredCode]);
 
-  return { options, preferredCode, checkingAudio: pending > 0 };
+  const pending = raw.filter((option) => !(option.id in results)).length;
+  const hidden = raw.length - options.length - pending;
+
+  return {
+    options,
+    preferredCode,
+    checkingAudio: pending > 0,
+    pending,
+    hidden: Math.max(0, hidden),
+  };
 }
 
 /** Movie sources: every quality row of every matched provider. */
@@ -171,11 +165,7 @@ export function useMovieSources(media: BridgeMedia | null) {
     (id) => states[id] && states[id].status !== "searching",
   );
   const resetKey = media ? `${media.mediaType}|${media.title}|${media.year}` : "";
-  const { options, preferredCode, checkingAudio } = useLanguageAwareOptions(
-    raw,
-    resetKey,
-    raw.length > 0,
-  );
+  const { options, preferredCode, checkingAudio, pending, hidden } = useValidatedOptions(raw, resetKey);
 
   const providers: ProviderStatus[] = installed.map((providerId) => {
     const state = states[providerId];
@@ -198,8 +188,10 @@ export function useMovieSources(media: BridgeMedia | null) {
   return {
     options,
     providers,
-    loading: !settled,
+    loading: !settled || pending > 0,
     checkingAudio,
+    pending,
+    hidden,
     preferredCode,
     noProviders: installed.length === 0,
   };
@@ -275,11 +267,7 @@ export function useEpisodeSources(
     installed.every((id) => states[id] && states[id].status !== "searching") &&
     resolving.length === 0;
 
-  const { options, preferredCode, checkingAudio } = useLanguageAwareOptions(
-    raw,
-    selectionKey,
-    raw.length > 0,
-  );
+  const { options, preferredCode, checkingAudio, pending, hidden } = useValidatedOptions(raw, selectionKey);
 
   const providers: ProviderStatus[] = installed.map((providerId) => {
     const state = states[providerId];
@@ -296,8 +284,10 @@ export function useEpisodeSources(
   return {
     options,
     providers,
-    loading: !settled,
+    loading: !settled || pending > 0,
     checkingAudio,
+    pending,
+    hidden,
     preferredCode,
     noProviders: installed.length === 0,
   };

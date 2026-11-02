@@ -232,3 +232,22 @@ export function sortByPreferredLanguage<T>(
   });
   return hits.length === 0 ? items : [...hits, ...rest];
 }
+
+/**
+ * Strict quality order: (1) rows whose audio matches the preferred language,
+ * (2) multi-audio rows, (3) the rest. Stable inside each group.
+ */
+export function sortQualitiesStrict<
+  T extends { languages: string[]; multiAudio: boolean },
+>(items: T[], preferred: string | null): T[] {
+  const rank = (item: T) =>
+    preferred && item.languages.includes(preferred)
+      ? 0
+      : item.multiAudio || item.languages.length > 1
+        ? 1
+        : 2;
+  return items
+    .map((item, index) => ({ item, index, rank: rank(item) }))
+    .sort((a, b) => a.rank - b.rank || a.index - b.index)
+    .map((entry) => entry.item);
+}

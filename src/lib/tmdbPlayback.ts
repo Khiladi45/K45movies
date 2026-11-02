@@ -6,6 +6,7 @@
 import { providerApi } from "@/lib/providerApi";
 import { episodeLabel, toPlayerEpisodes } from "@/lib/episodes";
 import { selectPlaybackStreams } from "@/lib/streams";
+import { takeResolvedStream } from "@/lib/streamValidation";
 import { findPreferredStreamIndex } from "@/lib/audioLanguages";
 import { usePlayerStore, type PlayerMeta } from "@/store/usePlayerStore";
 import { usePreferencesStore } from "@/store/usePreferencesStore";
@@ -111,19 +112,22 @@ export async function playSource(
     usePlayerStore.getState().setVideo(PENDING, [], 0, meta);
     hooks.openPlayer();
 
-    let raw: any;
-    try {
-      raw = await providerApi.getStream(
-        option.providerId,
-        option.link,
-        option.type,
-        hooks.signal,
-      );
-    } catch (error: any) {
-      failPending(option.link);
-      throw new Error(
-        error?.message || "Could not get a playable stream from this provider.",
-      );
+    // The row was already resolved while being verified: reuse that answer.
+    let raw: any = takeResolvedStream(option.providerId, option.link);
+    if (raw === undefined) {
+      try {
+        raw = await providerApi.getStream(
+          option.providerId,
+          option.link,
+          option.type,
+          hooks.signal,
+        );
+      } catch (error: any) {
+        failPending(option.link);
+        throw new Error(
+          error?.message || "Could not get a playable stream from this provider.",
+        );
+      }
     }
     if (hooks.signal?.aborted) return;
 

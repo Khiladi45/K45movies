@@ -68,6 +68,10 @@ import {
 } from "@/lib/streams";
 
 const mmkv = createMMKV();
+import { orderEpisodes } from "@/lib/episodes";
+import { EpisodesPanel, SubtitleSettingsPanel } from "./PlayerSidePanels";
+
+const SIDE_PANELS = ["subtitleSettings", "episodes"];
 const ICON = "rgba(255,255,255,0.8)";
 const RATES = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
 const ASPECTS: { key: any; label: string }[] = [
@@ -1047,8 +1051,21 @@ export default function PlayerOverlay() {
   }, [wake]);
 
   useEffect(() => {
-    if (panel) wake(true);
+    if (!panel) return;
+    if (SIDE_PANELS.includes(panel)) {
+      // Side panels slide over the video: clear the control bar so the
+      // subtitles/video stay visible while the panel is open.
+      if (hideTimer.current) clearTimeout(hideTimer.current);
+      setShowControls(false);
+      return;
+    }
+    wake(true);
   }, [panel, wake]);
+
+  // Episodes are landscape-only; rotating to portrait closes the panel.
+  useEffect(() => {
+    if (screenWidth <= screenHeight && panel === "episodes") setPanel(null);
+  }, [screenWidth, screenHeight, panel]);
 
   useEffect(() => {
     if (stallTimer.current) clearTimeout(stallTimer.current);
@@ -1624,6 +1641,31 @@ export default function PlayerOverlay() {
     }
   };
 
+  const isLandscape = screenWidth > screenHeight;
+  const sideEpisodes = useMemo(
+    () => orderEpisodes(playerMeta?.episodes || []),
+    [playerMeta?.episodes],
+  );
+  const showEpisodesButton =
+    isLandscape && !!playerMeta?.isSeries && sideEpisodes.length > 0;
+
+  const playEpisodeFromPanel = async (episode: any) => {
+    if (switchBusy.current) return;
+    switchBusy.current = true;
+    saveProgress();
+    setPanel(null);
+    showToast(`Loading ${episode.title || "episode"}…`);
+    try {
+      await playEpisode(episode);
+    } catch (err) {
+      showToast(
+        err instanceof Error ? err.message : "Could not load that episode",
+      );
+    } finally {
+      switchBusy.current = false;
+    }
+  };
+
   const retryStream = () => {
     setError(null);
     autoRetriedRef.current = false;
@@ -1828,7 +1870,9 @@ const renderSeekButton = (side: "left" | "right") => {
         panState.current = null;
         lastPanEnd.current = Date.now();
         setGesture(null);
-        wake();
+        // Swiping adjusts brightness/volume silently: never reveal controls.
+        // If they are already visible, just restart their hide timer.
+        if (showControlsRef.current) wake();
       },
       onPanResponderTerminate: () => {
         panState.current = null;
@@ -1885,6 +1929,7 @@ const renderSeekButton = (side: "left" | "right") => {
   // timeline or the control buttons.
   const handleTap = (event?: any) => {
     if (lockedRef.current || panel || !expandedRef.current) return;
+    if (panState.current) return;
     if (Date.now() - lastPanEnd.current < 280) return;
     if (pinchState.current.active) return;
     if (Date.now() - lastPinchEnd.current < 350) return;
@@ -2606,6 +2651,17 @@ const renderSeekButton = (side: "left" | "right") => {
                   {subtitleLabel}
                 </Text>
               </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => setPanel("subtitleSettings")}
+                accessibilityLabel="Subtitle settings"
+              >
+                <MaterialCommunityIcons
+                  name="format-letter-case"
+                  size={22}
+                  color={ICON}
+                />
+              </TouchableOpacity>
               {audioTracks.length > 1 && (
                 <TouchableOpacity
                   style={styles.pill}
@@ -2738,7 +2794,17 @@ const renderSeekButton = (side: "left" | "right") => {
                     color={ICON}
                   />
                 </TouchableOpacity>
-                  {nextEpisode ? (
+              {showEpisodesButton ? (
+                <TouchableOpacity
+                  style={styles.nextEpisodeButton}
+                  onPress={() => setPanel("episodes")}
+                  accessibilityLabel="Show episodes"
+                >
+                  <Ionicons name="list" size={13} color="#fff" />
+                  <Text style={styles.nextEpisodeText}>Episodes</Text>
+                </TouchableOpacity>
+              ) : null}
+              {nextEpisode && isLandscape ? (
                 <TouchableOpacity
                   style={styles.nextEpisodeButton}
                   onPress={playNextEpisode}
@@ -2779,6 +2845,20 @@ const renderSeekButton = (side: "left" | "right") => {
       ) : null}
 
           {locked && (
+            <Pressable
+              style={styles.lockedTapCatcher}
+              onPress={() => {
+                if (showControlsRef.current) {
+                  if (hideTimer.current) clearTimeout(hideTimer.current);
+                  setShowControls(false);
+                } else {
+                  wake();
+                }
+              }}
+            />
+          )}
+
+          {locked && showControls && (
             <TouchableOpacity
               style={[styles.unlockButton, { top: insets.top + 16 }]}
               onPress={handleLock}
@@ -2814,7 +2894,25 @@ const renderSeekButton = (side: "left" | "right") => {
             </View>
           ) : null}
 
-          {panel && (
+          {panel === "subtitleSettings" && (
+            <SubtitleSettingsPanel
+              width={Math.min(360, Math.round(screenWidth * 0.5))}
+              onClose={() => setPanel(null)}
+            />
+          )}
+
+          {panel === "episodes" && isLandscape && (
+            <EpisodesPanel
+              width={Math.min(360, Math.round(screenWidth * 0.5))}
+              episodes={sideEpisodes}
+              currentLink={playerMeta?.link}
+              currentNumber={playerMeta?.episodeNumber}
+              onSelect={playEpisodeFromPanel}
+              onClose={() => setPanel(null)}
+            />
+          )}
+
+          {panel && !SIDE_PANELS.includes(panel) && (
             <View style={styles.panelBackdrop}>
               <Pressable
                 style={StyleSheet.absoluteFill}
@@ -2968,6 +3066,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#000",
   },
   gestureLayer: { ...absoluteFillStyle },
+  lockedTapCatcher: { ...absoluteFillStyle, zIndex: 30 },
   subtitleLayer: {
     position: "absolute",
     left: 0,
