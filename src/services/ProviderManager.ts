@@ -196,33 +196,6 @@ class ProviderManagerClass {
     }
   }
 
-  // First launch only: install every provider in the manifest so Movie Based
-  // search has all sources available. The user can uninstall any of them from
-  // Settings afterwards; that choice is never overridden because the flag is
-  // set once the pass completes. Offline (manifest unreachable) -> retried on
-  // the next launch.
-  async installAllByDefault(): Promise<void> {
-    if (useProviderStore.getState().autoInstalledAll) return;
-    const providers = await this.fetchAvailableProviders();
-    const ids: string[] = providers
-      .map((entry: any) => entry?.value)
-      .filter((value: any): value is string => typeof value === "string");
-
-    let next = 0;
-    const lane = async () => {
-      while (next < ids.length) {
-        const id = ids[next++];
-        try {
-          await this.ensureProviderBundle(id);
-        } catch {
-          // one broken provider must not stop the rest
-        }
-      }
-    };
-    await Promise.all(Array.from({ length: Math.min(3, ids.length) }, lane));
-    useProviderStore.getState().markAutoInstalledAll();
-  }
-
   async uninstallProviderFiles(providerId: string): Promise<void> {
     const providerDir = this.getProviderDir(providerId);
     if (providerDir.exists) {

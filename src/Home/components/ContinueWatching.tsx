@@ -3,6 +3,7 @@ import { View, Text, FlatList, TouchableOpacity, StyleSheet } from "react-native
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { useContinueWatchingStore } from "@/store/useContinueWatchingStore";
+import { resumeProviderItem } from "@/lib/resumePlayback";
 import { useThemeStore } from "@/store/useThemeStore";
 
 const CARD_WIDTH = 152;
@@ -48,17 +49,23 @@ const ContinueWatching = memo(function ContinueWatching({ navigation }: any) {
           return (
             <TouchableOpacity
               activeOpacity={0.9}
-              onPress={() =>
-                navigation.navigate("Detail", {
-                  movie: {
-                    link: item.link,
-                    title: item.title,
-                    image: item.image,
-                    type: item.type,
-                  },
-                  providerId: item.providerId,
-                })
-              }
+              onPress={() => {
+                const openDetails = () =>
+                  navigation.navigate("Detail", {
+                    movie: {
+                      link: item.link,
+                      title: item.title,
+                      image: item.image,
+                      type: item.type,
+                    },
+                    providerId: item.providerId,
+                  });
+                // Entries saved with player state skip the Details page.
+                if (!item.resume) return openDetails();
+                void resumeProviderItem(item).then((started) => {
+                  if (!started) openDetails();
+                });
+              }}
               onLongPress={() => remove(item.link)}
               style={{ width: CARD_WIDTH }}
             >

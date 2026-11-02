@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { createMMKV } from "react-native-mmkv";
+import type { ResumeSnapshot } from "@/store/usePlayerStore";
 
 const mmkv = createMMKV();
 
@@ -24,7 +25,8 @@ export type ContinueWatchingItem = {
   type?: string;
   position: number;
   duration: number;
-  updatedAt: number;
+  updatedAt: number;  // Saved player state for direct resume (absent on older entries).
+  resume?: ResumeSnapshot;
 };
 
 const MAX_ITEMS = 20;

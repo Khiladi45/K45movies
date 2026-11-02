@@ -15,6 +15,30 @@ export type PlayerQuality = {
   directLinks?: PlayerEpisode[];
 };
 
+// How the user left the player. Saved with Continue Watching and re-applied
+// when playback is resumed straight from the home screen.
+export type PlayerRestore = {
+  // The server/stream that was playing (matched against the fresh stream list).
+  stream?: {
+    serverKey?: string;
+    qualityLabel?: string;
+    height?: number | null;
+    link?: string;
+  };
+  // Selected resolution track inside an adaptive stream.
+  videoHeight?: number | null;
+  audio?: { language?: string; title?: string; index?: number };
+  subtitle?:
+    | { kind: "off" }
+    | { kind: "external"; title: string; label: string }
+    | {
+        kind: "embedded";
+        index: number;
+        label: string;
+        language?: string;
+      };
+};
+
 export type PlayerMeta = {
   title?: string;
   episode?: string;
@@ -46,7 +70,15 @@ export type PlayerMeta = {
     backdrop?: string | null;
   };
   preferredAudioLanguage?: string;
+  // Applied once, on the first load of a resumed session.
+  restore?: PlayerRestore;
 } | null;
+
+// Everything needed to reopen the player exactly where it was left.
+export type ResumeSnapshot = {
+  meta: NonNullable<PlayerMeta>;
+  restore: PlayerRestore;
+};
 
 type PlayerState = {
   sessionId: number;

@@ -18,11 +18,7 @@ export default function App() {
     if (Platform.OS === "web") return;
     // Sync the persisted provider store with what's actually on disk and
     // re-download the active bundle if it's missing.
-    ProviderManager.reconcileProviderStore()
-      .catch(() => {})
-      // First launch: install every available provider (see ProviderManager).
-      .then(() => ProviderManager.installAllByDefault())
-      .catch(() => {});
+    ProviderManager.reconcileProviderStore().catch(() => {});
   }, []);
 
   useEffect(() => {

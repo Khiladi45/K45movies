@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useThemeStore } from "@/store/useThemeStore";
 import { useTmdbContinueWatchingStore } from "@/store/useTmdbContinueWatchingStore";
 import { tmdbImage } from "@/lib/tmdbApi";
+import { resumeTmdbItem } from "@/lib/resumePlayback";
 import { RowHeader, useOpenTitle } from "./common";
 
 const CARD_WIDTH = 168;
@@ -43,7 +44,13 @@ const ContinueWatchingRow = memo(function ContinueWatchingRow() {
             <TouchableOpacity
               activeOpacity={0.9}
               style={{ width: CARD_WIDTH }}
-              onPress={() => open(item)}
+              onPress={() => {
+                // Entries saved with player state skip the Details page.
+                if (!item.resume) return open(item);
+                void resumeTmdbItem(item).then((started) => {
+                  if (!started) open(item);
+                });
+              }}
               onLongPress={() => remove(item.key)}
             >
               <View style={styles.thumb}>

@@ -21,10 +21,6 @@ const zustandMMKVStorage = {
 type ProviderState = {
   activeProvider: string;
   installedProviders: string[];
-  // True once every available provider was installed on first launch; after
-  // that the user's own install/uninstall choices are never overridden.
-  autoInstalledAll: boolean;
-  markAutoInstalledAll: () => void;
   setActiveProvider: (value: string) => void;
   toggleInstall: (value: string) => void;
 };
@@ -35,8 +31,6 @@ export const useProviderStore = create<ProviderState>()(
       // Default active and installed provider
       activeProvider: "vega",
       installedProviders: ["vega"],
-      autoInstalledAll: false,
-      markAutoInstalledAll: () => set({ autoInstalledAll: true }),
 
       setActiveProvider: (value) => set({ activeProvider: value }),
 

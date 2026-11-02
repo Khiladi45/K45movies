@@ -398,8 +398,6 @@ function MovieDetail({ details, navigation }: { details: TmdbDetails; navigation
               providers={sources.providers}
               loading={sources.loading}
               checkingAudio={sources.checkingAudio}
-              pending={sources.pending}
-              hidden={sources.hidden}
               preferredCode={sources.preferredCode}
               noProviders={sources.noProviders}
               playingId={playingId}
@@ -734,8 +732,6 @@ function SeriesDetail({ details, navigation }: { details: TmdbDetails; navigatio
                 providers={sources.providers}
                 loading={sources.loading}
                 checkingAudio={sources.checkingAudio}
-              pending={sources.pending}
-              hidden={sources.hidden}
                 preferredCode={sources.preferredCode}
                 noProviders={sources.noProviders}
                 playingId={playingId}

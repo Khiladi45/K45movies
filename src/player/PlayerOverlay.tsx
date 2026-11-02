@@ -4,7 +4,6 @@ import {
   AppState,
   BackHandler,
   DeviceEventEmitter,
-  Easing,
   PanResponder,
   Platform,
   Pressable,
@@ -26,6 +25,10 @@ import Video, {
   ViewType,
 } from "react-native-video";
 import { LinearGradient } from "expo-linear-gradient";
+import { Image } from "expo-image";
+import { useAssets } from "expo-asset";
+import { File } from "expo-file-system";
+import { WebView } from "react-native-webview";
 import {
   Ionicons,
   MaterialCommunityIcons,
@@ -33,7 +36,11 @@ import {
 } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { createMMKV } from "react-native-mmkv";
-import { usePlayerStore } from "@/store/usePlayerStore";
+import {
+  usePlayerStore,
+  type PlayerMeta,
+  type ResumeSnapshot,
+} from "@/store/usePlayerStore";
 import {
   getNextEpisode,
   markQualityFailed,
@@ -73,6 +80,18 @@ import { EpisodesPanel, SubtitleSettingsPanel } from "./PlayerSidePanels";
 
 const SIDE_PANELS = ["subtitleSettings", "episodes"];
 const ICON = "rgba(255,255,255,0.8)";
+const GALAXY_PLAY_LOGO = require("../../assets/GalaxyPlay.svg");
+const GALAXY_PLAY_POSTER = require("../../assets/GalaxyPlay-poster.png");
+
+let galaxyMarkupRequest: Promise<string> | null = null;
+
+const readGalaxyMarkup = (uri: string) => {
+  if (!galaxyMarkupRequest) galaxyMarkupRequest = new File(uri).text();
+  return galaxyMarkupRequest;
+};
+
+const galaxyPage = (markup: string) =>
+  `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0;padding:0;background:transparent;width:100%;height:100%;overflow:hidden}svg{width:100%;height:100%;display:block}</style></head><body>${markup}</body></html>`;
 const RATES = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
 const ASPECTS: { key: any; label: string }[] = [
   { key: ResizeMode.CONTAIN, label: "Fit" },
@@ -121,64 +140,54 @@ const fmtTime = (t: number) => {
   return h > 0 ? `${h}:${mm}:${ss}` : `${m}:${ss}`;
 };
 
-function LoadingIndicator({ text, color }: { text: string; color: string }) {
-  const spin = useRef(new Animated.Value(0)).current;
-  const pulse = useRef(new Animated.Value(0.6)).current;
+function LoadingIndicator({ text, size = 96 }: { text: string; size?: number }) {
+  // The GalaxyPlay artwork relies on SMIL animation, which native SVG
+  // renderers ignore, so it runs in a transparent WebView. The poster covers
+  // the gap while the WebView engine starts up.
+  const [logoAssets] = useAssets(GALAXY_PLAY_LOGO);
+  const [logoPage, setLogoPage] = useState<{ html: string } | null>(null);
+  const [logoReady, setLogoReady] = useState(false);
 
   useEffect(() => {
-    const spinLoop = Animated.loop(
-      Animated.timing(spin, {
-        toValue: 1,
-        duration: 1000,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      }),
-    );
-    const pulseLoop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulse, {
-          toValue: 1,
-          duration: 700,
-          easing: Easing.out(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulse, {
-          toValue: 0.6,
-          duration: 700,
-          easing: Easing.in(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ]),
-    );
-    spinLoop.start();
-    pulseLoop.start();
+    const uri = logoAssets?.[0]?.localUri;
+    if (!uri) return;
+    let active = true;
+    readGalaxyMarkup(uri)
+      .then((markup) => {
+        if (active) setLogoPage({ html: galaxyPage(markup) });
+      })
+      .catch(() => {});
     return () => {
-      spinLoop.stop();
-      pulseLoop.stop();
+      active = false;
     };
-  }, [spin, pulse]);
-
-  const rotate = spin.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["0deg", "360deg"],
-  });
+  }, [logoAssets]);
 
   return (
     <View style={loaderStyles.wrap} pointerEvents="none">
-      <Animated.View style={[loaderStyles.ringWrap, { opacity: pulse }]}>
-        <View style={loaderStyles.ringTrack} />
-        <Animated.View
-          style={[loaderStyles.ringArc, { transform: [{ rotate }] }]}
-        >
-          <View
+      <View style={{ width: size, height: size }}>
+        <Image
+          source={GALAXY_PLAY_POSTER}
+          style={[StyleSheet.absoluteFill, { opacity: logoReady ? 0 : 1 }]}
+          contentFit="contain"
+        />
+        {logoPage ? (
+          <WebView
+            source={logoPage}
             style={[
-              loaderStyles.arcSegment,
-              { borderTopColor: color, borderRightColor: color },
+              StyleSheet.absoluteFill,
+              { backgroundColor: "transparent", opacity: logoReady ? 1 : 0 },
             ]}
+            originWhitelist={["*"]}
+            scrollEnabled={false}
+            bounces={false}
+            overScrollMode="never"
+            showsHorizontalScrollIndicator={false}
+            showsVerticalScrollIndicator={false}
+            javaScriptEnabled={false}
+            onLoadEnd={() => setLogoReady(true)}
           />
-        </Animated.View>
-        <View style={[loaderStyles.ringDot, { backgroundColor: color }]} />
-      </Animated.View>
+        ) : null}
+      </View>
       <View style={loaderStyles.textRow}>
         <Text style={loaderStyles.text}>{text}</Text>
         <LoadingDots />
@@ -224,48 +233,8 @@ function LoadingDots() {
   );
 }
 
-const LOADER_RING = 72;
-
 const loaderStyles = StyleSheet.create({
-  wrap: { alignItems: "center", justifyContent: "center", gap: 18 },
-  ringWrap: {
-    width: LOADER_RING,
-    height: LOADER_RING,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  ringTrack: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderRadius: LOADER_RING / 2,
-    borderWidth: 3,
-    borderColor: "rgba(255,255,255,0.12)",
-  },
-  ringArc: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  arcSegment: {
-    width: LOADER_RING,
-    height: LOADER_RING,
-    borderRadius: LOADER_RING / 2,
-    borderWidth: 3,
-    borderColor: "transparent",
-  },
-  ringDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    opacity: 0.9,
-  },
+  wrap: { alignItems: "center", justifyContent: "center", gap: 14 },
   textRow: { flexDirection: "row", alignItems: "center" },
   text: {
     color: "rgba(255,255,255,0.85)",
@@ -474,6 +443,48 @@ type SubtitleSelection =
 
 type PlaybackError = { message: string } | null;
 
+/** The user's current stream / audio / subtitle / resolution choices. */
+function buildResumeSnapshot(
+  meta: NonNullable<PlayerMeta>,
+  live: any,
+): ResumeSnapshot {
+  const audioTracks: any[] = live.audioTracks || [];
+  const audio =
+    live.selectedAudioIndex != null
+      ? audioTracks.find(
+          (track) => Number(track.index) === live.selectedAudioIndex,
+        )
+      : audioTracks.find((track) => track.selected);
+  const stream = live.currentStream as PlayableStream | undefined;
+  const sub = live.subtitle as SubtitleSelection | undefined;
+  const { restore: _restore, resumeAt: _resumeAt, ...base } = meta;
+  return {
+    meta: base,
+    restore: {
+      stream: stream
+        ? {
+            serverKey: stream.serverKey,
+            qualityLabel: stream.qualityLabel,
+            height: stream.height,
+            link: stream.link,
+          }
+        : undefined,
+      videoHeight:
+        live.selectedVideo?.type === SelectedVideoTrackType.RESOLUTION
+          ? Number(live.selectedVideo.value) || null
+          : null,
+      audio: audio
+        ? {
+            language: audio.language,
+            title: audio.title,
+            index: audio.index != null ? Number(audio.index) : undefined,
+          }
+        : undefined,
+      subtitle: sub,
+    },
+  };
+}
+
 const PANEL_TITLES: Record<string, string> = {
   subtitle: "Subtitles",
   audio: "Audio",
@@ -679,6 +690,15 @@ export default function PlayerOverlay() {
       : "";
   const progressKeyRef = useRef(progressKey);
   progressKeyRef.current = progressKey;
+  // Latest player choices, read by saveProgress for "Continue Watching".
+  const liveRef = useRef<any>({});
+  liveRef.current = {
+    subtitle,
+    selectedAudioIndex,
+    audioTracks,
+    currentStream,
+    selectedVideo,
+  };
 
   // Backstop for the placeholder player: if nothing resolves the stream (or
   // the screen that owns the fetch unmounts), do not strand the user on the
@@ -908,6 +928,7 @@ export default function PlayerOverlay() {
       const meta = usePlayerStore.getState().playerMeta;
       if (!meta?.link || !meta.title) return;
       if (meta.providerId === "__local") return;
+      const resume = buildResumeSnapshot(meta, liveRef.current);
       // Movie Based layout: progress goes to its own continue-watching list.
       if (meta.tmdb) {
         const tmdb = meta.tmdb;
@@ -934,6 +955,7 @@ export default function PlayerOverlay() {
           episodeTitle: episode === tmdb.episode ? tmdb.episodeTitle : undefined,
           position,
           duration: total,
+          resume,
         });
         return;
       }
@@ -950,10 +972,16 @@ export default function PlayerOverlay() {
         type: meta.type,
         position,
         duration: total,
+        resume,
       });
     },
     [removeContinueWatching, upsertContinueWatching],
   );
+
+  // Pausing also saves the exact state for "Continue Watching".
+  useEffect(() => {
+    if (paused) saveProgress();
+  }, [paused, saveProgress]);
 
   // Prepare the initial stream's external subtitles before mounting the
   // native player so the tracks exist on the very first load.
@@ -1214,6 +1242,11 @@ export default function PlayerOverlay() {
     if (incomingAudio.length) setAudioTracks(incomingAudio);
     if (incomingVideo.length) setVideoTracks(incomingVideo);
     if (incomingText.length) setEmbeddedTextTracks(incomingText);
+    // Resumed from Continue Watching: re-apply the saved audio / subtitle /
+    // resolution once, on the first load only.
+    const restore = hasLoadedOnceRef.current
+      ? undefined
+      : usePlayerStore.getState().playerMeta?.restore;
     // Movie Based layout: start on the user's preferred audio track when the
     // stream offers it. Without a preference this is exactly `null` as before.
     const preferredAudio =
@@ -1229,7 +1262,39 @@ export default function PlayerOverlay() {
         autoAudio = Number(hit.index);
       }
     }
+    if (restore?.audio && incomingAudio.length > 1) {
+      const saved = restore.audio;
+      const sameLang = (track: any) =>
+        !!saved.language &&
+        normalizeLangCode(track?.language) === normalizeLangCode(saved.language);
+      const sameTitle = (track: any) =>
+        !!saved.title && track?.title === saved.title;
+      const hit =
+        incomingAudio.find((t: any) => sameLang(t) && sameTitle(t)) ||
+        incomingAudio.find(sameTitle) ||
+        incomingAudio.find(sameLang) ||
+        incomingAudio.find(
+          (t: any) => saved.index != null && Number(t.index) === saved.index,
+        );
+      if (hit) autoAudio = hit.selected ? null : Number(hit.index);
+    }
     setSelectedAudioIndex(autoAudio);
+
+    if (restore?.subtitle) {
+      subtitleTouched.current = true;
+      const savedSub = restore.subtitle;
+      if (savedSub.kind === "external") {
+        const exists = (preparedSubs || []).some(
+          (track) => track.title === savedSub.title,
+        );
+        setSubtitle(exists ? savedSub : { kind: "off" });
+      } else if (savedSub.kind === "embedded") {
+        // Matched below against the tracks this stream reports.
+        pendingEmbeddedSubtitle.current = savedSub;
+      } else {
+        setSubtitle({ kind: "off" });
+      }
+    }
 
     const pendingEmbedded = pendingEmbeddedSubtitle.current;
     if (pendingEmbedded) {
@@ -1295,6 +1360,19 @@ export default function PlayerOverlay() {
             language: track.language,
           });
         }
+      }
+    }
+
+    if (restore?.videoHeight) {
+      const track = incomingVideo.find(
+        (item: any) => Number(item?.height) === restore.videoHeight,
+      );
+      if (track) {
+        qualityTouched.current = true;
+        setSelectedVideo({
+          type: SelectedVideoTrackType.RESOLUTION,
+          value: track.height,
+        });
       }
     }
 
@@ -2382,7 +2460,7 @@ const renderSeekButton = (side: "left" | "right") => {
           <View style={styles.loadingScreen}>
             <LoadingIndicator
               text={pendingStream ? "Starting stream" : "Preparing stream"}
-              color={primaryColor}
+              size={expanded ? 116 : 56}
             />
           </View>
         ) : (
@@ -2523,7 +2601,10 @@ const renderSeekButton = (side: "left" | "right") => {
 
           {switching && (
             <View style={styles.centerOverlay} pointerEvents="none">
-              <LoadingIndicator text="Switching server" color={primaryColor} />
+              <LoadingIndicator
+                text="Switching server"
+                size={expanded ? 96 : 56}
+              />
             </View>
           )}
 
@@ -2536,7 +2617,7 @@ const renderSeekButton = (side: "left" | "right") => {
               <View style={styles.centerOverlay} pointerEvents="none">
                 <LoadingIndicator
                   text={!hasRendered ? "Starting stream" : "Buffering"}
-                  color={primaryColor}
+                  size={expanded ? 96 : 56}
                 />
               </View>
             )}

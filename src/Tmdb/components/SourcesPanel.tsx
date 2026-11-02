@@ -19,9 +19,6 @@ type Props = {
   providers: ProviderStatus[];
   loading: boolean;
   checkingAudio: boolean;
-  // Rows still being verified / rows dropped because their stream was dead.
-  pending?: number;
-  hidden?: number;
   preferredCode: string | null;
   noProviders: boolean;
   playingId: string | null;
@@ -134,8 +131,6 @@ export default function SourcesPanel({
   providers,
   loading,
   checkingAudio,
-  pending = 0,
-  hidden = 0,
   preferredCode,
   noProviders,
   playingId,
@@ -156,10 +151,8 @@ export default function SourcesPanel({
   const otherRows = options.filter(
     (o) => !preferredRows.includes(o) && !o.multiAudio,
   );
-  const groups = [preferredRows, multiRows, otherRows].filter(
-    (g) => g.length > 0,
-  ).length;
-  const split = groups > 1;
+  const split =
+    [preferredRows, multiRows, otherRows].filter((g) => g.length > 0).length > 1;
   const busy = playingId != null;
 
   const renderRow = (option: SourceOption) => (
@@ -206,16 +199,7 @@ export default function SourcesPanel({
           <Ionicons name="language-outline" size={14} color="#38bdf8" />
           <Text style={styles.audioNoteText}>
             {languageName(preferredCode)} audio first
-            {checkingAudio ? ` · verifying ${pending} stream${pending === 1 ? "" : "s"}…` : ""}
-          </Text>
-        </View>
-      ) : null}
-
-      {!preferredCode && checkingAudio ? (
-        <View style={styles.audioNote}>
-          <ActivityIndicator size="small" color="#7dd3fc" style={styles.chipSpinner} />
-          <Text style={styles.audioNoteText}>
-            Verifying {pending} stream{pending === 1 ? "" : "s"}…
+            {checkingAudio ? " · checking audio tracks…" : ""}
           </Text>
         </View>
       ) : null}
@@ -233,10 +217,8 @@ export default function SourcesPanel({
           <Ionicons name="cloud-offline-outline" size={40} color="#444" />
           <Text style={styles.emptyTitle}>No streams found</Text>
           <Text style={styles.emptyText}>
-            {hidden > 0
-              ? `${hidden} stream${hidden === 1 ? " was" : "s were"} found but none are working right now, so they were hidden.`
-              : emptyText ||
-                "None of your installed providers returned this title. Try installing more providers."}
+            {emptyText ||
+              "None of your installed providers returned this title. Try installing more providers."}
           </Text>
         </View>
       ) : null}
