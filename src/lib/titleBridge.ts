@@ -25,7 +25,7 @@ import {
 import { TEXT_LANGUAGE_NAMES } from "@/lib/languages";
 import { fuzzyTitleScore, searchVariants } from "@/lib/fuzzy";
 import type { LinkItem, DirectLink } from "@/components/SeasonList";
-import type { PlayerEpisode } from "@/store/usePlayerStore";
+import { usePlayerStore, type PlayerEpisode } from "@/store/usePlayerStore";
 import type { TmdbMediaType } from "@/lib/tmdbApi";
 
 export const PROVIDER_CONCURRENCY = 3;
@@ -82,6 +82,36 @@ export type SourceOption = {
   linkList: LinkItem[];
 };
 
+// ---- pause gate ------------------------------------------------------------
+// While the player (or mini-player) is open, no NEW provider work starts: the
+// provider search, episode lookups and audio probes wait here and continue
+// once the player is fully closed. Requests already in flight finish normally.
+
+let checksPaused = false;
+let pauseWaiters: (() => void)[] = [];
+
+export function setSourceChecksPaused(paused: boolean) {
+  checksPaused = paused;
+  if (!paused) {
+    const waiting = pauseWaiters;
+    pauseWaiters = [];
+    waiting.forEach((resume) => resume());
+  }
+}
+
+export function waitIfPaused(signal?: AbortSignal): Promise<void> {
+  if (!checksPaused || signal?.aborted) return Promise.resolve();
+  return new Promise<void>((resolve) => {
+    pauseWaiters.push(resolve);
+    signal?.addEventListener("abort", () => resolve(), { once: true });
+  });
+}
+
+usePlayerStore.subscribe((state) =>
+  setSourceChecksPaused(!!state.currentVideoUrl),
+);
+setSourceChecksPaused(!!usePlayerStore.getState().currentVideoUrl);
+
 // ---- helpers ---------------------------------------------------------------
 
 async function runPool<T>(
@@ -94,6 +124,8 @@ async function runPool<T>(
   const lane = async () => {
     while (next < items.length) {
       if (signal?.aborted) return;
+      await waitIfPaused(signal);
+      if (signal?.aborted || next >= items.length) return;
       const item = items[next++];
       try {
         await worker(item);
@@ -271,6 +303,7 @@ async function matchProvider(
   media: BridgeMedia,
 ): Promise<ProviderMatch[]> {
   for (const query of searchQueries(media)) {
+    await waitIfPaused();
     const posts = await searchProvider(providerId, query);
     const matches = await buildMatches(
       providerId,

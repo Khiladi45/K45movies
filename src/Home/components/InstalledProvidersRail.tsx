@@ -1,4 +1,4 @@
-import React, { memo, useMemo } from "react";
+import React, { memo, useEffect, useMemo, useRef } from "react";
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import { useProviders } from "@/lib/providerApi";
 import { modulesOf } from "@/providers/registry";
 
 const CARD_WIDTH = 100;
+const CARD_GAP = 12;
 const CARD_HEIGHT = 50;
 
 const prettifyName = (raw: string) => {
@@ -69,6 +70,23 @@ const InstalledProvidersRail = memo(function InstalledProvidersRail() {
     });
   }, [installedProviders, providers]);
 
+  const listRef = useRef<FlatList<(typeof cards)[number]>>(null);
+  const activeIndex = cards.findIndex((card) => card.id === activeProvider);
+
+  // Keep the active provider in view (centered) whenever the rail loads,
+  // refreshes or the active provider changes, instead of resetting to item 0.
+  useEffect(() => {
+    if (activeIndex < 0) return;
+    const timer = setTimeout(() => {
+      listRef.current?.scrollToIndex({
+        index: activeIndex,
+        viewPosition: 0.5,
+        animated: true,
+      });
+    }, 60);
+    return () => clearTimeout(timer);
+  }, [activeIndex, cards.length]);
+
   if (cards.length === 0) return null;
 
   return (
@@ -79,10 +97,26 @@ const InstalledProvidersRail = memo(function InstalledProvidersRail() {
         <Text style={styles.headerCount}>{cards.length}</Text>
       </View> */}
       <FlatList
+        ref={listRef}
         data={cards}
+        getItemLayout={(_data, index) => ({
+          length: CARD_WIDTH + CARD_GAP,
+          offset: 16 + (CARD_WIDTH + CARD_GAP) * index,
+          index,
+        })}
+        onScrollToIndexFailed={(info) => {
+          setTimeout(
+            () =>
+              listRef.current?.scrollToOffset({
+                offset: Math.max(0, info.averageItemLength * info.index - 80),
+                animated: true,
+              }),
+            100,
+          );
+        }}
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
+        contentContainerStyle={{ paddingHorizontal: 16, gap: CARD_GAP }}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => {
           const isActive = item.id === activeProvider;
@@ -93,7 +127,8 @@ const InstalledProvidersRail = memo(function InstalledProvidersRail() {
            style={[
             styles.card,
              isActive && {
-                borderWidth: 1,
+                borderWidth: 2,
+                borderColor: primaryColor,
               },
             ]}
         >
@@ -131,6 +166,11 @@ const InstalledProvidersRail = memo(function InstalledProvidersRail() {
                 style={styles.watermark}
               />
                  )}
+              {isActive ? (
+                <View style={[styles.activeDot, { backgroundColor: primaryColor }]}>
+                  <Ionicons name="checkmark" size={13} color="#fff" />
+                </View>
+              ) : null}
               <View style={styles.cardContent}>
                 <Text style={styles.cardName} numberOfLines={1}>
                   {item.name}
@@ -206,11 +246,11 @@ const styles = StyleSheet.create({
   },
   activeDot: {
     position: "absolute",
-    top: 10,
-    right: 10,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    top: 5,
+    right: 5,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
     alignItems: "center",
     justifyContent: "center",
   },

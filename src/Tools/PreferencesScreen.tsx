@@ -503,6 +503,16 @@ export default function PreferencesScreen({ navigation }: any) {
             }
             primaryColor={primaryColor}
           />
+          <SwitchRow
+            icon="albums-outline"
+            title="Background playback"
+            subtitle="Keep playing in a floating window (PiP) or as audio when you leave the app"
+            value={prefs.backgroundPlayback}
+            onValueChange={(value) =>
+              prefs.setPreference("backgroundPlayback", value)
+            }
+            primaryColor={primaryColor}
+          />
           <ChoiceRow<DefaultQuality>
             icon="options-outline"
             title="Default quality"

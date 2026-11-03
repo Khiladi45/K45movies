@@ -27,6 +27,10 @@ export type DownloadLocation = "app" | "custom";
 
 export type Preferences = {
   resumePlayback: boolean;
+  // Keep playing when the app goes to the background: Picture-in-Picture
+  // window on Android/iOS, audio-only with a notification when PiP is not
+  // available.
+  backgroundPlayback: boolean;
   defaultQuality: DefaultQuality;
   autoSubtitles: boolean;
   subtitleLanguage: string;
@@ -54,6 +58,7 @@ export const DEFAULT_SUBTITLE_BOTTOM = 36;
 
 const DEFAULT_PREFERENCES: Preferences = {
   resumePlayback: true,
+  backgroundPlayback: true,
   defaultQuality: "auto",
   autoSubtitles: false,
   subtitleLanguage: "auto",

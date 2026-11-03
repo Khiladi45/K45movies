@@ -44,7 +44,15 @@
       ],
       "expo-image",
       "expo-font",
-      "./plugins/with-video-decoder"
+      "./plugins/with-video-decoder",
+      [
+        "react-native-video",
+        {
+          "enableNotificationControls": true,
+          "enableBackgroundAudio": true,
+          "enableAndroidPictureInPicture": true
+        }
+      ]
     ],
     "extra": {
       "eas": {

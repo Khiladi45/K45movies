@@ -146,6 +146,25 @@ const formatFromTypeAndLink = (
   return { format: "other", formatLabel: hinted.toUpperCase() || "STREAM" };
 };
 
+/**
+ * Providers sometimes return links without a scheme ("files/…", "//cdn…",
+ * "cdn.example.com/…"). ExoPlayer then treats the first path segment as a host
+ * and fails with `Unable to resolve host "files"`. Prepend https:// when there
+ * is no scheme. Real schemes (http, file, content, pending, …) and absolute
+ * paths ("/…", which have no host to repair) are left untouched.
+ */
+export const ensureHttpUrl = (link: string): string => {
+  const text = String(link || "").trim();
+  if (!text) return text;
+  if (text.startsWith("//")) return `https:${text}`;
+  // Has a scheme ("https://", "file://", "pending://" …) — but not "host:8080/…".
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(text) || /^(?:data|blob|magnet):/i.test(text)) {
+    return text;
+  }
+  if (text.startsWith("/")) return text;
+  return `https://${text}`;
+};
+
 export const normalizeStreams = (rawStreams: any[]): PlayableStream[] => {
   if (!Array.isArray(rawStreams) || rawStreams.length === 0) return [];
 
@@ -158,7 +177,7 @@ export const normalizeStreams = (rawStreams: any[]): PlayableStream[] => {
 
   rawStreams.forEach((raw) => {
     if (!raw || typeof raw.link !== "string") return;
-    const link = raw.link.trim();
+    const link = ensureHttpUrl(raw.link);
     const isRemote = /^https?:\/\//i.test(link);
     const isLocal = Platform.OS !== "web" && /^(?:file|content):\/\//i.test(link);
     if (!isRemote && !isLocal) return;

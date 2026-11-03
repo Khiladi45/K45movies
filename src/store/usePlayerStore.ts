@@ -72,6 +72,9 @@ export type PlayerMeta = {
   preferredAudioLanguage?: string;
   // Applied once, on the first load of a resumed session.
   restore?: PlayerRestore;
+  // One-shot toast shown when the player (re)opens, e.g. after an automatic
+  // switch to another provider.
+  notice?: string;
 } | null;
 
 // Everything needed to reopen the player exactly where it was left.

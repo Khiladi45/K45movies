@@ -15,6 +15,10 @@ import {
   useTmdbContinueWatchingStore,
 } from "@/store/useTmdbContinueWatchingStore";
 import { currentRouteName, goBack } from "@/navigation/navigationRef";
+import {
+  nextQueueOption,
+  useSourceQueueStore,
+} from "@/store/useSourceQueueStore";
 import type { SourceOption } from "@/lib/titleBridge";
 import type { TmdbMediaType } from "@/lib/tmdbApi";
 
@@ -98,11 +102,26 @@ export async function playSource(
     onStage?: (stage: string) => void;
     signal?: AbortSignal;
   },
+  // Every row the list knows about right now: the player can fall back to the
+  // next one if this stream fails, and lists them in its Sources panel.
+  queue?: {
+    options: SourceOption[];
+    providerNames?: Record<string, string>;
+    unchecked?: number;
+  },
 ): Promise<void> {
   if (inFlight) return;
   inFlight = true;
   const meta = buildPlayerMeta(option, target);
   try {
+    const known = queue?.options?.length ? queue.options : [];
+    useSourceQueueStore.getState().setQueue({
+      options: known.some((o) => o.id === option.id) ? known : [option, ...known],
+      providerNames: queue?.providerNames || {},
+      target,
+      currentId: option.id,
+      unchecked: queue?.unchecked ?? 0,
+    });
     useTmdbContinueWatchingStore
       .getState()
       .restore(continueKey(target.mediaType, target.id));
@@ -172,4 +191,92 @@ export async function playSource(
   } finally {
     inFlight = false;
   }
+}
+
+
+// ---- switching sources from inside the player ------------------------------
+
+let switching = false;
+
+/** Resolves a row to playable streams and the server to start on. */
+async function resolveOption(option: SourceOption) {
+  const raw = await providerApi.getStream(
+    option.providerId,
+    option.link,
+    option.type,
+  );
+  const list: any[] = Array.isArray(raw) ? raw : raw ? [raw] : [];
+  const selection = await selectPlaybackStreams(list, {
+    preference: usePreferencesStore.getState().defaultQuality,
+    budgetMs: 3000,
+    probeTimeoutMs: 2600,
+  });
+  if (selection.streams.length === 0) {
+    throw new Error("This provider returned no playable stream.");
+  }
+  let startIndex = selection.startIndex;
+  const preferred = getPreferredLanguage();
+  if (preferred && selection.streams.length > 1) {
+    const hit = await findPreferredStreamIndex(selection.streams, preferred);
+    if (hit >= 0 && selection.streams[hit].probe?.status !== "failed") {
+      startIndex = hit;
+    }
+  }
+  return { streams: selection.streams, startIndex };
+}
+
+export type SwitchResult = "ok" | "failed" | "busy";
+
+/**
+ * Loads another provider row into the open player without leaving it,
+ * resuming from `position`. A row that cannot be resolved is marked failed.
+ */
+export async function switchToOption(
+  option: SourceOption,
+  position: number,
+  notice?: string,
+): Promise<SwitchResult> {
+  const queue = useSourceQueueStore.getState();
+  if (!queue.target) return "failed";
+  if (switching) return "busy";
+  switching = true;
+  try {
+    const meta: NonNullable<PlayerMeta> = {
+      ...buildPlayerMeta(option, queue.target),
+      resumeAt: position > 2 ? position : undefined,
+      notice,
+    };
+    const { streams, startIndex } = await resolveOption(option);
+    const player = usePlayerStore.getState();
+    if (!player.currentVideoUrl) return "ok"; // the user closed the player
+    const chosen = streams[startIndex] || streams[0];
+    player.setVideo(chosen.link, streams, startIndex, meta);
+    useSourceQueueStore.getState().setCurrent(option.id);
+    return "ok";
+  } catch {
+    useSourceQueueStore.getState().markFailed(option.id);
+    return "failed";
+  } finally {
+    switching = false;
+  }
+}
+
+/**
+ * Stream failed for good: walk the queue until one row loads. Resolves false
+ * when the queue is exhausted (the player then shows its error).
+ */
+export async function playNextQueueSource(position: number): Promise<boolean> {
+  for (let guard = 0; guard < 50; guard += 1) {
+    const next = nextQueueOption();
+    if (!next) return false;
+    const { providerNames } = useSourceQueueStore.getState();
+    const name = providerNames[next.providerId] || next.providerId;
+    const result = await switchToOption(
+      next,
+      position,
+      `Stream failed — switched to ${name}`,
+    );
+    if (result === "ok" || result === "busy") return true;
+  }
+  return false;
 }

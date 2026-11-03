@@ -71,14 +71,25 @@ import {
   orderGroupEntries,
   preferredEntry,
   PlayableStream,
+  ensureHttpUrl,
   QualityPreference,
 } from "@/lib/streams";
 
 const mmkv = createMMKV();
 import { orderEpisodes } from "@/lib/episodes";
-import { EpisodesPanel, SubtitleSettingsPanel } from "./PlayerSidePanels";
+import { playNextQueueSource, switchToOption } from "@/lib/tmdbPlayback";
+import { ensureBackgroundPermissions } from "@/lib/backgroundPermissions";
+import {
+  nextQueueOption,
+  useSourceQueueStore,
+} from "@/store/useSourceQueueStore";
+import {
+  EpisodesPanel,
+  SourcesPanel,
+  SubtitleSettingsPanel,
+} from "./PlayerSidePanels";
 
-const SIDE_PANELS = ["subtitleSettings", "episodes"];
+const SIDE_PANELS = ["subtitleSettings", "episodes", "sources"];
 const ICON = "rgba(255,255,255,0.8)";
 const GALAXY_PLAY_LOGO = require("../../assets/GalaxyPlay.svg");
 const GALAXY_PLAY_POSTER = require("../../assets/GalaxyPlay-poster.png");
@@ -457,7 +468,7 @@ function buildResumeSnapshot(
       : audioTracks.find((track) => track.selected);
   const stream = live.currentStream as PlayableStream | undefined;
   const sub = live.subtitle as SubtitleSelection | undefined;
-  const { restore: _restore, resumeAt: _resumeAt, ...base } = meta;
+  const { restore: _restore, resumeAt: _resumeAt, notice: _notice, ...base } = meta;
   return {
     meta: base,
     restore: {
@@ -1206,7 +1217,9 @@ export default function PlayerOverlay() {
     const subscription = AppState.addEventListener("change", (state) => {
       if (state !== "active") {
         saveProgress();
-        if (!pausedRef.current) {
+        // Background playback on: the video keeps going in a PiP window (or as
+        // audio with a notification). Off: pause as before.
+        if (!pausedRef.current && !prefsRef.current.backgroundPlayback) {
           setPaused(true);
         }
       }
@@ -1443,6 +1456,29 @@ export default function PlayerOverlay() {
     saveProgress(time);
   };
 
+  // Movie Based layout: when every server of the current provider row failed,
+  // silently load the next row of the stream queue ("Stream failed,
+  // switching…") instead of showing a dead end. Falls back to `showError`
+  // once the queue is exhausted (or outside the Movie Based layout).
+  const failOrFallback = (showError: () => void) => {
+    const queueState = useSourceQueueStore.getState();
+    if (!playerMeta?.tmdb || !queueState.currentId) {
+      showError();
+      return;
+    }
+    queueState.markFailed(queueState.currentId);
+    if (!nextQueueOption()) {
+      showError();
+      return;
+    }
+    showToast("Stream failed, switching…");
+    setBuffering(true);
+    wake(true);
+    void playNextQueueSource(currentTimeRef.current).then((started) => {
+      if (!started && mountedRef.current) showError();
+    });
+  };
+
   const handleError = (event: any) => {
     setBuffering(false);
     const message = String(
@@ -1484,11 +1520,13 @@ export default function PlayerOverlay() {
         return;
       }
       setFailedStreams((previous) => ({ ...previous, [streamIndex]: true }));
-      setError({
-        message:
-          "This video did not start. Try another server or pick a different quality.",
+      failOrFallback(() => {
+        setError({
+          message:
+            "This video did not start. Try another server or pick a different quality.",
+        });
+        wake(true);
       });
-      wake(true);
       return;
     }
 
@@ -1522,11 +1560,13 @@ export default function PlayerOverlay() {
         }
       }
       setFailedStreams((previous) => ({ ...previous, [streamIndex]: true }));
-      setError({
-        message:
-          "This device can't decode this video (HEVC 10-bit / HDR / 4K). Pick a lower quality such as 1080p x264, or try on a real phone if you're using an emulator.",
+      failOrFallback(() => {
+        setError({
+          message:
+            "This device can't decode this video (HEVC 10-bit / HDR / 4K). Pick a lower quality such as 1080p x264, or try on a real phone if you're using an emulator.",
+        });
+        wake(true);
       });
-      wake(true);
       return;
     }
 
@@ -1548,9 +1588,21 @@ export default function PlayerOverlay() {
       return;
     }
 
+    // Errors that retrying cannot fix: a malformed HLS key ("Unsupported key
+    // size: 45 bytes" — the provider's key URL returned junk instead of 16
+    // bytes) and a host name that can never resolve (scheme-less link such as
+    // "files/..."). Skip the same-server retry and go straight to the next
+    // server / provider.
+    const keyFail =
+      /InvalidKeyException|Unsupported key size|BadPaddingException|IllegalBlockSizeException/i.test(
+        rawError,
+      );
+    const hostFail = /Unable to resolve host "[^".]+"/i.test(rawError);
+    const deterministic = keyFail || hostFail;
+
     // Stage 1: one silent retry, which covers transient decoder/network
     // failures without bothering the user.
-    if (!autoRetriedRef.current) {
+    if (!autoRetriedRef.current && !deterministic) {
       autoRetriedRef.current = true;
       hasRenderedRef.current = false;
       setHasRendered(false);
@@ -1573,36 +1625,44 @@ export default function PlayerOverlay() {
     const nextIndex = positions.find((index) => !failedStreams[index]);
     if (!switching && nextIndex != null && normalizedStreams[nextIndex]?.link) {
       setFailedStreams((previous) => ({ ...previous, [streamIndex]: true }));
-      showToast("This server failed — switching to another…");
+      showToast(
+        keyFail
+          ? "Stream encryption error — switching server…"
+          : "This server failed — switching to another…",
+      );
       wake(true);
       void switchStream(nextIndex);
       return;
     }
 
-    // Stage 3: nothing left to try; surface the error and let the user pick.
-    // Diagnostics: the native error carries the failing renderer/decoder in
-    // errorException / errorStackTrace. Show it so the real cause is visible.
-    const detail = [
-      event?.error?.errorCode != null ? `code ${event.error.errorCode}` : "",
-      event?.error?.errorException,
-      String(event?.error?.errorStackTrace || "")
-        .split("\n")
-        .filter((line: string) =>
-          /Decoder|Codec|Renderer|ffmpeg|Ffmpeg|Format|Caused by/i.test(line),
-        )
-        .slice(0, 4)
-        .join("\n"),
-    ]
-      .filter(Boolean)
-      .join("\n")
-      .slice(0, 600);
-    console.log("[player] error", JSON.stringify(event?.error || event));
-    setError({ message: detail ? `${message}\n${detail}` : message });
-    setFailedStreams((previous) => ({ ...previous, [streamIndex]: true }));
-    wake(true);
-    if (normalizedStreams.length > 1) {
-      showToast("All servers failed — choose one manually");
-    }
+    // Stage 3: this provider row has no server left. Movie Based layout: load
+    // the next row of the stream queue; otherwise surface the error.
+    const showFinal = () => {
+      // Diagnostics: the native error carries the failing renderer/decoder in
+      // errorException / errorStackTrace. Show it so the real cause is visible.
+      const detail = [
+        event?.error?.errorCode != null ? `code ${event.error.errorCode}` : "",
+        event?.error?.errorException,
+        String(event?.error?.errorStackTrace || "")
+          .split("\n")
+          .filter((line: string) =>
+            /Decoder|Codec|Renderer|ffmpeg|Ffmpeg|Format|Caused by/i.test(line),
+          )
+          .slice(0, 4)
+          .join("\n"),
+      ]
+        .filter(Boolean)
+        .join("\n")
+        .slice(0, 600);
+      console.log("[player] error", JSON.stringify(event?.error || event));
+      setError({ message: detail ? `${message}\n${detail}` : message });
+      setFailedStreams((previous) => ({ ...previous, [streamIndex]: true }));
+      wake(true);
+      if (normalizedStreams.length > 1) {
+        showToast("All servers failed — choose one manually");
+      }
+    };
+    failOrFallback(showFinal);
   };
   handlePlaybackFailureRef.current = handleError;
 
@@ -1719,6 +1779,153 @@ export default function PlayerOverlay() {
     }
   };
 
+  // ---- Picture-in-Picture / background playback -------------------------
+  const [inPip, setInPip] = useState(false);
+  const enterPip = () => {
+    try {
+      const native = playerRef.current as any;
+      if (native?.enterPictureInPicture) {
+        native.enterPictureInPicture();
+        return;
+      }
+    } catch {}
+    showToast("Picture-in-Picture isn't available on this device");
+  };
+  useEffect(() => {
+    if (prefs.backgroundPlayback) void ensureBackgroundPermissions();
+  }, [prefs.backgroundPlayback]);
+  useEffect(() => {
+    if (inPip) {
+      setShowControls(false);
+      setPanel(null);
+    }
+  }, [inPip]);
+
+  // ---- Resizable mini-player ---------------------------------------------
+  // Pinch with two fingers, or double-tap and drag (toward the top-left to
+  // grow, toward the bottom-right to shrink). A plain double-tap toggles
+  // between the small and large size. The size is remembered.
+  const MINI_MIN = 160;
+  const MINI_KEY = "k45-mini-player-width";
+  const [miniSaved, setMiniSaved] = useState<number | null>(() => {
+    try {
+      const value = Number(mmkv.getString(MINI_KEY));
+      return Number.isFinite(value) && value >= MINI_MIN ? value : null;
+    } catch {
+      return null;
+    }
+  });
+  const miniMax = Math.max(MINI_MIN, screenWidth - 24);
+  const miniWidth = Math.min(
+    miniMax,
+    Math.max(
+      MINI_MIN,
+      miniSaved ?? Math.min(240, Math.max(190, screenWidth * 0.52)),
+    ),
+  );
+  const miniWidthRef = useRef(miniWidth);
+  miniWidthRef.current = miniWidth;
+  const miniMaxRef = useRef(miniMax);
+  miniMaxRef.current = miniMax;
+  const miniGesture = useRef<{
+    mode: null | "pinch" | "drag";
+    startDist: number;
+    startX: number;
+    startY: number;
+    startW: number;
+    moved: boolean;
+    lastTapAt: number;
+  }>({
+    mode: null,
+    startDist: 0,
+    startX: 0,
+    startY: 0,
+    startW: 0,
+    moved: false,
+    lastTapAt: 0,
+  });
+  const miniExpandTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const applyMiniWidth = (width: number, persist: boolean) => {
+    const next = Math.round(
+      Math.min(miniMaxRef.current, Math.max(MINI_MIN, width)),
+    );
+    setMiniSaved(next);
+    if (persist) {
+      try {
+        mmkv.set(MINI_KEY, String(next));
+      } catch {}
+    }
+  };
+  const touchDistance = (touches: any[]) =>
+    Math.hypot(
+      touches[0].pageX - touches[1].pageX,
+      touches[0].pageY - touches[1].pageY,
+    );
+  const onMiniTouchStart = (event: any) => {
+    const touches = event.nativeEvent.touches || [];
+    const g = miniGesture.current;
+    if (touches.length >= 2) {
+      g.mode = "pinch";
+      g.startDist = touchDistance(touches) || 1;
+      g.startW = miniWidthRef.current;
+      g.moved = true;
+      if (miniExpandTimer.current) clearTimeout(miniExpandTimer.current);
+      return;
+    }
+    if (Date.now() - g.lastTapAt < 320) {
+      g.mode = "drag";
+      g.startX = touches[0].pageX;
+      g.startY = touches[0].pageY;
+      g.startW = miniWidthRef.current;
+      g.moved = false;
+      if (miniExpandTimer.current) clearTimeout(miniExpandTimer.current);
+    }
+  };
+  const onMiniTouchMove = (event: any) => {
+    const touches = event.nativeEvent.touches || [];
+    const g = miniGesture.current;
+    if (g.mode === "pinch" && touches.length >= 2) {
+      applyMiniWidth(
+        (g.startW * touchDistance(touches)) / g.startDist,
+        false,
+      );
+    } else if (g.mode === "drag" && touches.length === 1) {
+      const dx = g.startX - touches[0].pageX;
+      const dy = g.startY - touches[0].pageY;
+      if (Math.abs(dx) + Math.abs(dy) > 8) g.moved = true;
+      if (g.moved) applyMiniWidth(g.startW + (dx + dy * (16 / 9)) / 1.5, false);
+    }
+  };
+  const onMiniTouchEnd = (event: any) => {
+    const touches = event.nativeEvent.touches || [];
+    const g = miniGesture.current;
+    if (touches.length > 0) return;
+    if (g.mode && g.moved) {
+      applyMiniWidth(miniWidthRef.current, true);
+      g.lastTapAt = 0;
+    }
+    g.mode = null;
+  };
+  // Single tap expands after a short wait; a second tap inside that window is
+  // a double-tap and toggles the size instead.
+  const onMiniPress = () => {
+    const g = miniGesture.current;
+    const now = Date.now();
+    if (now - g.lastTapAt < 320) {
+      g.lastTapAt = 0;
+      if (miniExpandTimer.current) clearTimeout(miniExpandTimer.current);
+      const large = Math.min(miniMaxRef.current, Math.round(screenWidth * 0.8));
+      applyMiniWidth(miniWidthRef.current >= large - 8 ? 240 : large, true);
+      return;
+    }
+    g.lastTapAt = now;
+    if (miniExpandTimer.current) clearTimeout(miniExpandTimer.current);
+    miniExpandTimer.current = setTimeout(() => {
+      if (mountedRef.current) expandFromMini();
+    }, 330);
+  };
+
   const isLandscape = screenWidth > screenHeight;
   const sideEpisodes = useMemo(
     () => orderEpisodes(playerMeta?.episodes || []),
@@ -1726,6 +1933,38 @@ export default function PlayerOverlay() {
   );
   const showEpisodesButton =
     isLandscape && !!playerMeta?.isSeries && sideEpisodes.length > 0;
+
+  // Movie Based layout: every provider row known when playback started.
+  const queueOptions = useSourceQueueStore((q) => q.options);
+  const queueCurrentId = useSourceQueueStore((q) => q.currentId);
+  const queueFailed = useSourceQueueStore((q) => q.failed);
+  const queueNames = useSourceQueueStore((q) => q.providerNames);
+  const queueUnchecked = useSourceQueueStore((q) => q.unchecked);
+  const showSourcesButton = !!playerMeta?.tmdb && queueOptions.length > 1;
+
+  const pickSource = async (option: any) => {
+    setPanel(null);
+    if (option.id === queueCurrentId || switchBusy.current) return;
+    switchBusy.current = true;
+    saveProgress();
+    showToast(`Switching to ${queueNames[option.providerId] || option.providerId}…`);
+    setBuffering(true);
+    try {
+      const result = await switchToOption(option, currentTimeRef.current);
+      if (result === "failed") {
+        setBuffering(false);
+        showToast("That source didn't load — try another");
+      }
+    } finally {
+      switchBusy.current = false;
+    }
+  };
+
+  // One-shot message from an automatic provider switch.
+  useEffect(() => {
+    if (playerMeta?.notice) showToast(playerMeta.notice);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const playEpisodeFromPanel = async (episode: any) => {
     if (switchBusy.current) return;
@@ -2376,7 +2615,8 @@ const renderSeekButton = (side: "left" | "right") => {
   }, [selectedAudioIndex]);
 
   const videoSource = useMemo(() => {
-    const uri = currentStream?.link || currentVideoUrl;
+    // Last line of defence against scheme-less links (see ensureHttpUrl).
+    const uri = ensureHttpUrl(currentStream?.link || currentVideoUrl);
     const hls =
       currentStream?.format === "hls" || inferHls(currentStream);
     const mpd =
@@ -2434,7 +2674,6 @@ const renderSeekButton = (side: "left" | "right") => {
     audioTracks.find((track: any) => track.selected)?.title ||
     "Audio";
 
-  const miniWidth = Math.min(240, Math.max(190, screenWidth * 0.52));
   const miniBottom = Math.max(insets.bottom + 82, 88);
   // The full-screen loader owns the screen while the stream placeholder or
   // subtitles resolve; the buffering indicator must not stack on top of it.
@@ -2453,7 +2692,17 @@ const renderSeekButton = (side: "left" | "right") => {
       ];
 
   return (
-    <View style={rootStyle as any} pointerEvents="auto">
+    <View
+      style={rootStyle as any}
+      pointerEvents="auto"
+      {...(expanded
+        ? {}
+        : {
+            onTouchStart: onMiniTouchStart,
+            onTouchMove: onMiniTouchMove,
+            onTouchEnd: onMiniTouchEnd,
+          })}
+    >
       <StatusBar hidden={expanded} />
       <View style={StyleSheet.absoluteFill}>
         {startupLoading ? (
@@ -2522,6 +2771,12 @@ const renderSeekButton = (side: "left" | "right") => {
             }}
             bufferingStrategy={BufferingStrategyType.DEPENDING_ON_MEMORY}
             playWhenInactive
+            playInBackground={prefs.backgroundPlayback}
+            showNotificationControls={prefs.backgroundPlayback}
+            enterPictureInPictureOnLeave={prefs.backgroundPlayback && expanded}
+            onPictureInPictureStatusChanged={(event: any) =>
+              setInPip(!!event?.isActive)
+            }
             progressUpdateInterval={400}
             onError={handleError}
             onEnd={() => {
@@ -2732,6 +2987,19 @@ const renderSeekButton = (side: "left" | "right") => {
                   {subtitleLabel}
                 </Text>
               </TouchableOpacity>
+              {showSourcesButton ? (
+                <TouchableOpacity
+                  style={styles.iconButton}
+                  onPress={() => setPanel("sources")}
+                  accessibilityLabel="Providers and qualities"
+                >
+                  <MaterialCommunityIcons
+                    name="server-network"
+                    size={22}
+                    color={ICON}
+                  />
+                </TouchableOpacity>
+              ) : null}
               <TouchableOpacity
                 style={styles.iconButton}
                 onPress={() => setPanel("subtitleSettings")}
@@ -2864,6 +3132,19 @@ const renderSeekButton = (side: "left" | "right") => {
                     color={ICON}
                   />
                 </TouchableOpacity>
+                {Platform.OS !== "web" ? (
+                  <TouchableOpacity
+                    style={styles.iconButton}
+                    onPress={enterPip}
+                    accessibilityLabel="Picture in picture"
+                  >
+                    <MaterialCommunityIcons
+                      name="picture-in-picture-top-right"
+                      size={21}
+                      color={ICON}
+                    />
+                  </TouchableOpacity>
+                ) : null}
                 <TouchableOpacity
                   style={styles.iconButton}
                   onPress={minimizePlayer}
@@ -2982,6 +3263,19 @@ const renderSeekButton = (side: "left" | "right") => {
             />
           )}
 
+          {panel === "sources" && (
+            <SourcesPanel
+              width={Math.min(380, Math.round(screenWidth * (isLandscape ? 0.5 : 0.92)))}
+              options={queueOptions}
+              names={queueNames}
+              currentId={queueCurrentId}
+              failed={queueFailed}
+              unchecked={queueUnchecked}
+              onSelect={pickSource}
+              onClose={() => setPanel(null)}
+            />
+          )}
+
           {panel === "episodes" && isLandscape && (
             <EpisodesPanel
               width={Math.min(360, Math.round(screenWidth * 0.5))}
@@ -3030,7 +3324,7 @@ const renderSeekButton = (side: "left" | "right") => {
         </>
       ) : (
         <>
-          <Pressable style={StyleSheet.absoluteFill} onPress={expandFromMini}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={onMiniPress}>
             <LinearGradient
               colors={["rgba(0,0,0,0.05)", "rgba(0,0,0,0.82)"]}
               style={styles.miniGradient}

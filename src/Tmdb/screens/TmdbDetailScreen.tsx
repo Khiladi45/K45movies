@@ -53,6 +53,28 @@ import { PosterCard, RowHeader, formatRuntime } from "../components/common";
 
 // ---- shared helpers --------------------------------------------------------
 
+type PlayQueue = {
+  options: SourceOption[];
+  providerNames?: Record<string, string>;
+  unchecked?: number;
+};
+
+/** Everything the list knows now, handed to the player as its stream queue. */
+function buildQueue(sources: {
+  options: SourceOption[];
+  providers: { providerId: string; name: string; status: string }[];
+}): PlayQueue {
+  return {
+    options: sources.options,
+    providerNames: Object.fromEntries(
+      sources.providers.map((p) => [p.providerId, p.name]),
+    ),
+    unchecked: sources.providers.filter(
+      (p) => p.status === "searching" || p.status === "resolving",
+    ).length,
+  };
+}
+
 function usePlayback(navigation: any) {
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [stage, setStage] = useState<string | null>(null);
@@ -63,7 +85,12 @@ function usePlayback(navigation: any) {
   useEffect(() => () => abort.current?.abort(), []);
 
   const play = useCallback(
-    async (option: SourceOption, target: PlayTarget, onOpen?: () => void) => {
+    async (
+      option: SourceOption,
+      target: PlayTarget,
+      onOpen?: () => void,
+      queue?: PlayQueue,
+    ) => {
       if (busy.current) return;
       busy.current = true;
       const controller = new AbortController();
@@ -78,7 +105,7 @@ function usePlayback(navigation: any) {
           },
           onStage: setStage,
           signal: controller.signal,
-        });
+        }, queue);
       } catch (e: any) {
         if (!controller.signal.aborted) {
           setError(e?.message || "Could not start playback.");
@@ -303,6 +330,18 @@ function MovieDetail({ details, navigation }: { details: TmdbDetails; navigation
   const target = useMemo(() => playTarget(details), [details]);
 
   const first = sources.options[0];
+  // "Play first": tapping Watch Now before any provider answered starts the
+  // first stream the moment it shows up.
+  const [wantPlay, setWantPlay] = useState(false);
+  useEffect(() => {
+    if (wantPlay && first && !playingId) {
+      setWantPlay(false);
+      play(first, target, undefined, buildQueue(sources));
+    } else if (wantPlay && !first && !sources.loading) {
+      setWantPlay(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wantPlay, first, sources.loading, playingId]);
   const backdrop =
     tmdbImage(details.backdrop, "w780") || tmdbImage(details.poster, "w780");
 
@@ -314,8 +353,11 @@ function MovieDetail({ details, navigation }: { details: TmdbDetails; navigation
   if (details.rating) metaItems.push({ text: `★ ${details.rating.toFixed(1)}` });
 
   let watchLabel = "Watch Now";
+  const noStreams = !first && !sources.loading && !sources.noProviders;
   if (playingId) watchLabel = stage || "Preparing…";
-  else if (!first) watchLabel = sources.loading ? "Finding streams…" : "No streams found";
+  else if (wantPlay && !first) watchLabel = "Finding streams…";
+  else if (noStreams) watchLabel = "No streams found";
+  else if (sources.noProviders) watchLabel = "No providers installed";
 
   return (
     <View style={styles.container}>
@@ -362,12 +404,19 @@ function MovieDetail({ details, navigation }: { details: TmdbDetails; navigation
 
         <View style={styles.watchWrap}>
           <TouchableOpacity
-            style={[styles.watchBtn, (!first || !!playingId) && styles.watchBtnDim]}
-            disabled={!first || !!playingId}
+            style={[
+              styles.watchBtn,
+              (noStreams || sources.noProviders || !!playingId) && styles.watchBtnDim,
+            ]}
+            disabled={noStreams || sources.noProviders || !!playingId || wantPlay}
             activeOpacity={0.85}
-            onPress={() => first && play(first, target)}
+            onPress={() =>
+              first
+                ? play(first, target, undefined, buildQueue(sources))
+                : setWantPlay(true)
+            }
           >
-            {playingId || (!first && sources.loading) ? (
+            {playingId || wantPlay ? (
               <ActivityIndicator size="small" color="#0B0B0F" />
             ) : (
               <Ionicons name="play" size={16} color="#0B0B0F" />
@@ -402,7 +451,7 @@ function MovieDetail({ details, navigation }: { details: TmdbDetails; navigation
               noProviders={sources.noProviders}
               playingId={playingId}
               stage={stage}
-              onPlay={(option) => play(option, target)}
+              onPlay={(option) => play(option, target, undefined, buildQueue(sources))}
             />
           </View>
         </View>
@@ -737,7 +786,9 @@ function SeriesDetail({ details, navigation }: { details: TmdbDetails; navigatio
                 playingId={playingId}
                 stage={stage}
                 emptyText="This episode wasn't found in your installed providers. Some providers file each season under a different title."
-                onPlay={(option) => play(option, target, () => setSheetOpen(false))}
+                onPlay={(option) =>
+                  play(option, target, () => setSheetOpen(false), buildQueue(sources))
+                }
               />
             </ScrollView>
           </View>

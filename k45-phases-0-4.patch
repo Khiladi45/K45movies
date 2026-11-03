@@ -1,0 +1,1328 @@
+diff --git a/app.json b/app.json
+index ca9414e..d99c5f4 100644
+--- a/app.json
++++ b/app.json
+@@ -44,7 +44,15 @@
+       ],
+       "expo-image",
+       "expo-font",
+-      "./plugins/with-video-decoder"
++      "./plugins/with-video-decoder",
++      [
++        "react-native-video",
++        {
++          "enableNotificationControls": true,
++          "enableBackgroundAudio": true,
++          "enableAndroidPictureInPicture": true
++        }
++      ]
+     ],
+     "extra": {
+       "eas": {
+diff --git a/src/Home/components/InstalledProvidersRail.tsx b/src/Home/components/InstalledProvidersRail.tsx
+index 9e3308b..617bf33 100644
+--- a/src/Home/components/InstalledProvidersRail.tsx
++++ b/src/Home/components/InstalledProvidersRail.tsx
+@@ -1,4 +1,4 @@
+-import React, { memo, useMemo } from "react";
++import React, { memo, useEffect, useMemo, useRef } from "react";
+ import {
+   View,
+   Text,
+@@ -15,6 +15,7 @@ import { useProviders } from "@/lib/providerApi";
+ import { modulesOf } from "@/providers/registry";
+ 
+ const CARD_WIDTH = 100;
++const CARD_GAP = 12;
+ const CARD_HEIGHT = 50;
+ 
+ const prettifyName = (raw: string) => {
+@@ -69,6 +70,23 @@ const InstalledProvidersRail = memo(function InstalledProvidersRail() {
+     });
+   }, [installedProviders, providers]);
+ 
++  const listRef = useRef<FlatList<(typeof cards)[number]>>(null);
++  const activeIndex = cards.findIndex((card) => card.id === activeProvider);
++
++  // Keep the active provider in view (centered) whenever the rail loads,
++  // refreshes or the active provider changes, instead of resetting to item 0.
++  useEffect(() => {
++    if (activeIndex < 0) return;
++    const timer = setTimeout(() => {
++      listRef.current?.scrollToIndex({
++        index: activeIndex,
++        viewPosition: 0.5,
++        animated: true,
++      });
++    }, 60);
++    return () => clearTimeout(timer);
++  }, [activeIndex, cards.length]);
++
+   if (cards.length === 0) return null;
+ 
+   return (
+@@ -79,10 +97,26 @@ const InstalledProvidersRail = memo(function InstalledProvidersRail() {
+         <Text style={styles.headerCount}>{cards.length}</Text>
+       </View> */}
+       <FlatList
++        ref={listRef}
+         data={cards}
++        getItemLayout={(_data, index) => ({
++          length: CARD_WIDTH + CARD_GAP,
++          offset: 16 + (CARD_WIDTH + CARD_GAP) * index,
++          index,
++        })}
++        onScrollToIndexFailed={(info) => {
++          setTimeout(
++            () =>
++              listRef.current?.scrollToOffset({
++                offset: Math.max(0, info.averageItemLength * info.index - 80),
++                animated: true,
++              }),
++            100,
++          );
++        }}
+         horizontal
+         showsHorizontalScrollIndicator={false}
+-        contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
++        contentContainerStyle={{ paddingHorizontal: 16, gap: CARD_GAP }}
+         keyExtractor={(item) => item.id}
+         renderItem={({ item }) => {
+           const isActive = item.id === activeProvider;
+@@ -93,7 +127,8 @@ const InstalledProvidersRail = memo(function InstalledProvidersRail() {
+            style={[
+             styles.card,
+              isActive && {
+-                borderWidth: 1,
++                borderWidth: 2,
++                borderColor: primaryColor,
+               },
+             ]}
+         >
+@@ -131,6 +166,11 @@ const InstalledProvidersRail = memo(function InstalledProvidersRail() {
+                 style={styles.watermark}
+               />
+                  )}
++              {isActive ? (
++                <View style={[styles.activeDot, { backgroundColor: primaryColor }]}>
++                  <Ionicons name="checkmark" size={13} color="#fff" />
++                </View>
++              ) : null}
+               <View style={styles.cardContent}>
+                 <Text style={styles.cardName} numberOfLines={1}>
+                   {item.name}
+@@ -206,11 +246,11 @@ const styles = StyleSheet.create({
+   },
+   activeDot: {
+     position: "absolute",
+-    top: 10,
+-    right: 10,
+-    width: 20,
+-    height: 20,
+-    borderRadius: 10,
++    top: 5,
++    right: 5,
++    width: 18,
++    height: 18,
++    borderRadius: 9,
+     alignItems: "center",
+     justifyContent: "center",
+   },
+diff --git a/src/Tmdb/screens/TmdbDetailScreen.tsx b/src/Tmdb/screens/TmdbDetailScreen.tsx
+index d0e599a..3ff5068 100644
+--- a/src/Tmdb/screens/TmdbDetailScreen.tsx
++++ b/src/Tmdb/screens/TmdbDetailScreen.tsx
+@@ -53,6 +53,28 @@ import { PosterCard, RowHeader, formatRuntime } from "../components/common";
+ 
+ // ---- shared helpers --------------------------------------------------------
+ 
++type PlayQueue = {
++  options: SourceOption[];
++  providerNames?: Record<string, string>;
++  unchecked?: number;
++};
++
++/** Everything the list knows now, handed to the player as its stream queue. */
++function buildQueue(sources: {
++  options: SourceOption[];
++  providers: { providerId: string; name: string; status: string }[];
++}): PlayQueue {
++  return {
++    options: sources.options,
++    providerNames: Object.fromEntries(
++      sources.providers.map((p) => [p.providerId, p.name]),
++    ),
++    unchecked: sources.providers.filter(
++      (p) => p.status === "searching" || p.status === "resolving",
++    ).length,
++  };
++}
++
+ function usePlayback(navigation: any) {
+   const [playingId, setPlayingId] = useState<string | null>(null);
+   const [stage, setStage] = useState<string | null>(null);
+@@ -63,7 +85,12 @@ function usePlayback(navigation: any) {
+   useEffect(() => () => abort.current?.abort(), []);
+ 
+   const play = useCallback(
+-    async (option: SourceOption, target: PlayTarget, onOpen?: () => void) => {
++    async (
++      option: SourceOption,
++      target: PlayTarget,
++      onOpen?: () => void,
++      queue?: PlayQueue,
++    ) => {
+       if (busy.current) return;
+       busy.current = true;
+       const controller = new AbortController();
+@@ -78,7 +105,7 @@ function usePlayback(navigation: any) {
+           },
+           onStage: setStage,
+           signal: controller.signal,
+-        });
++        }, queue);
+       } catch (e: any) {
+         if (!controller.signal.aborted) {
+           setError(e?.message || "Could not start playback.");
+@@ -303,6 +330,18 @@ function MovieDetail({ details, navigation }: { details: TmdbDetails; navigation
+   const target = useMemo(() => playTarget(details), [details]);
+ 
+   const first = sources.options[0];
++  // "Play first": tapping Watch Now before any provider answered starts the
++  // first stream the moment it shows up.
++  const [wantPlay, setWantPlay] = useState(false);
++  useEffect(() => {
++    if (wantPlay && first && !playingId) {
++      setWantPlay(false);
++      play(first, target, undefined, buildQueue(sources));
++    } else if (wantPlay && !first && !sources.loading) {
++      setWantPlay(false);
++    }
++    // eslint-disable-next-line react-hooks/exhaustive-deps
++  }, [wantPlay, first, sources.loading, playingId]);
+   const backdrop =
+     tmdbImage(details.backdrop, "w780") || tmdbImage(details.poster, "w780");
+ 
+@@ -314,8 +353,11 @@ function MovieDetail({ details, navigation }: { details: TmdbDetails; navigation
+   if (details.rating) metaItems.push({ text: `★ ${details.rating.toFixed(1)}` });
+ 
+   let watchLabel = "Watch Now";
++  const noStreams = !first && !sources.loading && !sources.noProviders;
+   if (playingId) watchLabel = stage || "Preparing…";
+-  else if (!first) watchLabel = sources.loading ? "Finding streams…" : "No streams found";
++  else if (wantPlay && !first) watchLabel = "Finding streams…";
++  else if (noStreams) watchLabel = "No streams found";
++  else if (sources.noProviders) watchLabel = "No providers installed";
+ 
+   return (
+     <View style={styles.container}>
+@@ -362,12 +404,19 @@ function MovieDetail({ details, navigation }: { details: TmdbDetails; navigation
+ 
+         <View style={styles.watchWrap}>
+           <TouchableOpacity
+-            style={[styles.watchBtn, (!first || !!playingId) && styles.watchBtnDim]}
+-            disabled={!first || !!playingId}
++            style={[
++              styles.watchBtn,
++              (noStreams || sources.noProviders || !!playingId) && styles.watchBtnDim,
++            ]}
++            disabled={noStreams || sources.noProviders || !!playingId || wantPlay}
+             activeOpacity={0.85}
+-            onPress={() => first && play(first, target)}
++            onPress={() =>
++              first
++                ? play(first, target, undefined, buildQueue(sources))
++                : setWantPlay(true)
++            }
+           >
+-            {playingId || (!first && sources.loading) ? (
++            {playingId || wantPlay ? (
+               <ActivityIndicator size="small" color="#0B0B0F" />
+             ) : (
+               <Ionicons name="play" size={16} color="#0B0B0F" />
+@@ -402,7 +451,7 @@ function MovieDetail({ details, navigation }: { details: TmdbDetails; navigation
+               noProviders={sources.noProviders}
+               playingId={playingId}
+               stage={stage}
+-              onPlay={(option) => play(option, target)}
++              onPlay={(option) => play(option, target, undefined, buildQueue(sources))}
+             />
+           </View>
+         </View>
+@@ -737,7 +786,9 @@ function SeriesDetail({ details, navigation }: { details: TmdbDetails; navigatio
+                 playingId={playingId}
+                 stage={stage}
+                 emptyText="This episode wasn't found in your installed providers. Some providers file each season under a different title."
+-                onPlay={(option) => play(option, target, () => setSheetOpen(false))}
++                onPlay={(option) =>
++                  play(option, target, () => setSheetOpen(false), buildQueue(sources))
++                }
+               />
+             </ScrollView>
+           </View>
+diff --git a/src/Tools/PreferencesScreen.tsx b/src/Tools/PreferencesScreen.tsx
+index ba81d2d..084178a 100644
+--- a/src/Tools/PreferencesScreen.tsx
++++ b/src/Tools/PreferencesScreen.tsx
+@@ -503,6 +503,16 @@ export default function PreferencesScreen({ navigation }: any) {
+             }
+             primaryColor={primaryColor}
+           />
++          <SwitchRow
++            icon="albums-outline"
++            title="Background playback"
++            subtitle="Keep playing in a floating window (PiP) or as audio when you leave the app"
++            value={prefs.backgroundPlayback}
++            onValueChange={(value) =>
++              prefs.setPreference("backgroundPlayback", value)
++            }
++            primaryColor={primaryColor}
++          />
+           <ChoiceRow<DefaultQuality>
+             icon="options-outline"
+             title="Default quality"
+diff --git a/src/lib/backgroundPermissions.ts b/src/lib/backgroundPermissions.ts
+new file mode 100644
+index 0000000..ae42b24
+--- /dev/null
++++ b/src/lib/backgroundPermissions.ts
+@@ -0,0 +1,34 @@
++// Permissions needed for background playback.
++//
++// - Android 13+: POST_NOTIFICATIONS, so the media notification (play / pause
++//   while the app is in the background) can be shown.
++// - Picture-in-Picture and the foreground media service need no runtime
++//   permission. "Draw over other apps" is NOT required: PiP is the system's own
++//   floating window.
++// Asked once; the system remembers the answer.
++
++import { PermissionsAndroid, Platform } from "react-native";
++import { createMMKV } from "react-native-mmkv";
++
++const mmkv = createMMKV();
++const ASKED_KEY = "k45-bg-permission-asked";
++
++export async function ensureBackgroundPermissions(): Promise<void> {
++  if (Platform.OS !== "android" || Number(Platform.Version) < 33) return;
++  try {
++    if (mmkv.getBoolean(ASKED_KEY)) return;
++    mmkv.set(ASKED_KEY, true);
++    await PermissionsAndroid.request(
++      PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
++      {
++        title: "Background playback",
++        message:
++          "Allow notifications so you can pause or resume the video from the notification while the app is in the background.",
++        buttonPositive: "Allow",
++        buttonNegative: "Not now",
++      },
++    );
++  } catch {
++    // best effort
++  }
++}
+diff --git a/src/lib/streams.ts b/src/lib/streams.ts
+index 5691f84..105a906 100644
+--- a/src/lib/streams.ts
++++ b/src/lib/streams.ts
+@@ -146,6 +146,25 @@ const formatFromTypeAndLink = (
+   return { format: "other", formatLabel: hinted.toUpperCase() || "STREAM" };
+ };
+ 
++/**
++ * Providers sometimes return links without a scheme ("files/…", "//cdn…",
++ * "cdn.example.com/…"). ExoPlayer then treats the first path segment as a host
++ * and fails with `Unable to resolve host "files"`. Prepend https:// when there
++ * is no scheme. Real schemes (http, file, content, pending, …) and absolute
++ * paths ("/…", which have no host to repair) are left untouched.
++ */
++export const ensureHttpUrl = (link: string): string => {
++  const text = String(link || "").trim();
++  if (!text) return text;
++  if (text.startsWith("//")) return `https:${text}`;
++  // Has a scheme ("https://", "file://", "pending://" …) — but not "host:8080/…".
++  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(text) || /^(?:data|blob|magnet):/i.test(text)) {
++    return text;
++  }
++  if (text.startsWith("/")) return text;
++  return `https://${text}`;
++};
++
+ export const normalizeStreams = (rawStreams: any[]): PlayableStream[] => {
+   if (!Array.isArray(rawStreams) || rawStreams.length === 0) return [];
+ 
+@@ -158,7 +177,7 @@ export const normalizeStreams = (rawStreams: any[]): PlayableStream[] => {
+ 
+   rawStreams.forEach((raw) => {
+     if (!raw || typeof raw.link !== "string") return;
+-    const link = raw.link.trim();
++    const link = ensureHttpUrl(raw.link);
+     const isRemote = /^https?:\/\//i.test(link);
+     const isLocal = Platform.OS !== "web" && /^(?:file|content):\/\//i.test(link);
+     if (!isRemote && !isLocal) return;
+diff --git a/src/lib/titleBridge.ts b/src/lib/titleBridge.ts
+index 2192221..c9be443 100644
+--- a/src/lib/titleBridge.ts
++++ b/src/lib/titleBridge.ts
+@@ -25,7 +25,7 @@ import {
+ import { TEXT_LANGUAGE_NAMES } from "@/lib/languages";
+ import { fuzzyTitleScore, searchVariants } from "@/lib/fuzzy";
+ import type { LinkItem, DirectLink } from "@/components/SeasonList";
+-import type { PlayerEpisode } from "@/store/usePlayerStore";
++import { usePlayerStore, type PlayerEpisode } from "@/store/usePlayerStore";
+ import type { TmdbMediaType } from "@/lib/tmdbApi";
+ 
+ export const PROVIDER_CONCURRENCY = 3;
+@@ -82,6 +82,36 @@ export type SourceOption = {
+   linkList: LinkItem[];
+ };
+ 
++// ---- pause gate ------------------------------------------------------------
++// While the player (or mini-player) is open, no NEW provider work starts: the
++// provider search, episode lookups and audio probes wait here and continue
++// once the player is fully closed. Requests already in flight finish normally.
++
++let checksPaused = false;
++let pauseWaiters: (() => void)[] = [];
++
++export function setSourceChecksPaused(paused: boolean) {
++  checksPaused = paused;
++  if (!paused) {
++    const waiting = pauseWaiters;
++    pauseWaiters = [];
++    waiting.forEach((resume) => resume());
++  }
++}
++
++export function waitIfPaused(signal?: AbortSignal): Promise<void> {
++  if (!checksPaused || signal?.aborted) return Promise.resolve();
++  return new Promise<void>((resolve) => {
++    pauseWaiters.push(resolve);
++    signal?.addEventListener("abort", () => resolve(), { once: true });
++  });
++}
++
++usePlayerStore.subscribe((state) =>
++  setSourceChecksPaused(!!state.currentVideoUrl),
++);
++setSourceChecksPaused(!!usePlayerStore.getState().currentVideoUrl);
++
+ // ---- helpers ---------------------------------------------------------------
+ 
+ async function runPool<T>(
+@@ -94,6 +124,8 @@ async function runPool<T>(
+   const lane = async () => {
+     while (next < items.length) {
+       if (signal?.aborted) return;
++      await waitIfPaused(signal);
++      if (signal?.aborted || next >= items.length) return;
+       const item = items[next++];
+       try {
+         await worker(item);
+@@ -271,6 +303,7 @@ async function matchProvider(
+   media: BridgeMedia,
+ ): Promise<ProviderMatch[]> {
+   for (const query of searchQueries(media)) {
++    await waitIfPaused();
+     const posts = await searchProvider(providerId, query);
+     const matches = await buildMatches(
+       providerId,
+diff --git a/src/lib/tmdbPlayback.ts b/src/lib/tmdbPlayback.ts
+index 3bbf0ac..b2eec27 100644
+--- a/src/lib/tmdbPlayback.ts
++++ b/src/lib/tmdbPlayback.ts
+@@ -15,6 +15,10 @@ import {
+   useTmdbContinueWatchingStore,
+ } from "@/store/useTmdbContinueWatchingStore";
+ import { currentRouteName, goBack } from "@/navigation/navigationRef";
++import {
++  nextQueueOption,
++  useSourceQueueStore,
++} from "@/store/useSourceQueueStore";
+ import type { SourceOption } from "@/lib/titleBridge";
+ import type { TmdbMediaType } from "@/lib/tmdbApi";
+ 
+@@ -98,11 +102,26 @@ export async function playSource(
+     onStage?: (stage: string) => void;
+     signal?: AbortSignal;
+   },
++  // Every row the list knows about right now: the player can fall back to the
++  // next one if this stream fails, and lists them in its Sources panel.
++  queue?: {
++    options: SourceOption[];
++    providerNames?: Record<string, string>;
++    unchecked?: number;
++  },
+ ): Promise<void> {
+   if (inFlight) return;
+   inFlight = true;
+   const meta = buildPlayerMeta(option, target);
+   try {
++    const known = queue?.options?.length ? queue.options : [];
++    useSourceQueueStore.getState().setQueue({
++      options: known.some((o) => o.id === option.id) ? known : [option, ...known],
++      providerNames: queue?.providerNames || {},
++      target,
++      currentId: option.id,
++      unchecked: queue?.unchecked ?? 0,
++    });
+     useTmdbContinueWatchingStore
+       .getState()
+       .restore(continueKey(target.mediaType, target.id));
+@@ -173,3 +192,91 @@ export async function playSource(
+     inFlight = false;
+   }
+ }
++
++
++// ---- switching sources from inside the player ------------------------------
++
++let switching = false;
++
++/** Resolves a row to playable streams and the server to start on. */
++async function resolveOption(option: SourceOption) {
++  const raw = await providerApi.getStream(
++    option.providerId,
++    option.link,
++    option.type,
++  );
++  const list: any[] = Array.isArray(raw) ? raw : raw ? [raw] : [];
++  const selection = await selectPlaybackStreams(list, {
++    preference: usePreferencesStore.getState().defaultQuality,
++    budgetMs: 3000,
++    probeTimeoutMs: 2600,
++  });
++  if (selection.streams.length === 0) {
++    throw new Error("This provider returned no playable stream.");
++  }
++  let startIndex = selection.startIndex;
++  const preferred = getPreferredLanguage();
++  if (preferred && selection.streams.length > 1) {
++    const hit = await findPreferredStreamIndex(selection.streams, preferred);
++    if (hit >= 0 && selection.streams[hit].probe?.status !== "failed") {
++      startIndex = hit;
++    }
++  }
++  return { streams: selection.streams, startIndex };
++}
++
++export type SwitchResult = "ok" | "failed" | "busy";
++
++/**
++ * Loads another provider row into the open player without leaving it,
++ * resuming from `position`. A row that cannot be resolved is marked failed.
++ */
++export async function switchToOption(
++  option: SourceOption,
++  position: number,
++  notice?: string,
++): Promise<SwitchResult> {
++  const queue = useSourceQueueStore.getState();
++  if (!queue.target) return "failed";
++  if (switching) return "busy";
++  switching = true;
++  try {
++    const meta: NonNullable<PlayerMeta> = {
++      ...buildPlayerMeta(option, queue.target),
++      resumeAt: position > 2 ? position : undefined,
++      notice,
++    };
++    const { streams, startIndex } = await resolveOption(option);
++    const player = usePlayerStore.getState();
++    if (!player.currentVideoUrl) return "ok"; // the user closed the player
++    const chosen = streams[startIndex] || streams[0];
++    player.setVideo(chosen.link, streams, startIndex, meta);
++    useSourceQueueStore.getState().setCurrent(option.id);
++    return "ok";
++  } catch {
++    useSourceQueueStore.getState().markFailed(option.id);
++    return "failed";
++  } finally {
++    switching = false;
++  }
++}
++
++/**
++ * Stream failed for good: walk the queue until one row loads. Resolves false
++ * when the queue is exhausted (the player then shows its error).
++ */
++export async function playNextQueueSource(position: number): Promise<boolean> {
++  for (let guard = 0; guard < 50; guard += 1) {
++    const next = nextQueueOption();
++    if (!next) return false;
++    const { providerNames } = useSourceQueueStore.getState();
++    const name = providerNames[next.providerId] || next.providerId;
++    const result = await switchToOption(
++      next,
++      position,
++      `Stream failed — switched to ${name}`,
++    );
++    if (result === "ok" || result === "busy") return true;
++  }
++  return false;
++}
+diff --git a/src/player/PlayerOverlay.tsx b/src/player/PlayerOverlay.tsx
+index 1499e1b..acb7f07 100644
+--- a/src/player/PlayerOverlay.tsx
++++ b/src/player/PlayerOverlay.tsx
+@@ -71,14 +71,25 @@ import {
+   orderGroupEntries,
+   preferredEntry,
+   PlayableStream,
++  ensureHttpUrl,
+   QualityPreference,
+ } from "@/lib/streams";
+ 
+ const mmkv = createMMKV();
+ import { orderEpisodes } from "@/lib/episodes";
+-import { EpisodesPanel, SubtitleSettingsPanel } from "./PlayerSidePanels";
++import { playNextQueueSource, switchToOption } from "@/lib/tmdbPlayback";
++import { ensureBackgroundPermissions } from "@/lib/backgroundPermissions";
++import {
++  nextQueueOption,
++  useSourceQueueStore,
++} from "@/store/useSourceQueueStore";
++import {
++  EpisodesPanel,
++  SourcesPanel,
++  SubtitleSettingsPanel,
++} from "./PlayerSidePanels";
+ 
+-const SIDE_PANELS = ["subtitleSettings", "episodes"];
++const SIDE_PANELS = ["subtitleSettings", "episodes", "sources"];
+ const ICON = "rgba(255,255,255,0.8)";
+ const GALAXY_PLAY_LOGO = require("../../assets/GalaxyPlay.svg");
+ const GALAXY_PLAY_POSTER = require("../../assets/GalaxyPlay-poster.png");
+@@ -457,7 +468,7 @@ function buildResumeSnapshot(
+       : audioTracks.find((track) => track.selected);
+   const stream = live.currentStream as PlayableStream | undefined;
+   const sub = live.subtitle as SubtitleSelection | undefined;
+-  const { restore: _restore, resumeAt: _resumeAt, ...base } = meta;
++  const { restore: _restore, resumeAt: _resumeAt, notice: _notice, ...base } = meta;
+   return {
+     meta: base,
+     restore: {
+@@ -1206,7 +1217,9 @@ export default function PlayerOverlay() {
+     const subscription = AppState.addEventListener("change", (state) => {
+       if (state !== "active") {
+         saveProgress();
+-        if (!pausedRef.current) {
++        // Background playback on: the video keeps going in a PiP window (or as
++        // audio with a notification). Off: pause as before.
++        if (!pausedRef.current && !prefsRef.current.backgroundPlayback) {
+           setPaused(true);
+         }
+       }
+@@ -1443,6 +1456,29 @@ export default function PlayerOverlay() {
+     saveProgress(time);
+   };
+ 
++  // Movie Based layout: when every server of the current provider row failed,
++  // silently load the next row of the stream queue ("Stream failed,
++  // switching…") instead of showing a dead end. Falls back to `showError`
++  // once the queue is exhausted (or outside the Movie Based layout).
++  const failOrFallback = (showError: () => void) => {
++    const queueState = useSourceQueueStore.getState();
++    if (!playerMeta?.tmdb || !queueState.currentId) {
++      showError();
++      return;
++    }
++    queueState.markFailed(queueState.currentId);
++    if (!nextQueueOption()) {
++      showError();
++      return;
++    }
++    showToast("Stream failed, switching…");
++    setBuffering(true);
++    wake(true);
++    void playNextQueueSource(currentTimeRef.current).then((started) => {
++      if (!started && mountedRef.current) showError();
++    });
++  };
++
+   const handleError = (event: any) => {
+     setBuffering(false);
+     const message = String(
+@@ -1484,11 +1520,13 @@ export default function PlayerOverlay() {
+         return;
+       }
+       setFailedStreams((previous) => ({ ...previous, [streamIndex]: true }));
+-      setError({
+-        message:
+-          "This video did not start. Try another server or pick a different quality.",
++      failOrFallback(() => {
++        setError({
++          message:
++            "This video did not start. Try another server or pick a different quality.",
++        });
++        wake(true);
+       });
+-      wake(true);
+       return;
+     }
+ 
+@@ -1522,11 +1560,13 @@ export default function PlayerOverlay() {
+         }
+       }
+       setFailedStreams((previous) => ({ ...previous, [streamIndex]: true }));
+-      setError({
+-        message:
+-          "This device can't decode this video (HEVC 10-bit / HDR / 4K). Pick a lower quality such as 1080p x264, or try on a real phone if you're using an emulator.",
++      failOrFallback(() => {
++        setError({
++          message:
++            "This device can't decode this video (HEVC 10-bit / HDR / 4K). Pick a lower quality such as 1080p x264, or try on a real phone if you're using an emulator.",
++        });
++        wake(true);
+       });
+-      wake(true);
+       return;
+     }
+ 
+@@ -1548,9 +1588,21 @@ export default function PlayerOverlay() {
+       return;
+     }
+ 
++    // Errors that retrying cannot fix: a malformed HLS key ("Unsupported key
++    // size: 45 bytes" — the provider's key URL returned junk instead of 16
++    // bytes) and a host name that can never resolve (scheme-less link such as
++    // "files/..."). Skip the same-server retry and go straight to the next
++    // server / provider.
++    const keyFail =
++      /InvalidKeyException|Unsupported key size|BadPaddingException|IllegalBlockSizeException/i.test(
++        rawError,
++      );
++    const hostFail = /Unable to resolve host "[^".]+"/i.test(rawError);
++    const deterministic = keyFail || hostFail;
++
+     // Stage 1: one silent retry, which covers transient decoder/network
+     // failures without bothering the user.
+-    if (!autoRetriedRef.current) {
++    if (!autoRetriedRef.current && !deterministic) {
+       autoRetriedRef.current = true;
+       hasRenderedRef.current = false;
+       setHasRendered(false);
+@@ -1573,36 +1625,44 @@ export default function PlayerOverlay() {
+     const nextIndex = positions.find((index) => !failedStreams[index]);
+     if (!switching && nextIndex != null && normalizedStreams[nextIndex]?.link) {
+       setFailedStreams((previous) => ({ ...previous, [streamIndex]: true }));
+-      showToast("This server failed — switching to another…");
++      showToast(
++        keyFail
++          ? "Stream encryption error — switching server…"
++          : "This server failed — switching to another…",
++      );
+       wake(true);
+       void switchStream(nextIndex);
+       return;
+     }
+ 
+-    // Stage 3: nothing left to try; surface the error and let the user pick.
+-    // Diagnostics: the native error carries the failing renderer/decoder in
+-    // errorException / errorStackTrace. Show it so the real cause is visible.
+-    const detail = [
+-      event?.error?.errorCode != null ? `code ${event.error.errorCode}` : "",
+-      event?.error?.errorException,
+-      String(event?.error?.errorStackTrace || "")
+-        .split("\n")
+-        .filter((line: string) =>
+-          /Decoder|Codec|Renderer|ffmpeg|Ffmpeg|Format|Caused by/i.test(line),
+-        )
+-        .slice(0, 4)
+-        .join("\n"),
+-    ]
+-      .filter(Boolean)
+-      .join("\n")
+-      .slice(0, 600);
+-    console.log("[player] error", JSON.stringify(event?.error || event));
+-    setError({ message: detail ? `${message}\n${detail}` : message });
+-    setFailedStreams((previous) => ({ ...previous, [streamIndex]: true }));
+-    wake(true);
+-    if (normalizedStreams.length > 1) {
+-      showToast("All servers failed — choose one manually");
+-    }
++    // Stage 3: this provider row has no server left. Movie Based layout: load
++    // the next row of the stream queue; otherwise surface the error.
++    const showFinal = () => {
++      // Diagnostics: the native error carries the failing renderer/decoder in
++      // errorException / errorStackTrace. Show it so the real cause is visible.
++      const detail = [
++        event?.error?.errorCode != null ? `code ${event.error.errorCode}` : "",
++        event?.error?.errorException,
++        String(event?.error?.errorStackTrace || "")
++          .split("\n")
++          .filter((line: string) =>
++            /Decoder|Codec|Renderer|ffmpeg|Ffmpeg|Format|Caused by/i.test(line),
++          )
++          .slice(0, 4)
++          .join("\n"),
++      ]
++        .filter(Boolean)
++        .join("\n")
++        .slice(0, 600);
++      console.log("[player] error", JSON.stringify(event?.error || event));
++      setError({ message: detail ? `${message}\n${detail}` : message });
++      setFailedStreams((previous) => ({ ...previous, [streamIndex]: true }));
++      wake(true);
++      if (normalizedStreams.length > 1) {
++        showToast("All servers failed — choose one manually");
++      }
++    };
++    failOrFallback(showFinal);
+   };
+   handlePlaybackFailureRef.current = handleError;
+ 
+@@ -1719,6 +1779,153 @@ export default function PlayerOverlay() {
+     }
+   };
+ 
++  // ---- Picture-in-Picture / background playback -------------------------
++  const [inPip, setInPip] = useState(false);
++  const enterPip = () => {
++    try {
++      const native = playerRef.current as any;
++      if (native?.enterPictureInPicture) {
++        native.enterPictureInPicture();
++        return;
++      }
++    } catch {}
++    showToast("Picture-in-Picture isn't available on this device");
++  };
++  useEffect(() => {
++    if (prefs.backgroundPlayback) void ensureBackgroundPermissions();
++  }, [prefs.backgroundPlayback]);
++  useEffect(() => {
++    if (inPip) {
++      setShowControls(false);
++      setPanel(null);
++    }
++  }, [inPip]);
++
++  // ---- Resizable mini-player ---------------------------------------------
++  // Pinch with two fingers, or double-tap and drag (toward the top-left to
++  // grow, toward the bottom-right to shrink). A plain double-tap toggles
++  // between the small and large size. The size is remembered.
++  const MINI_MIN = 160;
++  const MINI_KEY = "k45-mini-player-width";
++  const [miniSaved, setMiniSaved] = useState<number | null>(() => {
++    try {
++      const value = Number(mmkv.getString(MINI_KEY));
++      return Number.isFinite(value) && value >= MINI_MIN ? value : null;
++    } catch {
++      return null;
++    }
++  });
++  const miniMax = Math.max(MINI_MIN, screenWidth - 24);
++  const miniWidth = Math.min(
++    miniMax,
++    Math.max(
++      MINI_MIN,
++      miniSaved ?? Math.min(240, Math.max(190, screenWidth * 0.52)),
++    ),
++  );
++  const miniWidthRef = useRef(miniWidth);
++  miniWidthRef.current = miniWidth;
++  const miniMaxRef = useRef(miniMax);
++  miniMaxRef.current = miniMax;
++  const miniGesture = useRef<{
++    mode: null | "pinch" | "drag";
++    startDist: number;
++    startX: number;
++    startY: number;
++    startW: number;
++    moved: boolean;
++    lastTapAt: number;
++  }>({
++    mode: null,
++    startDist: 0,
++    startX: 0,
++    startY: 0,
++    startW: 0,
++    moved: false,
++    lastTapAt: 0,
++  });
++  const miniExpandTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
++
++  const applyMiniWidth = (width: number, persist: boolean) => {
++    const next = Math.round(
++      Math.min(miniMaxRef.current, Math.max(MINI_MIN, width)),
++    );
++    setMiniSaved(next);
++    if (persist) {
++      try {
++        mmkv.set(MINI_KEY, String(next));
++      } catch {}
++    }
++  };
++  const touchDistance = (touches: any[]) =>
++    Math.hypot(
++      touches[0].pageX - touches[1].pageX,
++      touches[0].pageY - touches[1].pageY,
++    );
++  const onMiniTouchStart = (event: any) => {
++    const touches = event.nativeEvent.touches || [];
++    const g = miniGesture.current;
++    if (touches.length >= 2) {
++      g.mode = "pinch";
++      g.startDist = touchDistance(touches) || 1;
++      g.startW = miniWidthRef.current;
++      g.moved = true;
++      if (miniExpandTimer.current) clearTimeout(miniExpandTimer.current);
++      return;
++    }
++    if (Date.now() - g.lastTapAt < 320) {
++      g.mode = "drag";
++      g.startX = touches[0].pageX;
++      g.startY = touches[0].pageY;
++      g.startW = miniWidthRef.current;
++      g.moved = false;
++      if (miniExpandTimer.current) clearTimeout(miniExpandTimer.current);
++    }
++  };
++  const onMiniTouchMove = (event: any) => {
++    const touches = event.nativeEvent.touches || [];
++    const g = miniGesture.current;
++    if (g.mode === "pinch" && touches.length >= 2) {
++      applyMiniWidth(
++        (g.startW * touchDistance(touches)) / g.startDist,
++        false,
++      );
++    } else if (g.mode === "drag" && touches.length === 1) {
++      const dx = g.startX - touches[0].pageX;
++      const dy = g.startY - touches[0].pageY;
++      if (Math.abs(dx) + Math.abs(dy) > 8) g.moved = true;
++      if (g.moved) applyMiniWidth(g.startW + (dx + dy * (16 / 9)) / 1.5, false);
++    }
++  };
++  const onMiniTouchEnd = (event: any) => {
++    const touches = event.nativeEvent.touches || [];
++    const g = miniGesture.current;
++    if (touches.length > 0) return;
++    if (g.mode && g.moved) {
++      applyMiniWidth(miniWidthRef.current, true);
++      g.lastTapAt = 0;
++    }
++    g.mode = null;
++  };
++  // Single tap expands after a short wait; a second tap inside that window is
++  // a double-tap and toggles the size instead.
++  const onMiniPress = () => {
++    const g = miniGesture.current;
++    const now = Date.now();
++    if (now - g.lastTapAt < 320) {
++      g.lastTapAt = 0;
++      if (miniExpandTimer.current) clearTimeout(miniExpandTimer.current);
++      const large = Math.min(miniMaxRef.current, Math.round(screenWidth * 0.8));
++      applyMiniWidth(miniWidthRef.current >= large - 8 ? 240 : large, true);
++      return;
++    }
++    g.lastTapAt = now;
++    if (miniExpandTimer.current) clearTimeout(miniExpandTimer.current);
++    miniExpandTimer.current = setTimeout(() => {
++      if (mountedRef.current) expandFromMini();
++    }, 330);
++  };
++
+   const isLandscape = screenWidth > screenHeight;
+   const sideEpisodes = useMemo(
+     () => orderEpisodes(playerMeta?.episodes || []),
+@@ -1727,6 +1934,38 @@ export default function PlayerOverlay() {
+   const showEpisodesButton =
+     isLandscape && !!playerMeta?.isSeries && sideEpisodes.length > 0;
+ 
++  // Movie Based layout: every provider row known when playback started.
++  const queueOptions = useSourceQueueStore((q) => q.options);
++  const queueCurrentId = useSourceQueueStore((q) => q.currentId);
++  const queueFailed = useSourceQueueStore((q) => q.failed);
++  const queueNames = useSourceQueueStore((q) => q.providerNames);
++  const queueUnchecked = useSourceQueueStore((q) => q.unchecked);
++  const showSourcesButton = !!playerMeta?.tmdb && queueOptions.length > 1;
++
++  const pickSource = async (option: any) => {
++    setPanel(null);
++    if (option.id === queueCurrentId || switchBusy.current) return;
++    switchBusy.current = true;
++    saveProgress();
++    showToast(`Switching to ${queueNames[option.providerId] || option.providerId}…`);
++    setBuffering(true);
++    try {
++      const result = await switchToOption(option, currentTimeRef.current);
++      if (result === "failed") {
++        setBuffering(false);
++        showToast("That source didn't load — try another");
++      }
++    } finally {
++      switchBusy.current = false;
++    }
++  };
++
++  // One-shot message from an automatic provider switch.
++  useEffect(() => {
++    if (playerMeta?.notice) showToast(playerMeta.notice);
++    // eslint-disable-next-line react-hooks/exhaustive-deps
++  }, []);
++
+   const playEpisodeFromPanel = async (episode: any) => {
+     if (switchBusy.current) return;
+     switchBusy.current = true;
+@@ -2376,7 +2615,8 @@ const renderSeekButton = (side: "left" | "right") => {
+   }, [selectedAudioIndex]);
+ 
+   const videoSource = useMemo(() => {
+-    const uri = currentStream?.link || currentVideoUrl;
++    // Last line of defence against scheme-less links (see ensureHttpUrl).
++    const uri = ensureHttpUrl(currentStream?.link || currentVideoUrl);
+     const hls =
+       currentStream?.format === "hls" || inferHls(currentStream);
+     const mpd =
+@@ -2434,7 +2674,6 @@ const renderSeekButton = (side: "left" | "right") => {
+     audioTracks.find((track: any) => track.selected)?.title ||
+     "Audio";
+ 
+-  const miniWidth = Math.min(240, Math.max(190, screenWidth * 0.52));
+   const miniBottom = Math.max(insets.bottom + 82, 88);
+   // The full-screen loader owns the screen while the stream placeholder or
+   // subtitles resolve; the buffering indicator must not stack on top of it.
+@@ -2453,7 +2692,17 @@ const renderSeekButton = (side: "left" | "right") => {
+       ];
+ 
+   return (
+-    <View style={rootStyle as any} pointerEvents="auto">
++    <View
++      style={rootStyle as any}
++      pointerEvents="auto"
++      {...(expanded
++        ? {}
++        : {
++            onTouchStart: onMiniTouchStart,
++            onTouchMove: onMiniTouchMove,
++            onTouchEnd: onMiniTouchEnd,
++          })}
++    >
+       <StatusBar hidden={expanded} />
+       <View style={StyleSheet.absoluteFill}>
+         {startupLoading ? (
+@@ -2522,6 +2771,12 @@ const renderSeekButton = (side: "left" | "right") => {
+             }}
+             bufferingStrategy={BufferingStrategyType.DEPENDING_ON_MEMORY}
+             playWhenInactive
++            playInBackground={prefs.backgroundPlayback}
++            showNotificationControls={prefs.backgroundPlayback}
++            enterPictureInPictureOnLeave={prefs.backgroundPlayback && expanded}
++            onPictureInPictureStatusChanged={(event: any) =>
++              setInPip(!!event?.isActive)
++            }
+             progressUpdateInterval={400}
+             onError={handleError}
+             onEnd={() => {
+@@ -2732,6 +2987,19 @@ const renderSeekButton = (side: "left" | "right") => {
+                   {subtitleLabel}
+                 </Text>
+               </TouchableOpacity>
++              {showSourcesButton ? (
++                <TouchableOpacity
++                  style={styles.iconButton}
++                  onPress={() => setPanel("sources")}
++                  accessibilityLabel="Providers and qualities"
++                >
++                  <MaterialCommunityIcons
++                    name="server-network"
++                    size={22}
++                    color={ICON}
++                  />
++                </TouchableOpacity>
++              ) : null}
+               <TouchableOpacity
+                 style={styles.iconButton}
+                 onPress={() => setPanel("subtitleSettings")}
+@@ -2864,6 +3132,19 @@ const renderSeekButton = (side: "left" | "right") => {
+                     color={ICON}
+                   />
+                 </TouchableOpacity>
++                {Platform.OS !== "web" ? (
++                  <TouchableOpacity
++                    style={styles.iconButton}
++                    onPress={enterPip}
++                    accessibilityLabel="Picture in picture"
++                  >
++                    <MaterialCommunityIcons
++                      name="picture-in-picture-top-right"
++                      size={21}
++                      color={ICON}
++                    />
++                  </TouchableOpacity>
++                ) : null}
+                 <TouchableOpacity
+                   style={styles.iconButton}
+                   onPress={minimizePlayer}
+@@ -2982,6 +3263,19 @@ const renderSeekButton = (side: "left" | "right") => {
+             />
+           )}
+ 
++          {panel === "sources" && (
++            <SourcesPanel
++              width={Math.min(380, Math.round(screenWidth * (isLandscape ? 0.5 : 0.92)))}
++              options={queueOptions}
++              names={queueNames}
++              currentId={queueCurrentId}
++              failed={queueFailed}
++              unchecked={queueUnchecked}
++              onSelect={pickSource}
++              onClose={() => setPanel(null)}
++            />
++          )}
++
+           {panel === "episodes" && isLandscape && (
+             <EpisodesPanel
+               width={Math.min(360, Math.round(screenWidth * 0.5))}
+@@ -3030,7 +3324,7 @@ const renderSeekButton = (side: "left" | "right") => {
+         </>
+       ) : (
+         <>
+-          <Pressable style={StyleSheet.absoluteFill} onPress={expandFromMini}>
++          <Pressable style={StyleSheet.absoluteFill} onPress={onMiniPress}>
+             <LinearGradient
+               colors={["rgba(0,0,0,0.05)", "rgba(0,0,0,0.82)"]}
+               style={styles.miniGradient}
+diff --git a/src/player/PlayerSidePanels.tsx b/src/player/PlayerSidePanels.tsx
+index fbfac8b..7f46812 100644
+--- a/src/player/PlayerSidePanels.tsx
++++ b/src/player/PlayerSidePanels.tsx
+@@ -22,6 +22,7 @@ import {
+ import { episodeLabel } from "@/lib/episodes";
+ import { usePreferencesStore } from "@/store/usePreferencesStore";
+ import type { PlayerEpisode } from "@/store/usePlayerStore";
++import type { SourceOption } from "@/lib/titleBridge";
+ 
+ const ACCENT = "#ffffff";
+ 
+@@ -347,6 +348,104 @@ export function EpisodesPanel({
+   );
+ }
+ 
++
++/** Every provider row for the current title (Movie Based layout). Picking one
++ * switches the stream in place, keeping the playback position. */
++export function SourcesPanel({
++  width,
++  options,
++  names,
++  currentId,
++  failed,
++  unchecked,
++  onSelect,
++  onClose,
++}: {
++  width: number;
++  options: SourceOption[];
++  names: Record<string, string>;
++  currentId: string | null;
++  failed: string[];
++  unchecked: number;
++  onSelect: (option: SourceOption) => void;
++  onClose: () => void;
++}) {
++  const groups: { providerId: string; rows: SourceOption[] }[] = [];
++  options.forEach((option) => {
++    let group = groups.find((g) => g.providerId === option.providerId);
++    if (!group) {
++      group = { providerId: option.providerId, rows: [] };
++      groups.push(group);
++    }
++    group.rows.push(option);
++  });
++
++  return (
++    <SidePanel title="Providers & Qualities" width={width} onClose={onClose}>
++      <ScrollView
++        contentContainerStyle={styles.body}
++        showsVerticalScrollIndicator={false}
++      >
++        {groups.map((group) => (
++          <View key={group.providerId}>
++            <Text style={styles.sectionLabel}>
++              {names[group.providerId] || group.providerId}
++            </Text>
++            {group.rows.map((option) => {
++              const active = option.id === currentId;
++              const dead = failed.includes(option.id);
++              return (
++                <TouchableOpacity
++                  key={option.id}
++                  style={[
++                    styles.episode,
++                    { height: undefined, minHeight: 56, paddingVertical: 8 },
++                    active && styles.episodeActive,
++                    dead && { opacity: 0.45 },
++                  ]}
++                  onPress={() => (active ? onClose() : onSelect(option))}
++                >
++                  <View style={styles.episodeNumber}>
++                    {active ? (
++                      <MaterialCommunityIcons name="play" size={18} color="#fff" />
++                    ) : dead ? (
++                      <MaterialCommunityIcons name="close" size={16} color="#f87171" />
++                    ) : (
++                      <Text style={styles.episodeNumberText}>
++                        {option.height ? `${option.height}` : "HD"}
++                      </Text>
++                    )}
++                  </View>
++                  <View style={{ flex: 1 }}>
++                    <Text style={styles.episodeTitle} numberOfLines={2}>
++                      {option.label}
++                    </Text>
++                    <Text style={styles.sourceMeta} numberOfLines={1}>
++                      {[
++                        option.sizeText,
++                        option.multiAudio ? "Multi audio" : "",
++                        dead ? "Failed" : "",
++                      ]
++                        .filter(Boolean)
++                        .join(" · ")}
++                    </Text>
++                  </View>
++                </TouchableOpacity>
++              );
++            })}
++          </View>
++        ))}
++        {unchecked > 0 ? (
++          <Text style={styles.note}>
++            {unchecked} more provider{unchecked === 1 ? "" : "s"} will be
++            checked after you close the player.
++          </Text>
++        ) : null}
++      </ScrollView>
++    </SidePanel>
++  );
++}
++
+ const styles = StyleSheet.create({
+   backdrop: {
+     position: "absolute",
+@@ -466,5 +565,12 @@ const styles = StyleSheet.create({
+     justifyContent: "center",
+   },
+   episodeNumberText: { color: "#fff", fontSize: 12, fontWeight: "800" },
++  sourceMeta: { color: "rgba(255,255,255,0.55)", fontSize: 11.5, marginTop: 2 },
++  note: {
++    color: "rgba(255,255,255,0.55)",
++    fontSize: 12,
++    marginTop: 14,
++    lineHeight: 17,
++  },
+   episodeTitle: { flex: 1, color: "#fff", fontSize: 13.5, fontWeight: "600" },
+ });
+diff --git a/src/store/usePlayerStore.ts b/src/store/usePlayerStore.ts
+index f7a05e0..a66fd7b 100644
+--- a/src/store/usePlayerStore.ts
++++ b/src/store/usePlayerStore.ts
+@@ -72,6 +72,9 @@ export type PlayerMeta = {
+   preferredAudioLanguage?: string;
+   // Applied once, on the first load of a resumed session.
+   restore?: PlayerRestore;
++  // One-shot toast shown when the player (re)opens, e.g. after an automatic
++  // switch to another provider.
++  notice?: string;
+ } | null;
+ 
+ // Everything needed to reopen the player exactly where it was left.
+diff --git a/src/store/usePreferencesStore.ts b/src/store/usePreferencesStore.ts
+index 88d3c57..20bffaa 100644
+--- a/src/store/usePreferencesStore.ts
++++ b/src/store/usePreferencesStore.ts
+@@ -27,6 +27,10 @@ export type DownloadLocation = "app" | "custom";
+ 
+ export type Preferences = {
+   resumePlayback: boolean;
++  // Keep playing when the app goes to the background: Picture-in-Picture
++  // window on Android/iOS, audio-only with a notification when PiP is not
++  // available.
++  backgroundPlayback: boolean;
+   defaultQuality: DefaultQuality;
+   autoSubtitles: boolean;
+   subtitleLanguage: string;
+@@ -54,6 +58,7 @@ export const DEFAULT_SUBTITLE_BOTTOM = 36;
+ 
+ const DEFAULT_PREFERENCES: Preferences = {
+   resumePlayback: true,
++  backgroundPlayback: true,
+   defaultQuality: "auto",
+   autoSubtitles: false,
+   subtitleLanguage: "auto",
+diff --git a/src/store/useSourceQueueStore.ts b/src/store/useSourceQueueStore.ts
+new file mode 100644
+index 0000000..084c666
+--- /dev/null
++++ b/src/store/useSourceQueueStore.ts
+@@ -0,0 +1,69 @@
++import { create } from "zustand";
++import type { SourceOption } from "@/lib/titleBridge";
++import type { PlayTarget } from "@/lib/tmdbPlayback";
++import { usePlayerStore } from "@/store/usePlayerStore";
++
++// In-memory "stream queue" for the Movie Based layout: every provider row that
++// was known when playback started, in the order the list showed them. The
++// player walks it when a stream fails and lists it in the Sources panel.
++// Not persisted: it only lives as long as the player session.
++
++type QueueState = {
++  options: SourceOption[];
++  providerNames: Record<string, string>;
++  target: PlayTarget | null;
++  currentId: string | null;
++  failed: string[];
++  // Providers that had not answered yet when playback started.
++  unchecked: number;
++  setQueue: (input: {
++    options: SourceOption[];
++    providerNames: Record<string, string>;
++    target: PlayTarget;
++    currentId: string;
++    unchecked?: number;
++  }) => void;
++  setCurrent: (id: string) => void;
++  markFailed: (id: string) => void;
++  clear: () => void;
++};
++
++export const useSourceQueueStore = create<QueueState>()((set) => ({
++  options: [],
++  providerNames: {},
++  target: null,
++  currentId: null,
++  failed: [],
++  unchecked: 0,
++  setQueue: ({ options, providerNames, target, currentId, unchecked = 0 }) =>
++    set({ options, providerNames, target, currentId, failed: [], unchecked }),
++  setCurrent: (id) => set({ currentId: id }),
++  markFailed: (id) =>
++    set((state) =>
++      state.failed.includes(id) ? state : { failed: [...state.failed, id] },
++    ),
++  clear: () =>
++    set({
++      options: [],
++      providerNames: {},
++      target: null,
++      currentId: null,
++      failed: [],
++      unchecked: 0,
++    }),
++}));
++
++/** Next row that has not failed and is not the one playing. */
++export function nextQueueOption(): SourceOption | undefined {
++  const { options, currentId, failed } = useSourceQueueStore.getState();
++  const start = Math.max(0, options.findIndex((o) => o.id === currentId));
++  const ordered = [...options.slice(start + 1), ...options.slice(0, start)];
++  return ordered.find((o) => o.id !== currentId && !failed.includes(o.id));
++}
++
++// The queue only lives while a player session exists.
++usePlayerStore.subscribe((state, previous) => {
++  if (previous.currentVideoUrl && !state.currentVideoUrl) {
++    useSourceQueueStore.getState().clear();
++  }
++});

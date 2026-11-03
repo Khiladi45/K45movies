@@ -22,6 +22,7 @@ import {
 import { episodeLabel } from "@/lib/episodes";
 import { usePreferencesStore } from "@/store/usePreferencesStore";
 import type { PlayerEpisode } from "@/store/usePlayerStore";
+import type { SourceOption } from "@/lib/titleBridge";
 
 const ACCENT = "#ffffff";
 
@@ -347,6 +348,104 @@ export function EpisodesPanel({
   );
 }
 
+
+/** Every provider row for the current title (Movie Based layout). Picking one
+ * switches the stream in place, keeping the playback position. */
+export function SourcesPanel({
+  width,
+  options,
+  names,
+  currentId,
+  failed,
+  unchecked,
+  onSelect,
+  onClose,
+}: {
+  width: number;
+  options: SourceOption[];
+  names: Record<string, string>;
+  currentId: string | null;
+  failed: string[];
+  unchecked: number;
+  onSelect: (option: SourceOption) => void;
+  onClose: () => void;
+}) {
+  const groups: { providerId: string; rows: SourceOption[] }[] = [];
+  options.forEach((option) => {
+    let group = groups.find((g) => g.providerId === option.providerId);
+    if (!group) {
+      group = { providerId: option.providerId, rows: [] };
+      groups.push(group);
+    }
+    group.rows.push(option);
+  });
+
+  return (
+    <SidePanel title="Providers & Qualities" width={width} onClose={onClose}>
+      <ScrollView
+        contentContainerStyle={styles.body}
+        showsVerticalScrollIndicator={false}
+      >
+        {groups.map((group) => (
+          <View key={group.providerId}>
+            <Text style={styles.sectionLabel}>
+              {names[group.providerId] || group.providerId}
+            </Text>
+            {group.rows.map((option) => {
+              const active = option.id === currentId;
+              const dead = failed.includes(option.id);
+              return (
+                <TouchableOpacity
+                  key={option.id}
+                  style={[
+                    styles.episode,
+                    { height: undefined, minHeight: 56, paddingVertical: 8 },
+                    active && styles.episodeActive,
+                    dead && { opacity: 0.45 },
+                  ]}
+                  onPress={() => (active ? onClose() : onSelect(option))}
+                >
+                  <View style={styles.episodeNumber}>
+                    {active ? (
+                      <MaterialCommunityIcons name="play" size={18} color="#fff" />
+                    ) : dead ? (
+                      <MaterialCommunityIcons name="close" size={16} color="#f87171" />
+                    ) : (
+                      <Text style={styles.episodeNumberText}>
+                        {option.height ? `${option.height}` : "HD"}
+                      </Text>
+                    )}
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.episodeTitle} numberOfLines={2}>
+                      {option.label}
+                    </Text>
+                    <Text style={styles.sourceMeta} numberOfLines={1}>
+                      {[
+                        option.sizeText,
+                        option.multiAudio ? "Multi audio" : "",
+                        dead ? "Failed" : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        ))}
+        {unchecked > 0 ? (
+          <Text style={styles.note}>
+            {unchecked} more provider{unchecked === 1 ? "" : "s"} will be
+            checked after you close the player.
+          </Text>
+        ) : null}
+      </ScrollView>
+    </SidePanel>
+  );
+}
+
 const styles = StyleSheet.create({
   backdrop: {
     position: "absolute",
@@ -466,5 +565,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   episodeNumberText: { color: "#fff", fontSize: 12, fontWeight: "800" },
+  sourceMeta: { color: "rgba(255,255,255,0.55)", fontSize: 11.5, marginTop: 2 },
+  note: {
+    color: "rgba(255,255,255,0.55)",
+    fontSize: 12,
+    marginTop: 14,
+    lineHeight: 17,
+  },
   episodeTitle: { flex: 1, color: "#fff", fontSize: 13.5, fontWeight: "600" },
 });
