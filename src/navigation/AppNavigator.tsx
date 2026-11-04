@@ -12,6 +12,7 @@ import CategoryScreen from "@/Home/screens/CategoryScreen";
 import PreferencesScreen from "@/Tools/PreferencesScreen";
 import ProviderDiagnosticsScreen from "@/Tools/ProviderDiagnosticsScreen";
 import TmdbDetailScreen from "@/Tmdb/screens/TmdbDetailScreen";
+import YtVideoScreen from "@/YouTube/screens/YtVideoScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -53,6 +54,16 @@ export default function AppNavigator() {
           component={TmdbDetailScreen}
           options={{
             title: "Details",
+            animation: "slide_from_bottom",
+          }}
+        />
+
+        {/* YouTube layout only: video page with player and related videos */}
+        <Stack.Screen
+          name="YtVideo"
+          component={YtVideoScreen}
+          options={{
+            title: "Video",
             animation: "slide_from_bottom",
           }}
         />

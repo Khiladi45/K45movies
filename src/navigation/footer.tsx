@@ -30,6 +30,8 @@ import { SearchGate, WatchlistGate } from "@/Tmdb/LayoutGates";
 import AddProviders from "@/components/providersAdd";
 import UserSettings from "@/components/settings";
 import { useProfileStore } from "@/store/useProfileStore";
+import { useLayoutStore } from "@/store/useLayoutStore";
+import YtTabs from "@/YouTube/YtTabs";
 
 if (
   Platform.OS === "android" &&
@@ -185,7 +187,17 @@ function CurvedTabBar({ state, navigation, descriptors, insets }: any) {
   );
 }
 
+/**
+ * Picks the tab navigator for the chosen layout. The "provider" and "movie"
+ * layouts keep the original curved bar (ClassicTabs, unchanged); "youtube"
+ * swaps in its own navigator and screens.
+ */
 export default function BottomTabs() {
+  const layout = useLayoutStore((s) => s.layout);
+  return layout === "youtube" ? <YtTabs /> : <ClassicTabs />;
+}
+
+function ClassicTabs() {
   // 👇 Get theme color here too, for the Profile image border
   const { primaryColor } = useThemeStore();
 

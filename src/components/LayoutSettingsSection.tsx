@@ -24,6 +24,13 @@ const OPTIONS: {
     description: "Browse movies and series from TMDB, then find streams",
     icon: "movie-open-outline",
   },
+  {
+    value: "youtube",
+    title: "YouTube Layout",
+    description:
+      "Video feed with Shorts, a video page, search history and a Watchlist",
+    icon: "youtube",
+  },
 ];
 
 /**
