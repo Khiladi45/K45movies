@@ -1,5 +1,6 @@
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   StyleSheet,
   Text,
@@ -11,11 +12,13 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useIsFocused, useNavigation, useRoute } from "@react-navigation/native";
-import { DEFAULT_SHORTS_QUERY, fetchShorts } from "../api";
+import { DEFAULT_SHORTS_QUERY } from "../api";
 import { useYtShorts, useYtWatch } from "../hooks";
 import { useYtLibraryStore } from "../store";
 import type { YtVideo } from "../types";
 import { notify, shareVideo } from "../utils";
+import { useYtUiStore } from "../playerStore";
+import CommentsSheet from "../components/CommentsSheet";
 import YtPlayer from "../components/YtPlayer";
 
 type ItemProps = {
@@ -29,9 +32,10 @@ type ItemProps = {
 };
 
 const ShortItem = memo(function ShortItem({ video, height, playing, near, topInset }: ItemProps) {
-  const navigation = useNavigation<any>();
   const [userPaused, setUserPaused] = useState(false);
   const [liked, setLiked] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(false);
+  const openDownload = useYtUiStore((s) => s.openDownload);
   const saved = useYtLibraryStore((s) => s.isSaved(video.id));
   const toggleSaved = useYtLibraryStore((s) => s.toggleSaved);
 
@@ -77,7 +81,7 @@ const ShortItem = memo(function ShortItem({ video, height, playing, near, topIns
         <RailButton
           icon="chatbubble-ellipses-outline"
           label="Comment"
-          onPress={() => notify("Comments aren't available here")}
+          onPress={() => setCommentsOpen(true)}
         />
         <RailButton
           icon={saved ? "bookmark" : "bookmark-outline"}
@@ -87,7 +91,9 @@ const ShortItem = memo(function ShortItem({ video, height, playing, near, topIns
           }
         />
         <RailButton icon="arrow-redo-outline" label="Share" onPress={() => shareVideo(video)} />
+        <RailButton icon="download-outline" label="Download" onPress={() => openDownload(video)} />
       </View>
+      <CommentsSheet visible={commentsOpen} onClose={() => setCommentsOpen(false)} link={video.link} />
 
       <View style={[styles.bottom, { bottom: 24 }]} pointerEvents="none">
         <Text style={styles.channel} numberOfLines={1}>
@@ -131,17 +137,13 @@ export default function YtShortsScreen() {
   const query: string = params.query || DEFAULT_SHORTS_QUERY;
 
   const feed = useYtShorts(query);
-  const [more, setMore] = useState<YtVideo[]>([]);
-  const page = useRef(1);
-  const exhausted = useRef(false);
-  const loadingMore = useRef(false);
 
   const items = useMemo(() => {
     const seen = new Set<string>();
     const out: YtVideo[] = [];
     const source = [
-      ...(Array.isArray(params.items) && params.items.length ? params.items : feed.data ?? []),
-      ...more,
+      ...(Array.isArray(params.items) && params.items.length ? params.items : []),
+      ...(feed.data ?? []),
     ];
     for (const v of source) {
       if (!seen.has(v.id)) {
@@ -150,7 +152,7 @@ export default function YtShortsScreen() {
       }
     }
     return out;
-  }, [params.items, feed.data, more]);
+  }, [params.items, feed.data]);
 
   const [height, setHeight] = useState(0);
   const [activeIndex, setActiveIndex] = useState<number>(params.startIndex ?? 0);
@@ -172,23 +174,9 @@ export default function YtShortsScreen() {
   }).current;
   const viewConfig = useRef({ itemVisiblePercentThreshold: 80 }).current;
 
-  const loadMore = useCallback(async () => {
-    if (loadingMore.current || exhausted.current) return;
-    loadingMore.current = true;
-    try {
-      page.current += 1;
-      const next = await fetchShorts(query, page.current);
-      const known = new Set(items.map((v) => v.id));
-      const fresh = next.filter((v) => !known.has(v.id));
-      // The provider repeats its last page once it runs out.
-      if (fresh.length === 0) exhausted.current = true;
-      else setMore((prev) => [...prev, ...fresh]);
-    } catch {
-      exhausted.current = true;
-    } finally {
-      loadingMore.current = false;
-    }
-  }, [items, query]);
+  const loadMore = useCallback(() => {
+    if (feed.hasNextPage && !feed.isFetchingNextPage) feed.fetchNextPage();
+  }, [feed]);
 
   return (
     <View
@@ -227,7 +215,7 @@ export default function YtShortsScreen() {
         />
       ) : feed.isLoading ? (
         <View style={styles.center}>
-          <Text style={styles.msg}>Loading Shorts…</Text>
+          <ActivityIndicator color="#fff" />
         </View>
       ) : height > 0 ? (
         <View style={styles.center}>
@@ -239,11 +227,14 @@ export default function YtShortsScreen() {
       ) : null}
 
       <View style={[styles.top, { paddingTop: insets.top }]} pointerEvents="box-none">
+        <TouchableOpacity style={styles.topBtn} accessibilityLabel="Back" onPress={() => navigation.navigate("HomeTab")}>
+          <Ionicons name="arrow-back" size={24} color="#fff" />
+        </TouchableOpacity>
         <Text style={styles.topTitle}>Shorts</Text>
         <TouchableOpacity
           style={styles.topBtn}
           accessibilityLabel="Search"
-          onPress={() => navigation.navigate("Search")}
+          onPress={() => navigation.navigate("YtSearch")}
         >
           <Ionicons name="search-outline" size={24} color="#fff" />
         </TouchableOpacity>
@@ -265,7 +256,7 @@ const styles = StyleSheet.create({
     right: 0,
     flexDirection: "row",
     alignItems: "center",
-    paddingLeft: 16,
+    paddingLeft: 4,
     paddingRight: 4,
   },
   topTitle: { flex: 1, color: "#fff", fontSize: 20, fontWeight: "700", paddingVertical: 12 },

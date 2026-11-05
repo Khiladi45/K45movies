@@ -1,6 +1,6 @@
-import { providerApi } from "@/lib/providerApi";
-import { selectPlaybackStreams } from "@/lib/streams";
-import type { YtHomeTab, YtVideo, YtWatch } from "./types";
+import { executeProvider, providerApi } from "@/lib/providerApi";
+import { normalizeStreams, selectPlaybackStreams, type PlayableStream } from "@/lib/streams";
+import type { YtCommentsPage, YtHomeTab, YtQuality, YtVideo, YtWatch } from "./types";
 
 /** The bundled YouTube provider. It ships with the app, so it is always there. */
 export const YT_PROVIDER = "youtube";
@@ -101,9 +101,47 @@ export async function fetchShorts(
 /** Search results, Shorts included so a result can open the Shorts player. */
 export async function fetchSearch(
   query: string,
+  page = 1,
   signal?: AbortSignal,
 ): Promise<YtVideo[]> {
-  return fetchPosts(query, 1, signal);
+  return fetchPosts(query, page, signal);
+}
+
+/** Live suggestions while typing (YouTube's own autocomplete, via the API). */
+export async function fetchSuggestions(
+  query: string,
+  signal?: AbortSignal,
+): Promise<string[]> {
+  const text = query.trim();
+  if (!text) return [];
+  const raw: any = await executeProvider(
+    YT_PROVIDER,
+    "posts",
+    "getSuggestions",
+    { query: text },
+    signal,
+  );
+  return (Array.isArray(raw) ? raw : []).map((v) => String(v)).filter(Boolean).slice(0, 10);
+}
+
+/** One page of comments, or of replies when `continuation` is a reply token. */
+export async function fetchComments(
+  link: string,
+  continuation?: string,
+  signal?: AbortSignal,
+): Promise<YtCommentsPage> {
+  const raw: any = await executeProvider(
+    YT_PROVIDER,
+    "meta",
+    "getComments",
+    { link, continuation },
+    signal,
+  );
+  return {
+    comments: Array.isArray(raw?.comments) ? raw.comments : [],
+    count: String(raw?.count || ""),
+    continuation: raw?.continuation || undefined,
+  };
 }
 
 export async function fetchWatch(
@@ -142,7 +180,70 @@ export async function fetchWatch(
 
 /** Resolves playable streams for a video and picks the best candidate first. */
 export async function fetchPlayback(link: string, signal?: AbortSignal) {
-  const raw: any = await providerApi.getStream(YT_PROVIDER, link, "movie", signal);
-  const list = Array.isArray(raw) ? raw : Array.isArray(raw?.streams) ? raw.streams : [];
-  return selectPlaybackStreams(list, { preference: "auto", signal });
+  const all = await fetchStreamList(link, signal);
+  // Per-height HLS renditions are for the quality picker (they may lack audio);
+  // playback uses the master playlist or the muxed MP4s.
+  const candidates = all.filter((s) => !(s.format === "hls" && s.height));
+  return selectPlaybackStreams(candidates.length ? candidates : all, {
+    preference: "auto",
+    signal,
+  });
 }
+
+const STREAM_TTL = 1000 * 60 * 10;
+const streamCache = new Map<string, { at: number; promise: Promise<PlayableStream[]> }>();
+
+/** All streams of a video, normalised. Shared by playback, gear menu and downloads. */
+export function fetchStreamList(
+  link: string,
+  signal?: AbortSignal,
+): Promise<PlayableStream[]> {
+  const hit = streamCache.get(link);
+  if (hit && Date.now() - hit.at < STREAM_TTL) return hit.promise;
+  const promise = (async () => {
+    const raw: any = await providerApi.getStream(YT_PROVIDER, link, "movie", signal);
+    const list = Array.isArray(raw) ? raw : Array.isArray(raw?.streams) ? raw.streams : [];
+    return normalizeStreams(list);
+  })();
+  streamCache.set(link, { at: Date.now(), promise });
+  promise.catch(() => streamCache.delete(link));
+  return promise;
+}
+
+const isMuxedStream = (s: PlayableStream) =>
+  !/video only/i.test(String(s.raw?.tag || ""));
+
+/**
+ * Qualities for the gear menu: every height the API listed (highest first).
+ * `muxed` is false for HLS renditions whose audio is a separate track; those
+ * play fine through the master playlist but can't be saved as one file.
+ */
+export function qualitiesOf(streams: PlayableStream[]): YtQuality[] {
+  const byHeight = new Map<number, YtQuality>();
+  for (const s of streams) {
+    const h = s.height || 0;
+    if (!h) continue;
+    const muxed = isMuxedStream(s) && (s.format === "mp4" || s.format === "hls");
+    const prev = byHeight.get(h);
+    if (!prev) byHeight.set(h, { height: h, label: `${h}p`, muxed });
+    else if (muxed) prev.muxed = true;
+  }
+  return [...byHeight.values()].sort((a, b) => b.height - a.height);
+}
+
+/** Streams that can be downloaded as a single file, best first, one per height. */
+export function downloadableStreams(streams: PlayableStream[]): PlayableStream[] {
+  const picked = new Map<number, PlayableStream>();
+  for (const s of streams) {
+    const h = s.height || 0;
+    if (!h || !isMuxedStream(s)) continue;
+    const prev = picked.get(h);
+    // Prefer an MP4 (one file) over an HLS rendition at the same height.
+    if (!prev || (prev.format !== "mp4" && s.format === "mp4")) picked.set(h, s);
+  }
+  return [...picked.values()].sort((a, b) => (b.height || 0) - (a.height || 0));
+}
+
+/** The master adaptive playlist (Auto), when the provider returned one. */
+export const masterStream = (streams: PlayableStream[]): PlayableStream | undefined =>
+  streams.find((s) => s.format === "hls" && !s.height);

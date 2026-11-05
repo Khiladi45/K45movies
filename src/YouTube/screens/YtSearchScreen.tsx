@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -13,16 +13,35 @@ import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
-import { useYtSearch } from "../hooks";
+import { useYtSearch, useYtSuggestions } from "../hooks";
 import { useYtSearchStore } from "../store";
+import { useYtUiStore } from "../playerStore";
 import { YT } from "../theme";
 import type { YtVideo } from "../types";
 import VideoRow from "../components/VideoRow";
+import { RowSkeleton } from "../components/Skeletons";
 
+const ROW_H = 110; // 94px thumbnail + 8px padding top and bottom
+
+const useDebounced = (value: string, ms: number) => {
+  const [out, setOut] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setOut(value), ms);
+    return () => clearTimeout(t);
+  }, [value, ms]);
+  return out;
+};
+
+/**
+ * Root-stack search screen opened from the Home header. Typing shows live
+ * suggestions; submitting shows results in the same screen. Back always goes
+ * to Home.
+ */
 export default function YtSearchScreen() {
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
   const inputRef = useRef<TextInput>(null);
+  const openMenu = useYtUiStore((s) => s.openMenu);
   const [text, setText] = useState("");
   const [submitted, setSubmitted] = useState("");
 
@@ -31,13 +50,21 @@ export default function YtSearchScreen() {
   const removeSearch = useYtSearchStore((s) => s.removeSearch);
   const clearSearches = useYtSearchStore((s) => s.clearSearches);
 
+  const debounced = useDebounced(text, 220);
+  const suggestions = useYtSuggestions(submitted ? "" : debounced);
   const results = useYtSearch(submitted);
+  const videos = results.data ?? [];
 
   // Remember the search together with a thumbnail of its first result.
-  const firstImage = results.data?.[0]?.image;
+  const firstImage = videos[0]?.image;
   useEffect(() => {
     if (submitted && firstImage) addSearch(submitted, firstImage);
   }, [submitted, firstImage, addSearch]);
+
+  const imageFor = useMemo(() => {
+    const map = new Map(recent.map((r) => [r.term.toLowerCase(), r.image]));
+    return (term: string) => map.get(term.toLowerCase());
+  }, [recent]);
 
   const run = useCallback(
     (term: string) => {
@@ -51,7 +78,13 @@ export default function YtSearchScreen() {
     [addSearch],
   );
 
-  const reset = () => {
+  const onChangeText = (value: string) => {
+    setText(value);
+    // Editing the query leaves the results and goes back to suggestions.
+    if (submitted) setSubmitted("");
+  };
+
+  const clearText = () => {
     setText("");
     setSubmitted("");
     inputRef.current?.focus();
@@ -60,43 +93,68 @@ export default function YtSearchScreen() {
   const openResult = useCallback(
     (video: YtVideo) => {
       if (video.isShort) {
-        const shorts = (results.data ?? []).filter((v) => v.isShort);
-        navigation.navigate("Shorts", {
+        const shorts = videos.filter((v) => v.isShort);
+        navigation.navigate("Tabs", { screen: "Shorts", params: {
           items: shorts,
           startIndex: Math.max(0, shorts.findIndex((v) => v.id === video.id)),
-        });
+        } });
       } else {
         navigation.navigate("YtVideo", { video });
       }
     },
-    [navigation, results.data],
+    [navigation, videos],
   );
 
   const showResults = submitted.length > 0;
+  const typing = text.trim().length > 0 && !showResults;
+  const live = suggestions.data ?? [];
+
+  const suggestionRows = useMemo(
+    () => live.map((term) => ({ term, image: imageFor(term) })),
+    [live, imageFor],
+  );
+
+  const renderTermRow = ({ item }: { item: { term: string; image?: string } }) => (
+    <TouchableOpacity
+      style={styles.recentRow}
+      onPress={() => run(item.term)}
+      onLongPress={typing ? undefined : () => removeSearch(item.term)}
+      accessibilityRole="button"
+    >
+      <Ionicons name="time-outline" size={22} color={YT.muted} />
+      <Text style={styles.recentText} numberOfLines={1}>
+        {item.term}
+      </Text>
+      {item.image ? (
+        <Image source={{ uri: item.image }} style={styles.recentThumb} contentFit="cover" />
+      ) : (
+        <View style={styles.recentThumb} />
+      )}
+    </TouchableOpacity>
+  );
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
       <View style={styles.bar}>
-        {showResults ? (
-          <TouchableOpacity style={styles.iconBtn} onPress={reset} accessibilityLabel="Back to recent searches">
-            <Ionicons name="arrow-back" size={24} color={YT.text} />
-          </TouchableOpacity>
-        ) : null}
-        <View style={[styles.input, !showResults && { marginLeft: 12 }]}>
+        <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.goBack()} accessibilityLabel="Back">
+          <Ionicons name="arrow-back" size={24} color={YT.text} />
+        </TouchableOpacity>
+        <View style={styles.input}>
           <TextInput
             ref={inputRef}
             value={text}
-            onChangeText={setText}
+            onChangeText={onChangeText}
             onSubmitEditing={() => run(text)}
             placeholder="Search videos"
             placeholderTextColor={YT.muted}
             returnKeyType="search"
+            autoFocus
             autoCorrect={false}
             style={styles.field}
             accessibilityLabel="Search videos"
           />
           {text.length > 0 ? (
-            <TouchableOpacity onPress={reset} accessibilityLabel="Clear search" hitSlop={10}>
+            <TouchableOpacity onPress={clearText} accessibilityLabel="Clear search" hitSlop={10}>
               <Ionicons name="close" size={20} color={YT.muted} />
             </TouchableOpacity>
           ) : null}
@@ -108,10 +166,8 @@ export default function YtSearchScreen() {
 
       {showResults ? (
         results.isLoading ? (
-          <View style={styles.center}>
-            <ActivityIndicator color={YT.red} />
-          </View>
-        ) : results.isError ? (
+          <RowSkeleton />
+        ) : results.isError && videos.length === 0 ? (
           <View style={styles.center}>
             <Text style={styles.msg}>Search failed.</Text>
             <TouchableOpacity style={styles.retry} onPress={() => results.refetch()}>
@@ -120,14 +176,49 @@ export default function YtSearchScreen() {
           </View>
         ) : (
           <FlatList
-            data={results.data ?? []}
+            data={videos}
             keyExtractor={(v) => v.id}
             keyboardShouldPersistTaps="handled"
-            renderItem={({ item }) => <VideoRow video={item} onPress={openResult} />}
+            renderItem={({ item }) => (
+              <VideoRow
+                video={item}
+                onPress={openResult}
+                right={
+                  <TouchableOpacity hitSlop={10} onPress={() => openMenu(item)} accessibilityLabel="More options">
+                    <Ionicons name="ellipsis-vertical" size={18} color={YT.text} />
+                  </TouchableOpacity>
+                }
+              />
+            )}
+            getItemLayout={(_, index) => ({ length: ROW_H, offset: ROW_H * index, index })}
+            initialNumToRender={8}
+            maxToRenderPerBatch={8}
+            windowSize={9}
+            removeClippedSubviews
+            onEndReached={() => results.hasNextPage && !results.isFetchingNextPage && results.fetchNextPage()}
+            onEndReachedThreshold={1.5}
             ListEmptyComponent={<Text style={[styles.msg, styles.empty]}>No results for "{submitted}".</Text>}
-            contentContainerStyle={{ paddingBottom: 16 }}
+            ListFooterComponent={
+              results.isFetchingNextPage ? (
+                <ActivityIndicator color={YT.red} style={{ paddingVertical: 20 }} />
+              ) : (
+                <View style={{ height: 16 }} />
+              )
+            }
           />
         )
+      ) : typing ? (
+        <FlatList
+          data={suggestionRows}
+          keyExtractor={(r) => r.term}
+          keyboardShouldPersistTaps="handled"
+          renderItem={renderTermRow}
+          ListHeaderComponent={
+            suggestions.isFetching && suggestionRows.length === 0 ? (
+              <ActivityIndicator color={YT.muted} style={{ paddingVertical: 20 }} />
+            ) : null
+          }
+        />
       ) : (
         <FlatList
           data={recent}
@@ -144,25 +235,7 @@ export default function YtSearchScreen() {
             ) : null
           }
           ListEmptyComponent={<Text style={[styles.msg, styles.empty]}>Your recent searches appear here.</Text>}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.recentRow}
-              onPress={() => run(item.term)}
-              onLongPress={() => removeSearch(item.term)}
-              accessibilityRole="button"
-              accessibilityHint="Long press to remove"
-            >
-              <Ionicons name="time-outline" size={22} color={YT.muted} />
-              <Text style={styles.recentText} numberOfLines={1}>
-                {item.term}
-              </Text>
-              {item.image ? (
-                <Image source={{ uri: item.image }} style={styles.recentThumb} contentFit="cover" />
-              ) : (
-                <View style={styles.recentThumb} />
-              )}
-            </TouchableOpacity>
-          )}
+          renderItem={renderTermRow}
         />
       )}
     </View>

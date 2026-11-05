@@ -1,4 +1,5 @@
 import React from "react";
+import { View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import BottomTabs from "./footer";
@@ -13,11 +14,16 @@ import PreferencesScreen from "@/Tools/PreferencesScreen";
 import ProviderDiagnosticsScreen from "@/Tools/ProviderDiagnosticsScreen";
 import TmdbDetailScreen from "@/Tmdb/screens/TmdbDetailScreen";
 import YtVideoScreen from "@/YouTube/screens/YtVideoScreen";
+import YtSearchScreen from "@/YouTube/screens/YtSearchScreen";
+import YtOverlays from "@/YouTube/components/YtOverlays";
+import { useLayoutStore } from "@/store/useLayoutStore";
 
 const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
+  const youtube = useLayoutStore((s) => s.layout === "youtube");
   return (
+    <View style={{ flex: 1 }}>
     <NavigationContainer ref={navigationRef}>
       <Stack.Navigator
         screenOptions={{
@@ -56,6 +62,13 @@ export default function AppNavigator() {
             title: "Details",
             animation: "slide_from_bottom",
           }}
+        />
+
+        {/* YouTube layout only: search (suggestions + results) */}
+        <Stack.Screen
+          name="YtSearch"
+          component={YtSearchScreen}
+          options={{ animation: "slide_from_right" }}
         />
 
         {/* YouTube layout only: video page with player and related videos */}
@@ -114,5 +127,7 @@ export default function AppNavigator() {
         />
       </Stack.Navigator>
     </NavigationContainer>
+    {youtube ? <YtOverlays /> : null}
+    </View>
   );
 }

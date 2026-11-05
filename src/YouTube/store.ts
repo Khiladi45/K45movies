@@ -83,3 +83,28 @@ export const useYtSearchStore = create<RecentState>()(
     { name: "k45-yt-recent-searches", storage: createJSONStorage(() => storage) },
   ),
 );
+
+type HiddenState = {
+  videos: string[];
+  channels: string[];
+  hideVideo: (id: string) => void;
+  hideChannel: (name: string) => void;
+  isHidden: (video: { id: string; channelName: string }) => boolean;
+};
+
+/** "Not interested" choices from the 3-dot menu. */
+export const useYtHiddenStore = create<HiddenState>()(
+  persist(
+    (set, get) => ({
+      videos: [],
+      channels: [],
+      hideVideo: (id) =>
+        set((s) => (s.videos.includes(id) ? s : { videos: [id, ...s.videos].slice(0, 500) })),
+      hideChannel: (name) =>
+        set((s) => (s.channels.includes(name) ? s : { channels: [name, ...s.channels].slice(0, 200) })),
+      isHidden: (v) =>
+        get().videos.includes(v.id) || (!!v.channelName && get().channels.includes(v.channelName)),
+    }),
+    { name: "k45-yt-hidden", storage: createJSONStorage(() => storage) },
+  ),
+);

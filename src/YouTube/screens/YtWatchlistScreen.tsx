@@ -15,7 +15,6 @@ import {
   deleteDownload,
   formatBytes,
   retryDownload,
-  startDownload,
 } from "@/services/downloadManager";
 import { downloadFileExists } from "@/lib/localPlayback";
 import {
@@ -27,6 +26,7 @@ import { useYtLibraryStore } from "../store";
 import { YT } from "../theme";
 import type { YtVideo } from "../types";
 import { notify } from "../utils";
+import { useYtUiStore } from "../playerStore";
 import VideoRow from "../components/VideoRow";
 
 type Tab = "saved" | "downloads";
@@ -101,16 +101,8 @@ export default function YtWatchlistScreen() {
     [navigation],
   );
 
-  const download = async (video: YtVideo) => {
-    const result = await startDownload({
-      link: video.link,
-      title: video.title,
-      providerId: "youtube",
-      type: "movie",
-      image: video.image,
-    });
-    notify(result.ok ? "Download started" : result.error || "Couldn't start download");
-  };
+  // Opens the quality picker; the sheet starts the download.
+  const download = (video: YtVideo) => useYtUiStore.getState().openDownload(video);
 
   const confirmDelete = (job: DownloadJob) =>
     Alert.alert("Delete download?", job.title, [

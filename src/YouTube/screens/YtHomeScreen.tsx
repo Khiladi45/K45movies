@@ -14,21 +14,52 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { HOME_TABS } from "../api";
 import { useYtFeed, useYtShorts } from "../hooks";
+import { useYtHiddenStore } from "../store";
+import { useYtUiStore } from "../playerStore";
 import { YT } from "../theme";
 import type { YtVideo } from "../types";
-import VideoRow from "../components/VideoRow";
+import VideoCard from "../components/VideoCard";
 import ShortsShelf from "../components/ShortsShelf";
+import { FeedSkeleton } from "../components/Skeletons";
 
 type Row =
   | { kind: "video"; key: string; video: YtVideo }
-  | { kind: "shelf"; key: string };
+  | { kind: "shelf"; key: string; shorts: YtVideo[]; startIndex: number };
 
-// Where the Shorts shelf sits in the list (after this many videos).
-const SHELF_AFTER = 2;
+const SHELF_SIZE = 2;
+
+/** Stable pseudo-random 5-8 so the shelf positions don't jump on re-render. */
+const gapFor = (n: number) => 5 + ((n * 2654435761) >>> 0) % 4;
+
+/** Videos with a 2-column Shorts shelf after every 5-8 of them. */
+export function buildRows(videos: YtVideo[], shorts: YtVideo[]): Row[] {
+  const rows: Row[] = [];
+  let shelf = 0;
+  let untilShelf = gapFor(0);
+  videos.forEach((video) => {
+    rows.push({ kind: "video", key: video.id, video });
+    untilShelf -= 1;
+    const start = shelf * SHELF_SIZE;
+    if (untilShelf <= 0 && start + SHELF_SIZE <= shorts.length) {
+      rows.push({
+        kind: "shelf",
+        key: `shelf-${shelf}`,
+        shorts: shorts.slice(start, start + SHELF_SIZE),
+        startIndex: start,
+      });
+      shelf += 1;
+      untilShelf = gapFor(shelf);
+    }
+  });
+  return rows;
+}
 
 export default function YtHomeScreen() {
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
+  const openMenu = useYtUiStore((s) => s.openMenu);
+  const hiddenVideos = useYtHiddenStore((s) => s.videos);
+  const hiddenChannels = useYtHiddenStore((s) => s.channels);
   const [tabKey, setTabKey] = useState(HOME_TABS[0].key);
   const tab = HOME_TABS.find((t) => t.key === tabKey) ?? HOME_TABS[0];
 
@@ -36,37 +67,41 @@ export default function YtHomeScreen() {
   const shorts = useYtShorts(tab.shortsFilter);
 
   const rows = useMemo<Row[]>(() => {
-    const videos = feed.data ?? [];
-    const out: Row[] = videos.map((video) => ({
-      kind: "video",
-      key: video.id,
-      video,
-    }));
-    if ((shorts.data?.length ?? 0) > 0) {
-      out.splice(Math.min(SHELF_AFTER, out.length), 0, { kind: "shelf", key: "shelf" });
-    }
-    return out;
-  }, [feed.data, shorts.data]);
+    const videos = (feed.data ?? []).filter(
+      (v) => !hiddenVideos.includes(v.id) && !(v.channelName && hiddenChannels.includes(v.channelName)),
+    );
+    return buildRows(videos, shorts.data ?? []);
+  }, [feed.data, shorts.data, hiddenVideos, hiddenChannels]);
 
   const openVideo = useCallback(
     (video: YtVideo) => navigation.navigate("YtVideo", { video }),
     [navigation],
   );
 
+  const shortsList = shorts.data ?? [];
   const openShort = useCallback(
     (index: number) =>
       navigation.navigate("Shorts", {
-        items: shorts.data ?? [],
+        items: shortsList,
         startIndex: index,
         query: tab.shortsFilter,
       }),
-    [navigation, shorts.data, tab.shortsFilter],
+    [navigation, shortsList, tab.shortsFilter],
   );
 
   const refresh = () => {
     feed.refetch();
     shorts.refetch();
   };
+
+  const loadMore = useCallback(() => {
+    if (feed.hasNextPage && !feed.isFetchingNextPage) feed.fetchNextPage();
+    // Keep the shelves supplied: fetch more Shorts as the feed grows.
+    const needed = Math.ceil(rows.length / 6) * SHELF_SIZE + SHELF_SIZE * 2;
+    if (shortsList.length < needed && shorts.hasNextPage && !shorts.isFetchingNextPage) {
+      shorts.fetchNextPage();
+    }
+  }, [feed, shorts, rows.length, shortsList.length]);
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
@@ -80,25 +115,14 @@ export default function YtHomeScreen() {
         <TouchableOpacity
           style={styles.iconBtn}
           accessibilityLabel="Search"
-          onPress={() => navigation.navigate("Search")}
+          onPress={() => navigation.navigate("YtSearch")}
         >
           <Ionicons name="search-outline" size={24} color={YT.text} />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.iconBtn}
-          accessibilityLabel="Settings and profile"
-          onPress={() => navigation.navigate("Profile")}
-        >
-          <Ionicons name="person-circle-outline" size={28} color={YT.text} />
         </TouchableOpacity>
       </View>
 
       <View style={styles.tabsWrap}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.tabs}
-        >
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs}>
           {HOME_TABS.map((t) => {
             const active = t.key === tabKey;
             return (
@@ -109,9 +133,7 @@ export default function YtHomeScreen() {
                 accessibilityState={{ selected: active }}
                 style={[styles.chip, active && styles.chipActive]}
               >
-                <Text style={[styles.chipText, active && styles.chipTextActive]}>
-                  {t.label}
-                </Text>
+                <Text style={[styles.chipText, active && styles.chipTextActive]}>{t.label}</Text>
               </TouchableOpacity>
             );
           })}
@@ -119,9 +141,7 @@ export default function YtHomeScreen() {
       </View>
 
       {feed.isLoading ? (
-        <View style={styles.center}>
-          <ActivityIndicator color={YT.red} />
-        </View>
+        <FeedSkeleton />
       ) : feed.isError && rows.length === 0 ? (
         <View style={styles.center}>
           <Text style={styles.message}>Couldn't load videos.</Text>
@@ -135,22 +155,31 @@ export default function YtHomeScreen() {
           keyExtractor={(row) => row.key}
           renderItem={({ item }) =>
             item.kind === "shelf" ? (
-              <ShortsShelf shorts={shorts.data ?? []} onPress={openShort} />
+              <ShortsShelf shorts={item.shorts} startIndex={item.startIndex} onPress={openShort} />
             ) : (
-              <VideoRow video={item.video} onPress={openVideo} />
+              <VideoCard video={item.video} onPress={openVideo} onMenu={openMenu} />
             )
           }
+          initialNumToRender={3}
+          maxToRenderPerBatch={4}
+          windowSize={7}
+          updateCellsBatchingPeriod={50}
+          removeClippedSubviews
+          onEndReached={loadMore}
+          onEndReachedThreshold={1.5}
           refreshControl={
-            <RefreshControl
-              refreshing={feed.isRefetching}
-              onRefresh={refresh}
-              tintColor={YT.red}
-            />
+            <RefreshControl refreshing={feed.isRefetching && !feed.isFetchingNextPage} onRefresh={refresh} tintColor={YT.red} />
           }
-          ListEmptyComponent={
-            <Text style={[styles.message, styles.empty]}>No videos found.</Text>
+          ListEmptyComponent={<Text style={[styles.message, styles.empty]}>No videos found.</Text>}
+          ListFooterComponent={
+            feed.isFetchingNextPage ? (
+              <View style={{ paddingVertical: 20 }}>
+                <ActivityIndicator color={YT.red} />
+              </View>
+            ) : (
+              <View style={{ height: 16 }} />
+            )
           }
-          contentContainerStyle={{ paddingBottom: 16 }}
         />
       )}
     </View>

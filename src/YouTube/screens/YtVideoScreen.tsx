@@ -1,8 +1,7 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
+  BackHandler,
   FlatList,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -13,13 +12,16 @@ import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { startDownload } from "@/services/downloadManager";
-import { useYtWatch } from "../hooks";
+import { useYtComments, useYtWatch } from "../hooks";
 import { useYtLibraryStore } from "../store";
+import { useYtPlayerStore, useYtUiStore } from "../playerStore";
 import { YT } from "../theme";
 import type { YtVideo } from "../types";
-import { notify, shareVideo } from "../utils";
+import { lockOrientation, notify, setImmersive, shareVideo, unlockOrientation } from "../utils";
 import YtPlayer, { YtPlayerHandle } from "../components/YtPlayer";
+import VideoRow from "../components/VideoRow";
+import CommentsSheet from "../components/CommentsSheet";
+import { RowSkeleton } from "../components/Skeletons";
 
 type Params = {
   video?: YtVideo;
@@ -28,9 +30,11 @@ type Params = {
   title?: string;
   /** Local file to play instead of streaming. */
   localUri?: string;
+  /** Resume position in seconds (from the mini player). */
+  startAt?: number;
 };
 
-const RELATED_W = 220;
+const ROW_H = 110;
 
 export default function YtVideoScreen() {
   const navigation = useNavigation<any>();
@@ -38,243 +42,255 @@ export default function YtVideoScreen() {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const params: Params = route.params ?? {};
-  const link = params.video?.link ?? params.link ?? "";
   const playerRef = useRef<YtPlayerHandle>(null);
-  const [expanded, setExpanded] = useState(false);
 
-  const watch = useYtWatch(params.video, link, !params.localUri);
-  const video: YtVideo | undefined = watch.data?.video ?? params.video;
+  const [current, setCurrent] = useState<YtVideo | undefined>(params.video);
+  const link = current?.link ?? params.link ?? "";
+  const [expanded, setExpanded] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(false);
+
+  const openMenu = useYtUiStore((s) => s.openMenu);
+  const openDownload = useYtUiStore((s) => s.openDownload);
+  const setMini = useYtPlayerStore((s) => s.setMini);
+  const clearMini = useYtPlayerStore((s) => s.clearMini);
+
+  const watch = useYtWatch(current, link, !params.localUri);
+  const video: YtVideo | undefined = watch.data?.video ?? current;
   const title = video?.title ?? params.title ?? "Video";
+  const related = watch.data?.related ?? [];
+  const comments = useYtComments(link, undefined, !params.localUri && !!link);
+  const commentCount = comments.data?.pages[0]?.count;
+  const firstComment = comments.data?.pages[0]?.comments[0];
 
   const saved = useYtLibraryStore((s) => (video ? s.isSaved(video.id) : false));
   const toggleSaved = useYtLibraryStore((s) => s.toggleSaved);
+  const [liked, setLiked] = useState(false);
 
-  const onSave = () => {
-    if (!video) return;
-    notify(toggleSaved(video) ? "Saved to Watchlist" : "Removed from Watchlist");
-  };
+  // Opening the page takes over from the mini player.
+  useEffect(() => {
+    clearMini();
+  }, [clearMini]);
 
-  const onDownload = async () => {
-    if (!video) return;
-    const result = await startDownload({
-      link: video.link,
-      title: video.title,
-      providerId: "youtube",
-      type: "movie",
-      image: video.image,
-    });
-    notify(result.ok ? "Download started" : result.error || "Couldn't start download");
-  };
+  useEffect(() => {
+    setLiked(false);
+    setExpanded(false);
+  }, [link]);
 
-  const onPip = () => {
-    if (!playerRef.current?.enterPip()) {
-      notify("Picture-in-Picture isn't available on this device");
-    }
-  };
+  // Fullscreen = landscape, no status bar, no navigation bar.
+  useEffect(() => {
+    if (!fullscreen) return;
+    lockOrientation(true);
+    setImmersive(true);
+    return () => {
+      setImmersive(false);
+      lockOrientation(false);
+    };
+  }, [fullscreen]);
 
-  const openRelated = useCallback(
-    (item: YtVideo) =>
-      item.isShort
-        ? navigation.navigate("Shorts", { items: [item], startIndex: 0 })
-        : navigation.push("YtVideo", { video: item }),
-    [navigation],
+  // Leave the orientation as the app had it.
+  useEffect(
+    () => () => {
+      setImmersive(false);
+      unlockOrientation();
+    },
+    [],
   );
 
+  useEffect(() => {
+    if (!fullscreen) return;
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      setFullscreen(false);
+      return true;
+    });
+    return () => sub.remove();
+  }, [fullscreen]);
+
+  const minimize = useCallback(() => {
+    if (fullscreen) setFullscreen(false);
+    if (video && !params.localUri) setMini(video, playerRef.current?.position() ?? 0);
+    navigation.goBack();
+  }, [fullscreen, video, params.localUri, setMini, navigation]);
+
+  const play = useCallback((item: YtVideo) => {
+    if (item.isShort) {
+      navigation.navigate("Tabs", { screen: "Shorts", params: { items: [item], startIndex: 0 } });
+    } else {
+      setCurrent(item);
+    }
+  }, [navigation]);
+
+  // Autoplay: when this video ends, the first related video starts.
+  const playNext = useCallback(() => {
+    const next = related.find((r) => !r.isShort);
+    if (next) setCurrent(next);
+  }, [related]);
+
   const meta = [video?.views, video?.publishedTime].filter(Boolean).join(" · ");
-  const related = watch.data?.related ?? [];
-  const description = watch.data?.description ?? "";
+  const playerHeight = Math.round((width * 9) / 16);
 
-  return (
-    <View style={[styles.root, { paddingTop: insets.top }]}>
-      <View style={{ width, height: Math.round((width * 9) / 16) }}>
-        <YtPlayer
-          ref={playerRef}
-          link={link}
-          localUri={params.localUri}
-          controls
-          style={StyleSheet.absoluteFill}
-        />
-        <TouchableOpacity
-          style={[styles.playerBtn, { left: 4 }]}
-          onPress={() => navigation.goBack()}
-          accessibilityLabel="Back"
-        >
-          <Ionicons name="chevron-down" size={26} color="#fff" />
-        </TouchableOpacity>
-        <View style={styles.playerRight}>
-          <TouchableOpacity
-            style={styles.playerBtn}
-            onPress={onPip}
-            accessibilityLabel="Picture in picture"
-          >
-            <Ionicons name="albums-outline" size={22} color="#fff" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.playerBtn}
-            onPress={() => playerRef.current?.enterFullscreen()}
-            accessibilityLabel="Fullscreen"
-          >
-            <Ionicons name="expand-outline" size={22} color="#fff" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}>
-        <View style={styles.block}>
-          <Text style={styles.title}>{title}</Text>
-          {meta ? <Text style={styles.meta}>{meta}</Text> : null}
-        </View>
-
-        <View style={styles.channelRow}>
-          {video?.channelAvatar ? (
-            <Image source={{ uri: video.channelAvatar }} style={styles.avatar} />
-          ) : (
-            <View style={[styles.avatar, styles.avatarFallback]}>
-              <Ionicons name="person" size={20} color={YT.muted} />
-            </View>
-          )}
-          <Text style={styles.channel} numberOfLines={1}>
-            {video?.channelName || "Channel"}
-          </Text>
-        </View>
-
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.actions}
-        >
-          <ActionChip icon="share-social-outline" label="Share" onPress={() => video && shareVideo(video)} />
-          <ActionChip
-            icon={saved ? "bookmark" : "bookmark-outline"}
-            label={saved ? "Saved" : "Save"}
-            onPress={onSave}
-          />
-          {!params.localUri ? (
-            <ActionChip icon="download-outline" label="Download" onPress={onDownload} />
-          ) : null}
-          {watch.data?.likes ? (
-            <View style={styles.chip}>
-              <Ionicons name="thumbs-up-outline" size={18} color={YT.text} />
-              <Text style={styles.chipText}>{watch.data.likes}</Text>
-            </View>
-          ) : null}
-        </ScrollView>
-
-        {description ? (
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={() => setExpanded((v) => !v)}
-            style={styles.description}
-          >
-            <Text style={styles.descText} numberOfLines={expanded ? undefined : 3}>
-              {description}
+  const header = (
+    <View>
+      <View style={styles.block}>
+        <Text style={styles.title}>{title}</Text>
+        {meta ? <Text style={styles.meta}>{meta}</Text> : null}
+        {watch.data?.description ? (
+          <TouchableOpacity activeOpacity={0.8} onPress={() => setExpanded((v) => !v)}>
+            <Text style={styles.desc} numberOfLines={expanded ? undefined : 2}>
+              {watch.data.description}
             </Text>
             <Text style={styles.more}>{expanded ? "Show less" : "...more"}</Text>
           </TouchableOpacity>
         ) : null}
+      </View>
 
-        {!params.localUri ? (
-          <View style={styles.relatedHead}>
-            <Text style={styles.relatedTitle}>Related videos</Text>
+      <View style={styles.channelRow}>
+        {video?.channelAvatar ? (
+          <Image source={{ uri: video.channelAvatar }} style={styles.avatar} />
+        ) : (
+          <View style={[styles.avatar, styles.avatarFallback]}>
+            <Ionicons name="person" size={20} color={YT.muted} />
           </View>
+        )}
+        <Text style={styles.channel} numberOfLines={1}>
+          {video?.channelName || "Channel"}
+        </Text>
+      </View>
+
+      <View style={styles.actions}>
+        <Action
+          icon={liked ? "thumbs-up" : "thumbs-up-outline"}
+          label={watch.data?.likes || "Like"}
+          active={liked}
+          onPress={() => setLiked((v) => !v)}
+        />
+        <Action icon="arrow-redo-outline" label="Share" onPress={() => video && shareVideo(video)} />
+        {!params.localUri ? (
+          <Action icon="download-outline" label="Download" onPress={() => video && openDownload(video)} />
         ) : null}
-        {!params.localUri && watch.isLoading ? (
-          <ActivityIndicator color={YT.red} style={{ marginTop: 16 }} />
-        ) : null}
-        {!params.localUri && related.length > 0 ? (
-          <FlatList
-            horizontal
-            data={related}
-            keyExtractor={(item) => item.id}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.relatedList}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                activeOpacity={0.85}
-                style={styles.card}
-                onPress={() => openRelated(item)}
-                accessibilityRole="button"
-                accessibilityLabel={item.title}
-              >
-                <View style={styles.cardThumb}>
-                  <Image source={{ uri: item.image }} style={StyleSheet.absoluteFill} contentFit="cover" />
-                  {item.duration ? (
-                    <View style={styles.badge}>
-                      <Text style={styles.badgeText}>{item.duration}</Text>
-                    </View>
-                  ) : null}
-                </View>
-                <Text style={styles.cardTitle} numberOfLines={2}>
-                  {item.title}
-                </Text>
-                <Text style={styles.cardSub} numberOfLines={1}>
-                  {item.channelName}
-                </Text>
-                <Text style={styles.cardSub} numberOfLines={1}>
-                  {[item.views, item.publishedTime].filter(Boolean).join(" · ")}
-                </Text>
+        <Action
+          icon={saved ? "bookmark" : "bookmark-outline"}
+          label={saved ? "Saved" : "Save"}
+          active={saved}
+          onPress={() => video && notify(toggleSaved(video) ? "Saved to Watchlist" : "Removed from Watchlist")}
+        />
+      </View>
+
+      {!params.localUri ? (
+        <TouchableOpacity style={styles.commentsCard} activeOpacity={0.8} onPress={() => setCommentsOpen(true)}>
+          <Text style={styles.commentsHead}>
+            Comments{commentCount ? `  ${commentCount}` : ""}
+          </Text>
+          {comments.isLoading ? (
+            <View style={styles.skeletonLine} />
+          ) : firstComment ? (
+            <Text style={styles.commentPreview} numberOfLines={2}>
+              {firstComment.text}
+            </Text>
+          ) : (
+            <Text style={styles.commentPreview}>Tap to view comments</Text>
+          )}
+        </TouchableOpacity>
+      ) : null}
+
+      {!params.localUri ? <Text style={styles.relatedTitle}>Related videos</Text> : null}
+    </View>
+  );
+
+  return (
+    <View style={[styles.root, { paddingTop: fullscreen ? 0 : insets.top }]}>
+      <View style={fullscreen ? styles.full : { width, height: playerHeight }}>
+        <YtPlayer
+          ref={playerRef}
+          link={link}
+          localUri={params.localUri}
+          controls="full"
+          zoomable
+          fullscreen={fullscreen}
+          startAt={params.startAt}
+          style={StyleSheet.absoluteFill}
+          onEnd={playNext}
+          onNext={related.length ? playNext : undefined}
+          onToggleFullscreen={() => setFullscreen((v) => !v)}
+          onMinimize={minimize}
+        />
+      </View>
+
+      <FlatList
+        data={params.localUri ? [] : related}
+        keyExtractor={(v) => v.id}
+        ListHeaderComponent={header}
+        renderItem={({ item }) => (
+          <VideoRow
+            video={item}
+            onPress={play}
+            right={
+              <TouchableOpacity hitSlop={10} onPress={() => openMenu(item)} accessibilityLabel="More options">
+                <Ionicons name="ellipsis-vertical" size={18} color={YT.text} />
               </TouchableOpacity>
-            )}
+            }
           />
-        ) : null}
-        {!params.localUri && !watch.isLoading && related.length === 0 ? (
-          <Text style={styles.none}>No related videos found.</Text>
-        ) : null}
-      </ScrollView>
+        )}
+        getItemLayout={(_, index) => ({ length: ROW_H, offset: ROW_H * index, index })}
+        initialNumToRender={6}
+        maxToRenderPerBatch={6}
+        windowSize={9}
+        removeClippedSubviews
+        ListEmptyComponent={
+          params.localUri ? null : watch.isLoading ? (
+            <RowSkeleton />
+          ) : (
+            <Text style={styles.none}>No related videos found.</Text>
+          )
+        }
+        ListFooterComponent={<View style={{ height: insets.bottom + 24 }} />}
+      />
+
+      <CommentsSheet visible={commentsOpen} onClose={() => setCommentsOpen(false)} link={link} />
     </View>
   );
 }
 
-function ActionChip({
+function Action({
   icon,
   label,
   onPress,
+  active,
 }: {
   icon: React.ComponentProps<typeof Ionicons>["name"];
   label: string;
   onPress: () => void;
+  active?: boolean;
 }) {
   return (
-    <TouchableOpacity style={styles.chip} onPress={onPress} accessibilityRole="button">
-      <Ionicons name={icon} size={18} color={YT.text} />
-      <Text style={styles.chipText}>{label}</Text>
+    <TouchableOpacity style={styles.action} onPress={onPress} accessibilityRole="button" accessibilityLabel={label}>
+      <Ionicons name={icon} size={22} color={active ? YT.blue : YT.text} />
+      <Text style={[styles.actionText, active && { color: YT.blue }]} numberOfLines={1}>
+        {label}
+      </Text>
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: YT.bg },
-  playerBtn: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
-  playerRight: { position: "absolute", right: 4, top: 0, flexDirection: "row" },
+  full: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: 20, backgroundColor: "#000" },
   block: { paddingHorizontal: 12, paddingTop: 12 },
   title: { color: YT.text, fontSize: 18, fontWeight: "700", lineHeight: 24 },
   meta: { color: YT.muted, fontSize: 12, paddingTop: 4 },
+  desc: { color: YT.text, fontSize: 13, lineHeight: 18, paddingTop: 8 },
+  more: { color: YT.muted, fontSize: 13, paddingTop: 2 },
   channelRow: { flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 12, paddingTop: 14 },
   avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: YT.surface },
   avatarFallback: { alignItems: "center", justifyContent: "center" },
   channel: { flex: 1, color: YT.text, fontSize: 14, fontWeight: "500" },
-  actions: { paddingHorizontal: 12, paddingVertical: 14, gap: 8 },
-  chip: {
-    height: 36,
-    paddingHorizontal: 14,
-    borderRadius: 18,
-    backgroundColor: YT.surface,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  chipText: { color: YT.text, fontSize: 13, fontWeight: "500" },
-  description: { marginHorizontal: 12, padding: 12, borderRadius: 12, backgroundColor: YT.surfaceAlt },
-  descText: { color: YT.text, fontSize: 13, lineHeight: 18 },
-  more: { color: YT.muted, fontSize: 13, paddingTop: 4 },
-  relatedHead: { paddingHorizontal: 12, paddingTop: 18, paddingBottom: 10 },
-  relatedTitle: { color: YT.text, fontSize: 16, fontWeight: "700" },
-  relatedList: { paddingHorizontal: 12, gap: 12 },
-  card: { width: RELATED_W },
-  cardThumb: { width: RELATED_W, height: 124, borderRadius: 10, overflow: "hidden", backgroundColor: YT.surface },
-  badge: { position: "absolute", right: 6, bottom: 6, backgroundColor: "rgba(0,0,0,0.8)", borderRadius: 4, paddingHorizontal: 4, paddingVertical: 1 },
-  badgeText: { color: "#fff", fontSize: 11, fontWeight: "600" },
-  cardTitle: { color: YT.text, fontSize: 14, fontWeight: "500", lineHeight: 18, paddingTop: 8 },
-  cardSub: { color: YT.muted, fontSize: 12, paddingTop: 2 },
+  actions: { flexDirection: "row", paddingHorizontal: 8, paddingTop: 14, paddingBottom: 6 },
+  action: { flex: 1, alignItems: "center", gap: 4, paddingVertical: 6 },
+  actionText: { color: YT.text, fontSize: 12 },
+  commentsCard: { marginHorizontal: 12, marginTop: 8, padding: 12, borderRadius: 12, backgroundColor: YT.surfaceAlt, gap: 6 },
+  commentsHead: { color: YT.text, fontSize: 14, fontWeight: "700" },
+  commentPreview: { color: YT.text, fontSize: 13, lineHeight: 18 },
+  skeletonLine: { height: 12, width: "70%", borderRadius: 4, backgroundColor: "#2a2a2a" },
+  relatedTitle: { color: YT.text, fontSize: 16, fontWeight: "700", paddingHorizontal: 12, paddingTop: 18, paddingBottom: 6 },
   none: { color: YT.muted, fontSize: 13, paddingHorizontal: 12 },
 });

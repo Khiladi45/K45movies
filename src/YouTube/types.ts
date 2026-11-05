@@ -29,3 +29,31 @@ export type YtHomeTab = {
   /** Query used for this tab's Shorts shelf. */
   shortsFilter: string;
 };
+
+export type YtComment = {
+  id: string;
+  author: string;
+  authorAvatar?: string;
+  text: string;
+  publishedTime: string;
+  likes: string;
+  replyCount: string;
+  /** Token that loads this comment's replies. */
+  replyToken?: string;
+};
+
+export type YtCommentsPage = {
+  comments: YtComment[];
+  count: string;
+  /** Token for the next page; undefined when there are no more comments. */
+  continuation?: string;
+};
+
+/** One rendition offered in the gear menu or the download sheet. */
+export type YtQuality = {
+  /** Vertical resolution, e.g. 1080. 0 means "Auto". */
+  height: number;
+  label: string;
+  /** True when this rendition carries audio too (safe to download). */
+  muxed: boolean;
+};

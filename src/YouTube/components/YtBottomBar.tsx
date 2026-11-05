@@ -3,6 +3,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { YT } from "../theme";
+import YtMiniPlayer from "./YtMiniPlayer";
 
 type Item = {
   route: string;
@@ -11,22 +12,28 @@ type Item = {
   iconActive: React.ComponentProps<typeof Ionicons>["name"];
 };
 
-// The four tabs of the YouTube layout. "Profile" and "Providers" stay
-// registered in the navigator (the Home header opens Settings) but are not
-// shown here.
+// The four tabs of the YouTube layout: Home | Shorts | Watchlist | Settings.
+// Search is a stack screen opened from the Home header; "Providers" stays
+// registered so the layout can always be switched back, but has no button.
 const ITEMS: Item[] = [
   { route: "HomeTab", label: "Home", icon: "home-outline", iconActive: "home" },
   { route: "Shorts", label: "Shorts", icon: "film-outline", iconActive: "film" },
-  { route: "Search", label: "Search", icon: "search-outline", iconActive: "search" },
   { route: "Watchlist", label: "Watchlist", icon: "bookmark-outline", iconActive: "bookmark" },
+  { route: "Profile", label: "Settings", icon: "settings-outline", iconActive: "settings" },
 ];
 
 export default function YtBottomBar({ state, navigation }: any) {
   const insets = useSafeAreaInsets();
   const activeName: string = state.routes[state.index]?.name;
   const onShorts = activeName === "Shorts";
+  const miniBottom = 50 + insets.bottom + 12;
+
+  // The bar is hidden while a Short is playing (full-screen vertical video).
+  if (onShorts) return null;
 
   return (
+    <>
+    <YtMiniPlayer bottom={miniBottom} />
     <View
       style={[
         styles.bar,
@@ -66,6 +73,7 @@ export default function YtBottomBar({ state, navigation }: any) {
         );
       })}
     </View>
+    </>
   );
 }
 
