@@ -79,7 +79,6 @@ function usePlayback(navigation: any) {
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [stage, setStage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const busy = useRef(false);
   const abort = useRef<AbortController | null>(null);
 
   useEffect(() => () => abort.current?.abort(), []);
@@ -91,8 +90,9 @@ function usePlayback(navigation: any) {
       onOpen?: () => void,
       queue?: PlayQueue,
     ) => {
-      if (busy.current) return;
-      busy.current = true;
+      // A second tap while a source is still resolving switches to the new
+      // source instead of being silently ignored.
+      abort.current?.abort();
       const controller = new AbortController();
       abort.current = controller;
       setError(null);
@@ -111,9 +111,11 @@ function usePlayback(navigation: any) {
           setError(e?.message || "Could not start playback.");
         }
       } finally {
-        busy.current = false;
-        setPlayingId(null);
-        setStage(null);
+        // A newer tap owns the state now; leave it alone.
+        if (abort.current === controller) {
+          setPlayingId(null);
+          setStage(null);
+        }
       }
     },
     [navigation],
@@ -992,7 +994,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#1a1a1a",
   },
   stillOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: "rgba(0,0,0,0.3)",
     alignItems: "center",
     justifyContent: "center",

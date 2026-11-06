@@ -74,6 +74,7 @@ import {
   ensureHttpUrl,
   QualityPreference,
 } from "@/lib/streams";
+import { HD_TARGET_HEIGHT } from "@/lib/streamRanking";
 
 const mmkv = createMMKV();
 import { orderEpisodes } from "@/lib/episodes";
@@ -505,6 +506,13 @@ const PANEL_TITLES: Record<string, string> = {
   aspect: "Screen Size",
 };
 
+// Bitrate ceiling for adaptive streams under the "HD" preference (bps):
+// comfortably above typical 1080p ladders, below 1440p/4K renditions.
+const HD_MAX_BITRATE = 12_000_000;
+
+// How long the first frame may wait for external subtitles.
+const INITIAL_SUBTITLE_WAIT_MS = 1500;
+
 const withTimeout = <T,>(promise: Promise<T>, ms: number, fallback: T) =>
   Promise.race([
     promise,
@@ -545,6 +553,10 @@ export default function PlayerOverlay() {
   );
   const currentStream: PlayableStream | undefined =
     normalizedStreams[streamIndex] || normalizedStreams[0];
+  // Link of the stream on screen, for async work that must not apply to a
+  // stream the user has already switched away from.
+  const liveLinkRef = useRef<string | undefined>(undefined);
+  liveLinkRef.current = currentStream?.link;
   const streamGroups = useMemo(
     () => groupStreams(normalizedStreams),
     [normalizedStreams],
@@ -995,25 +1007,53 @@ export default function PlayerOverlay() {
   }, [paused, saveProgress]);
 
   // Prepare the initial stream's external subtitles before mounting the
-  // native player so the tracks exist on the very first load.
+  // native player so the tracks exist on the very first load. The video only
+  // waits a short moment for them: slow subtitle hosts used to hold the first
+  // frame back for up to 6s. Tracks that arrive later are attached with one
+  // quick reload that keeps the playback position.
   useEffect(() => {
     if (pendingStream) return;
     let cancelled = false;
+    const startLink = currentStream?.link;
+    const sources = subtitleSources(currentStream);
     (async () => {
-      const result = await withTimeout(
-        prepareSubtitles(
-          subtitleSources(currentStream),
-          currentStream?.link || currentVideoUrl,
-          currentStream?.headers,
-        ).catch(() => ({ tracks: [], failed: 0 })),
-        6000,
-        { tracks: [], failed: 0 },
+      const preparing = prepareSubtitles(
+        sources,
+        currentStream?.link || currentVideoUrl,
+        currentStream?.headers,
+      ).catch(() => ({ tracks: [], failed: 0 }));
+      const settled = (result: { tracks: PreparedSubtitle[]; failed: number }) => {
+        if (result.failed > 0) {
+          showToast("Some subtitles could not be loaded");
+        }
+      };
+      const LATE = Symbol("late");
+      const first = await withTimeout<any>(
+        preparing,
+        INITIAL_SUBTITLE_WAIT_MS,
+        LATE,
       );
       if (cancelled || !mountedRef.current) return;
-      setPreparedSubs(result.tracks);
-      if (result.failed > 0) {
-        showToast("Some subtitles could not be loaded");
+      if (first !== LATE) {
+        setPreparedSubs(first.tracks);
+        settled(first);
+        return;
       }
+      setPreparedSubs([]);
+      const result = await withTimeout(preparing, 6000, {
+        tracks: [],
+        failed: 0,
+      });
+      if (cancelled || !mountedRef.current) return;
+      if (liveLinkRef.current !== startLink) return; // switched stream since
+      if (result.tracks.length > 0) {
+        pendingSeekRef.current =
+          currentTimeRef.current > 2
+            ? currentTimeRef.current
+            : pendingSeekRef.current;
+        setPreparedSubs(result.tracks);
+      }
+      settled(result);
     })();
     return () => {
       cancelled = true;
@@ -1114,7 +1154,7 @@ export default function PlayerOverlay() {
     const startedAt = currentTimeRef.current;
     // Before the first frame the server gets a shorter window; mid-playback a
     // stall is retried later so a short rebuffer is not treated as a failure.
-    const timeout = hasRenderedRef.current ? 30000 : 20000;
+    const timeout = hasRenderedRef.current ? 30000 : 12000;
     stallTimer.current = setTimeout(() => {
       if (!mountedRef.current || pausedRef.current) return;
       if (Math.abs(currentTimeRef.current - startedAt) > 1) return;
@@ -1389,15 +1429,24 @@ export default function PlayerOverlay() {
       }
     }
 
-    if (!qualityTouched.current && prefsRef.current.defaultQuality !== "auto") {
+    const quality = prefsRef.current.defaultQuality;
+    // "hd" on an adaptive stream stays on AUTO (capped by maxBitRate) so the
+    // player never re-buffers to switch rendition right after starting.
+    const hdAdaptive = quality === "hd" && !!currentStream?.adaptive;
+    if (!qualityTouched.current && quality !== "auto" && !hdAdaptive) {
       const heights = incomingVideo
         .filter((track: any) => Number(track?.height) > 0)
         .sort((a: any, b: any) => a.height - b.height);
       if (heights.length > 1) {
+        const atMostHd = heights.filter(
+          (track: any) => track.height <= HD_TARGET_HEIGHT,
+        );
         const target =
-          prefsRef.current.defaultQuality === "highest"
+          quality === "highest"
             ? heights[heights.length - 1]
-            : heights[0];
+            : quality === "hd"
+              ? atMostHd[atMostHd.length - 1] || heights[0]
+              : heights[0];
         setSelectedVideo({
           type: SelectedVideoTrackType.RESOLUTION,
           value: target.height,
@@ -2760,6 +2809,15 @@ const renderSeekButton = (side: "left" | "right") => {
             selectedAudioTrack={selectedAudioTrack}
             selectedTextTrack={selectedTextTrack}
             selectedVideoTrack={selectedVideo}
+            // "HD" preference: adaptive streams pick their own rendition but
+            // stop below 4K-class bitrates, so start-up stays quick. A
+            // resolution chosen by hand (including 4K) lifts the cap; 0 = none.
+            maxBitRate={
+              prefs.defaultQuality === "hd" &&
+              selectedVideo?.type === SelectedVideoTrackType.AUTO
+                ? HD_MAX_BITRATE
+                : 0
+            }
             subtitleStyle={{
               // Native rendering only covers size and position; external
               // tracks use the fully styled overlay below instead.

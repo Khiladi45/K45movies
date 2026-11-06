@@ -21,7 +21,8 @@ const zustandMMKVStorage = {
   },
 };
 
-export type DefaultQuality = "auto" | "highest" | "lowest";
+// "hd" starts on 1080p (or the best below it); taller streams stay selectable.
+export type DefaultQuality = "auto" | "hd" | "highest" | "lowest";
 export type DownloadQuality = "best" | "smallest";
 export type DownloadLocation = "app" | "custom";
 
@@ -59,7 +60,7 @@ export const DEFAULT_SUBTITLE_BOTTOM = 36;
 const DEFAULT_PREFERENCES: Preferences = {
   resumePlayback: true,
   backgroundPlayback: true,
-  defaultQuality: "auto",
+  defaultQuality: "hd",
   autoSubtitles: false,
   subtitleLanguage: "auto",
   subtitleSize: 16,
@@ -202,6 +203,13 @@ export const usePreferencesStore = create<PreferencesState>()(
     {
       name: "k45-preferences-storage",
       storage: createJSONStorage(() => zustandMMKVStorage),
+      // v1: "hd" became the default. Users still on the old default ("auto")
+      // move to it once; any explicit choice is kept.
+      version: 1,
+      migrate: (persisted: any, version) =>
+        version < 1 && persisted && persisted.defaultQuality === "auto"
+          ? { ...persisted, defaultQuality: "hd" }
+          : persisted,
       merge: (persisted, current) => ({
         ...current,
         ...normalize((persisted as Partial<Preferences>) || {}),

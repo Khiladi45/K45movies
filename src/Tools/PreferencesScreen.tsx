@@ -518,6 +518,7 @@ export default function PreferencesScreen({ navigation }: any) {
             title="Default quality"
             subtitle="Applied when a stream exposes multiple resolutions"
             options={[
+              { label: "HD 1080p", value: "hd" },
               { label: "Auto", value: "auto" },
               { label: "Highest", value: "highest" },
               { label: "Lowest", value: "lowest" },

@@ -350,7 +350,7 @@ export default function YtControls(p: Props) {
 }
 
 const styles = StyleSheet.create({
-  shade: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.4)" },
+  shade: { ...StyleSheet.absoluteFill, backgroundColor: "rgba(0,0,0,0.4)" },
   top: { flexDirection: "row", alignItems: "center", paddingHorizontal: 4, paddingTop: 4 },
   titleBlock: { flex: 1, paddingHorizontal: 6 },
   title: { color: "#fff", fontSize: 17, fontWeight: "700" },

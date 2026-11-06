@@ -1,5 +1,7 @@
 import { Platform } from "react-native";
 import { DEFAULT_UA } from "@/services/SandboxManager";
+import { parseHlsAudioLanguages } from "@/lib/audioLanguages";
+import { hdRank } from "@/lib/streamRanking";
 
 export type StreamFormat =
   | "hls"
@@ -35,6 +37,8 @@ export type StreamProbe = {
   contentType?: string;
   reason?: string;
   checkedAt: number;
+  /** Audio languages read from the HLS master while probing (ISO 639-1). */
+  audioLanguages?: string[];
 };
 
 export type StreamGroupEntry = {
@@ -50,7 +54,8 @@ export type StreamGroup = {
   formats: string[];
 };
 
-export type QualityPreference = "auto" | "highest" | "lowest";
+// "hd": prefer 1080p (the best at or below it), taller streams only after.
+export type QualityPreference = "auto" | "hd" | "highest" | "lowest";
 
 const BLOCKED_HEADERS = new Set([
   "host",
@@ -220,6 +225,11 @@ export const orderGroupEntries = (
   preference: QualityPreference,
 ): StreamGroupEntry[] => {
   if (preference === "auto") return [...entries];
+  if (preference === "hd") {
+    return [...entries].sort(
+      (a, b) => hdRank(a.stream.height) - hdRank(b.stream.height),
+    );
+  }
   return [...entries].sort((a, b) => {
     const ah = a.stream.height;
     const bh = b.stream.height;
@@ -282,7 +292,9 @@ const probeRequest = async (
   range: boolean,
 ): Promise<Response> => {
   const headers = { ...stream.headers };
-  if (range) headers.Range = "bytes=0-4095";
+  // Manifests get a larger window so the #EXT-X-MEDIA audio lines (read for
+  // the preferred-language pick) come back in the same request.
+  if (range) headers.Range = stream.adaptive ? "bytes=0-16383" : "bytes=0-4095";
   return fetch(stream.link, { method, headers, signal });
 };
 
@@ -337,10 +349,17 @@ export async function probeStream(
           checkedAt: Date.now(),
         };
       } else if (stream.adaptive) {
-        const body = (await response.text()).slice(0, 4096);
-        const valid = /#EXTM3U/i.test(body) || /<MPD[\s>]/i.test(body);
+        const body = (await response.text()).slice(0, 16384);
+        const isHls = /#EXTM3U/i.test(body);
+        const valid = isHls || /<MPD[\s>]/i.test(body);
         result = valid
-          ? { status: "ok", httpStatus: status, contentType, checkedAt: Date.now() }
+          ? {
+              status: "ok",
+              httpStatus: status,
+              contentType,
+              checkedAt: Date.now(),
+              ...(isHls ? { audioLanguages: parseHlsAudioLanguages(body) } : {}),
+            }
           : {
               status: "failed",
               httpStatus: status,

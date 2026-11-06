@@ -12,6 +12,7 @@ import {
   normalizeLangCode,
 } from "./languages";
 import type { PlayableStream } from "./streams";
+import { pickPreferredIndex } from "./streamRanking";
 
 const NAME_RE = new RegExp(
   `\\b(${Object.keys(TEXT_LANGUAGE_NAMES).join("|")})\\b`,
@@ -195,24 +196,74 @@ export async function detectLanguagesFromStreams(
   return unique(lists.flat());
 }
 
-/** Index of the first stream whose audio matches `preferred`, or -1. */
+/**
+ * Index of the stream to start on for the preferred audio language, or -1.
+ *
+ * Uses what is already known first — provider metadata and the audio groups
+ * the server check read from each HLS master (`probe.audioLanguages`) — so the
+ * usual case needs no extra request. Only HLS streams that were not probed get
+ * their manifest fetched, under one shared `budgetMs`. Among matches, the one
+ * closest to 1080p wins; streams the probe found dead are skipped.
+ */
 export async function findPreferredStreamIndex(
   streams: PlayableStream[],
   preferred: string,
   signal?: AbortSignal,
+  budgetMs = 1500,
 ): Promise<number> {
   const capped = streams.slice(0, 6);
-  const languages = await Promise.all(
-    capped.map((stream, i) =>
-      detectStreamLanguages(stream, {
-        signal,
-        // Only look inside the first few manifests; the rest use metadata.
-        skipManifest: i >= 4,
-      }),
-    ),
+  const known = capped.map((stream) =>
+    unique([
+      ...detectLanguagesFromRawStream(stream.raw),
+      ...(stream.probe?.audioLanguages || []),
+    ]),
   );
-  const hit = languages.findIndex((codes) => codes.includes(preferred));
-  return hit >= 0 ? hit : -1;
+
+  const unprobed = capped
+    .map((stream, i) => ({ stream, i }))
+    .filter(
+      ({ stream, i }) =>
+        stream.format === "hls" &&
+        !stream.probe?.audioLanguages &&
+        stream.probe?.status !== "failed" &&
+        !known[i].includes(preferred),
+    )
+    .slice(0, 3);
+
+  if (unprobed.length > 0) {
+    const controller = new AbortController();
+    const onAbort = () => controller.abort();
+    if (signal) {
+      if (signal.aborted) controller.abort();
+      else signal.addEventListener("abort", onAbort, { once: true });
+    }
+    const timer = setTimeout(() => controller.abort(), budgetMs);
+    try {
+      const fetched = await Promise.all(
+        unprobed.map(({ stream }) =>
+          fetchHlsAudioLanguages(stream, controller.signal, budgetMs),
+        ),
+      );
+      fetched.forEach((codes, n) => {
+        const i = unprobed[n].i;
+        known[i] = unique([...known[i], ...codes]);
+      });
+    } finally {
+      clearTimeout(timer);
+      signal?.removeEventListener("abort", onAbort);
+    }
+  }
+
+  return pickPreferredIndex(
+    capped.map((stream, i) => ({
+      languages: known[i],
+      // An adaptive master with no fixed height plays at the best rendition
+      // the connection allows, so it ranks like a 1080p file.
+      height: stream.height ?? (stream.adaptive ? 1080 : null),
+      failed: stream.probe?.status === "failed",
+    })),
+    preferred,
+  );
 }
 
 /**

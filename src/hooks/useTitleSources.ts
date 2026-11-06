@@ -93,6 +93,9 @@ function useLanguageAwareOptions(
   const preferredCode = preferred && preferred !== NO_LANGUAGE ? preferred : null;
   const [resolved, setResolved] = useState<Record<string, string[]>>({});
   const [pending, setPending] = useState(0);
+  // Bumped when a probe was interrupted by playback starting, so it is queued
+  // again (it waits for the player to close before running).
+  const [retryTick, setRetryTick] = useState(0);
   const probed = useRef(new Set<string>());
   const budget = useRef(MAX_LANGUAGE_PROBES);
   const controller = useRef<AbortController | null>(null);
@@ -130,10 +133,16 @@ function useLanguageAwareOptions(
         setResolved((prev) => ({ ...prev, [id]: codes }));
       },
       signal,
+      (id) => {
+        if (signal.aborted) return;
+        probed.current.delete(id);
+        budget.current += 1;
+        setRetryTick((tick) => tick + 1);
+      },
     ).finally(() => {
       if (!signal.aborted) setPending((count) => Math.max(0, count - targets.length));
     });
-  }, [raw, preferredCode, ready]);
+  }, [raw, preferredCode, ready, retryTick]);
 
   const options = useMemo(() => {
     const merged = raw.map((option) =>

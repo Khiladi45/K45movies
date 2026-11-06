@@ -229,26 +229,49 @@ export function prefetchStreams(link: string) {
 
 const fastCache = new Map<string, { at: number; promise: Promise<PlayableStream[]> }>();
 
+/**
+ * The cached stream requests are shared by every caller (prefetch, player,
+ * gear menu, downloads), so they run without any one caller's signal. Each
+ * caller only stops waiting when its own signal fires.
+ */
+function waitFor<T>(promise: Promise<T>, signal?: AbortSignal): Promise<T> {
+  if (!signal) return promise;
+  if (signal.aborted) return Promise.reject(new Error("canceled"));
+  return new Promise<T>((resolve, reject) => {
+    const onAbort = () => reject(new Error("canceled"));
+    signal.addEventListener("abort", onAbort, { once: true });
+    promise.then(
+      (value) => {
+        signal.removeEventListener("abort", onAbort);
+        resolve(value);
+      },
+      (error) => {
+        signal.removeEventListener("abort", onAbort);
+        reject(error);
+      },
+    );
+  });
+}
+
 /** Master playlist + muxed MP4s only: the quickest answer for starting playback. */
 function fetchFastStreams(link: string, signal?: AbortSignal): Promise<PlayableStream[]> {
   const full = streamCache.get(link);
-  if (full && Date.now() - full.at < STREAM_TTL) return full.promise;
+  if (full && Date.now() - full.at < STREAM_TTL) return waitFor(full.promise, signal);
   const hit = fastCache.get(link);
-  if (hit && Date.now() - hit.at < STREAM_TTL) return hit.promise;
+  if (hit && Date.now() - hit.at < STREAM_TTL) return waitFor(hit.promise, signal);
   const promise = (async () => {
     const raw: any = await executeProvider(
       YT_PROVIDER,
       "stream",
       "getStream",
       { link, type: "movie", provider: YT_PROVIDER, fast: true },
-      signal,
     );
     const list = Array.isArray(raw) ? raw : Array.isArray(raw?.streams) ? raw.streams : [];
     return normalizeStreams(list);
   })();
   fastCache.set(link, { at: Date.now(), promise });
   promise.catch(() => fastCache.delete(link));
-  return promise;
+  return waitFor(promise, signal);
 }
 
 const STREAM_TTL = 1000 * 60 * 10;
@@ -260,15 +283,15 @@ export function fetchStreamList(
   signal?: AbortSignal,
 ): Promise<PlayableStream[]> {
   const hit = streamCache.get(link);
-  if (hit && Date.now() - hit.at < STREAM_TTL) return hit.promise;
+  if (hit && Date.now() - hit.at < STREAM_TTL) return waitFor(hit.promise, signal);
   const promise = (async () => {
-    const raw: any = await providerApi.getStream(YT_PROVIDER, link, "movie", signal);
+    const raw: any = await providerApi.getStream(YT_PROVIDER, link, "movie");
     const list = Array.isArray(raw) ? raw : Array.isArray(raw?.streams) ? raw.streams : [];
     return normalizeStreams(list);
   })();
   streamCache.set(link, { at: Date.now(), promise });
   promise.catch(() => streamCache.delete(link));
-  return promise;
+  return waitFor(promise, signal);
 }
 
 const isMuxedStream = (s: PlayableStream) =>
