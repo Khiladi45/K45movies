@@ -221,7 +221,7 @@ export default function CategoryScreen({ route, navigation }: any) {
           ))}
         </View>
       ) : (
-        <FlatList
+        <FlatList showsHorizontalScrollIndicator={false}
           data={items}
           numColumns={COLUMNS}
           keyExtractor={(item, index) => `${keyFor(item)}-${index}`}

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -22,9 +22,11 @@ const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
   const youtube = useLayoutStore((s) => s.layout === "youtube");
+  const [routeName, setRouteName] = useState<string | undefined>();
+  const syncRoute = () => setRouteName(navigationRef.getCurrentRoute()?.name);
   return (
     <View style={{ flex: 1 }}>
-    <NavigationContainer ref={navigationRef}>
+    <NavigationContainer ref={navigationRef} onReady={syncRoute} onStateChange={syncRoute}>
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
@@ -127,7 +129,7 @@ export default function AppNavigator() {
         />
       </Stack.Navigator>
     </NavigationContainer>
-    {youtube ? <YtOverlays /> : null}
+    {youtube ? <YtOverlays routeName={routeName} /> : null}
     </View>
   );
 }

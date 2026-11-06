@@ -108,3 +108,25 @@ export const useYtHiddenStore = create<HiddenState>()(
     { name: "k45-yt-hidden", storage: createJSONStorage(() => storage) },
   ),
 );
+
+type SubsState = {
+  channels: string[];
+  isSubscribed: (name: string) => boolean;
+  toggle: (name: string) => boolean;
+};
+
+/** Channels the user pressed Subscribe on (kept on this device). */
+export const useYtSubsStore = create<SubsState>()(
+  persist(
+    (set, get) => ({
+      channels: [],
+      isSubscribed: (name) => get().channels.includes(name),
+      toggle: (name) => {
+        const has = get().channels.includes(name);
+        set((s) => ({ channels: has ? s.channels.filter((c) => c !== name) : [name, ...s.channels] }));
+        return !has;
+      },
+    }),
+    { name: "k45-yt-subs", storage: createJSONStorage(() => storage) },
+  ),
+);

@@ -28,6 +28,8 @@ export type YtHomeTab = {
   filter: string;
   /** Query used for this tab's Shorts shelf. */
   shortsFilter: string;
+  /** When set, the tab mixes these topics into one endless feed. */
+  topics?: string[];
 };
 
 export type YtComment = {
@@ -56,4 +58,17 @@ export type YtQuality = {
   label: string;
   /** True when this rendition carries audio too (safe to download). */
   muxed: boolean;
+};
+
+/** One row of the download sheet. */
+export type YtDownloadOption = {
+  height: number;
+  /** "2160p · 4K" */
+  label: string;
+  /** "AV1 · 1.2 GB" */
+  detail: string;
+  /** Single file (audio + video), or the video-only half of a merged pair. */
+  video: any;
+  /** Audio-only half; present when the two files are joined after download. */
+  audio?: any;
 };

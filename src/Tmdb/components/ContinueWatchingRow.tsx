@@ -23,7 +23,7 @@ const ContinueWatchingRow = memo(function ContinueWatchingRow() {
   return (
     <View style={styles.wrap}>
       <RowHeader title="Continue Watching" />
-      <FlatList
+      <FlatList showsVerticalScrollIndicator={false}
         data={items}
         horizontal
         showsHorizontalScrollIndicator={false}

@@ -18,12 +18,19 @@ import {
   View,
   ViewStyle,
 } from "react-native";
-import Video, { ResizeMode, SelectedVideoTrackType } from "react-native-video";
+import Video, {
+  ResizeMode,
+  SelectedTrackType,
+  SelectedVideoTrackType,
+  TextTrackType,
+  ViewType,
+} from "react-native-video";
+import { Image } from "expo-image";
 import { useYtPlayback, useYtStreamInfo } from "../hooks";
 import { YT } from "../theme";
 import YtControls from "./YtControls";
-import YtSheet from "./YtSheet";
-import { Ionicons } from "@expo/vector-icons";
+import PlayerSettings, { type Caption, type SettingsPage } from "./PlayerSettings";
+import { useYtPlayerStore } from "../playerStore";
 
 export type YtPlayerHandle = {
   position: () => number;
@@ -38,6 +45,14 @@ type Props = {
   repeat?: boolean;
   /** "full" = YouTube-style overlay; "none" = bare video (Shorts, mini player). */
   controls?: "full" | "none";
+  /** Shown over the video until it starts, so there is never a black box. */
+  poster?: string;
+  title?: string;
+  channel?: string;
+  /** Fullscreen only: the like / comments / save / share row. */
+  extra?: React.ReactNode;
+  /** Shorts and the mini player: start fast, cap the bitrate. */
+  lowLatency?: boolean;
   resizeMode?: "contain" | "cover";
   /** Resolve streams only when true, so off-screen Shorts stay idle. */
   active?: boolean;
@@ -70,6 +85,11 @@ const YtPlayer = forwardRef<YtPlayerHandle, Props>(function YtPlayer(
     paused = false,
     repeat = false,
     controls = "none",
+    poster,
+    title,
+    channel,
+    extra,
+    lowLatency = false,
     resizeMode = "contain",
     active = true,
     startAt = 0,
@@ -95,7 +115,14 @@ const YtPlayer = forwardRef<YtPlayerHandle, Props>(function YtPlayer(
   const [position, setPosition] = useState(0);
   const [duration, setDuration] = useState(0);
   const [height, setHeight] = useState(0); // 0 = Auto
-  const [gear, setGear] = useState(false);
+  const [settings, setSettings] = useState<{ visible: boolean; page: SettingsPage }>({ visible: false, page: "root" });
+  const [speed, setSpeed] = useState(1);
+  const [caption, setCaption] = useState(-1);
+  const [locked, setLocked] = useState(false);
+  const [playingHeight, setPlayingHeight] = useState(0);
+  const [trackHeights, setTrackHeights] = useState<number[]>([]);
+  const autoplay = useYtPlayerStore((st) => st.autoplay);
+  const toggleAutoplay = useYtPlayerStore((st) => st.toggleAutoplay);
   const posRef = useRef(0);
   const seekedFor = useRef("");
 
@@ -110,6 +137,9 @@ const YtPlayer = forwardRef<YtPlayerHandle, Props>(function YtPlayer(
     setPosition(0);
     setDuration(0);
     setHeight(0);
+    setCaption(-1);
+    setPlayingHeight(0);
+    setTrackHeights([]);
     posRef.current = 0;
   }, [link, localUri, playback.data, start]);
 
@@ -137,6 +167,25 @@ const YtPlayer = forwardRef<YtPlayerHandle, Props>(function YtPlayer(
         ? { type: SelectedVideoTrackType.RESOLUTION, value: height }
         : { type: SelectedVideoTrackType.AUTO },
     [adaptive, height],
+  );
+
+  const captions = useMemo<Caption[]>(() => {
+    const raw = (stream as any)?.subtitles;
+    return Array.isArray(raw)
+      ? raw.filter((c: any) => c?.uri).map((c: any) => ({ title: c.title || c.language || "Captions", language: c.language || "", uri: c.uri }))
+      : [];
+  }, [stream]);
+  const textTracks = useMemo(
+    () => captions.map((c) => ({ title: c.title, language: c.language, type: TextTrackType.VTT, uri: c.uri })),
+    [captions],
+  );
+
+  const bufferConfig = useMemo(
+    () =>
+      lowLatency
+        ? { minBufferMs: 2500, maxBufferMs: 15000, bufferForPlaybackMs: 400, bufferForPlaybackAfterRebufferMs: 1000 }
+        : { minBufferMs: 15000, maxBufferMs: 50000, bufferForPlaybackMs: 800, bufferForPlaybackAfterRebufferMs: 2500 },
+    [lowLatency],
   );
 
   const onError = () => {
@@ -220,7 +269,13 @@ const YtPlayer = forwardRef<YtPlayerHandle, Props>(function YtPlayer(
 
   const resolving = !localUri && active && playback.isLoading;
   const noStream = !localUri && active && !playback.isLoading && (playback.isError || streams.length === 0);
-  const qualities = info.data?.qualities ?? [];
+  // Heights from the API plus anything the player itself reports.
+  const mergedQualities = useMemo(() => {
+    const byHeight = new Map<number, { height: number; label: string; muxed: boolean }>();
+    for (const q of info.data?.qualities ?? []) byHeight.set(q.height, q);
+    for (const h of trackHeights) if (!byHeight.has(h)) byHeight.set(h, { height: h, label: `${h}p`, muxed: true });
+    return [...byHeight.values()].sort((a, b) => b.height - a.height);
+  }, [info.data, trackHeights]);
 
   return (
     <View style={[styles.box, style]} {...(zoomable ? pinch.panHandlers : {})}>
@@ -234,12 +289,25 @@ const YtPlayer = forwardRef<YtPlayerHandle, Props>(function YtPlayer(
             paused={!isPlaying}
             repeat={repeat}
             controls={false}
+            // TextureView, not SurfaceView: a SurfaceView draws nothing (sound
+            // only) inside a clipped, scaled or floating view like the mini player.
+            viewType={ViewType.TEXTURE}
+            rate={speed}
+            bufferConfig={bufferConfig as any}
+            maxBitRate={lowLatency ? 2_500_000 : undefined}
+            textTracks={textTracks as any}
+            selectedTextTrack={(caption >= 0 ? { type: SelectedTrackType.INDEX, value: caption } : { type: SelectedTrackType.DISABLED }) as any}
+            onVideoTracks={(d: any) => {
+              const hs = (d?.videoTracks || []).map((t: any) => Number(t.height) || 0).filter(Boolean);
+              setTrackHeights([...new Set<number>(hs)].sort((x, y) => y - x));
+            }}
             resizeMode={resizeMode === "cover" ? ResizeMode.COVER : ResizeMode.CONTAIN}
             selectedVideoTrack={selectedVideoTrack as any}
             progressUpdateInterval={500}
             onLoad={(d: any) => {
               setLoaded(true);
               setDuration(Number(d?.duration) || 0);
+              setPlayingHeight(Number(d?.naturalSize?.height) || 0);
               if (startAt > 0 && seekedFor.current !== link) {
                 seekedFor.current = link;
                 try {
@@ -261,20 +329,33 @@ const YtPlayer = forwardRef<YtPlayerHandle, Props>(function YtPlayer(
         </Animated.View>
       ) : null}
 
-      {controls === "full" && loaded && !failed ? (
+      {poster && !loaded && !failed ? (
+        <Image source={{ uri: poster }} style={StyleSheet.absoluteFill} contentFit={resizeMode === "cover" ? "cover" : "contain"} />
+      ) : null}
+
+      {controls === "full" && !failed ? (
         <YtControls
           playing={isPlaying}
           buffering={buffering}
           position={position}
           duration={duration}
           fullscreen={fullscreen}
+          locked={locked}
+          title={title}
+          channel={channel}
+          autoplay={autoplay}
+          extra={extra}
           onToggle={() => setUserPaused((v) => !v)}
           onSeek={seek}
           onSkip={(d) => seek(posRef.current + d)}
+          onPrev={() => seek(0)}
           onNext={onNext}
           onFullscreen={() => onToggleFullscreen?.()}
           onMinimize={() => onMinimize?.()}
-          onGear={() => setGear(true)}
+          onSettings={() => setSettings({ visible: true, page: "root" })}
+          onCaptions={() => setSettings({ visible: true, page: "captions" })}
+          onAutoplay={toggleAutoplay}
+          onUnlock={() => setLocked(false)}
         />
       ) : null}
 
@@ -300,31 +381,22 @@ const YtPlayer = forwardRef<YtPlayerHandle, Props>(function YtPlayer(
       )}
 
       {controls === "full" ? (
-        <YtSheet visible={gear} onClose={() => setGear(false)} title="Quality">
-          {[{ height: 0, label: "Auto", muxed: true }, ...qualities].map((q) => {
-            const selected = height === q.height;
-            return (
-              <TouchableOpacity
-                key={q.height}
-                style={styles.qRow}
-                onPress={() => {
-                  setHeight(q.height);
-                  setGear(false);
-                }}
-                accessibilityRole="radio"
-                accessibilityState={{ selected }}
-              >
-                <Ionicons name={selected ? "checkmark" : "ellipse-outline"} size={20} color={selected ? YT.blue : "transparent"} />
-                <Text style={[styles.qText, selected && { color: YT.blue }]}>{q.label}</Text>
-                {q.height === 0 ? <Text style={styles.qHint}>Recommended</Text> : null}
-              </TouchableOpacity>
-            );
-          })}
-          {info.isLoading ? <ActivityIndicator color={YT.muted} style={{ padding: 16 }} /> : null}
-          {!adaptive && qualities.length > 0 ? (
-            <Text style={styles.qNote}>This video is playing as a single MP4, so its quality can't be changed.</Text>
-          ) : null}
-        </YtSheet>
+        <PlayerSettings
+          visible={settings.visible}
+          page={settings.page}
+          onClose={() => setSettings((v) => ({ ...v, visible: false }))}
+          qualities={mergedQualities}
+          height={height}
+          playingHeight={playingHeight}
+          canPickQuality={adaptive}
+          onHeight={setHeight}
+          speed={speed}
+          onSpeed={setSpeed}
+          captions={captions}
+          caption={caption}
+          onCaption={setCaption}
+          onLock={() => setLocked(true)}
+        />
       ) : null}
     </View>
   );
@@ -334,14 +406,10 @@ export default YtPlayer;
 
 const styles = StyleSheet.create({
   box: { backgroundColor: "#000", overflow: "hidden" },
-  overlay: { ...StyleSheet.absoluteFillObject, alignItems: "center", justifyContent: "center", gap: 10 },
+  overlay: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, alignItems: "center", justifyContent: "center", gap: 10 },
   error: { color: "#fff", fontSize: 13 },
   retry: { backgroundColor: YT.surface, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 16 },
   retryText: { color: "#fff", fontWeight: "600", fontSize: 13 },
   zoomBadge: { position: "absolute", top: 12, alignSelf: "center", backgroundColor: "rgba(0,0,0,0.7)", borderRadius: 14, paddingHorizontal: 12, paddingVertical: 4 },
   zoomText: { color: "#fff", fontSize: 13, fontWeight: "600" },
-  qRow: { flexDirection: "row", alignItems: "center", gap: 14, paddingHorizontal: 20, paddingVertical: 14 },
-  qText: { color: YT.text, fontSize: 15, flex: 1 },
-  qHint: { color: YT.muted, fontSize: 12 },
-  qNote: { color: YT.muted, fontSize: 12, paddingHorizontal: 20, paddingVertical: 10 },
 });

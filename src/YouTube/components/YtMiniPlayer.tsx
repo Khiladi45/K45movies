@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import { navigationRef } from "@/navigation/navigationRef";
 import YtPlayer, { YtPlayerHandle } from "./YtPlayer";
 import { useYtPlayerStore } from "../playerStore";
 import { YT } from "../theme";
@@ -10,7 +10,6 @@ export const MINI_W = 180;
 
 /** Floating bottom-right player shown after minimizing the video page. */
 export default function YtMiniPlayer({ bottom }: { bottom: number }) {
-  const navigation = useNavigation<any>();
   const mini = useYtPlayerStore((s) => s.mini);
   const clearMini = useYtPlayerStore((s) => s.clearMini);
   const [paused, setPaused] = useState(false);
@@ -19,7 +18,7 @@ export default function YtMiniPlayer({ bottom }: { bottom: number }) {
 
   const expand = () => {
     const position = ref.current?.position() ?? mini.position;
-    navigation.navigate("YtVideo", { video: mini.video, startAt: position });
+    if (navigationRef.isReady()) (navigationRef as any).navigate("YtVideo", { video: mini.video, startAt: position });
   };
 
   return (
@@ -30,6 +29,8 @@ export default function YtMiniPlayer({ bottom }: { bottom: number }) {
           link={mini.video.link}
           startAt={mini.position}
           paused={paused}
+          poster={mini.video.image}
+          lowLatency
           style={StyleSheet.absoluteFill}
         />
       </TouchableOpacity>

@@ -12,7 +12,8 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useIsFocused, useNavigation, useRoute } from "@react-navigation/native";
-import { DEFAULT_SHORTS_QUERY } from "../api";
+import { DEFAULT_SHORTS_QUERY, prefetchStreams } from "../api";
+import { Image } from "expo-image";
 import { useYtShorts, useYtWatch } from "../hooks";
 import { useYtLibraryStore } from "../store";
 import type { YtVideo } from "../types";
@@ -56,10 +57,15 @@ const ShortItem = memo(function ShortItem({ video, height, playing, near, topIns
           active={near}
           paused={!playing || userPaused}
           repeat
+          lowLatency
+          poster={video.image}
           resizeMode="cover"
           style={StyleSheet.absoluteFill}
         />
-      ) : null}
+      ) : (
+        // Off-screen neighbours show their thumbnail, never a black box.
+        <Image source={{ uri: video.image }} style={StyleSheet.absoluteFill} contentFit="cover" />
+      )}
 
       <TouchableWithoutFeedback onPress={() => setUserPaused((v) => !v)}>
         <View style={StyleSheet.absoluteFill}>
@@ -174,6 +180,14 @@ export default function YtShortsScreen() {
   }).current;
   const viewConfig = useRef({ itemVisiblePercentThreshold: 80 }).current;
 
+  // Resolve the streams of the next Shorts ahead of time so each one starts
+  // the moment you swipe to it.
+  useEffect(() => {
+    for (let i = activeIndex; i <= activeIndex + 5; i++) {
+      if (items[i]) prefetchStreams(items[i].link);
+    }
+  }, [activeIndex, items]);
+
   const loadMore = useCallback(() => {
     if (feed.hasNextPage && !feed.isFetchingNextPage) feed.fetchNextPage();
   }, [feed]);
@@ -184,7 +198,7 @@ export default function YtShortsScreen() {
       onLayout={(e) => setHeight(Math.round(e.nativeEvent.layout.height))}
     >
       {height > 0 && items.length > 0 ? (
-        <FlatList
+        <FlatList showsHorizontalScrollIndicator={false}
           ref={listRef}
           data={items}
           keyExtractor={(v) => v.id}
@@ -195,13 +209,13 @@ export default function YtShortsScreen() {
           showsVerticalScrollIndicator={false}
           initialScrollIndex={Math.min(params.startIndex ?? 0, items.length - 1)}
           getItemLayout={(_, index) => ({ length: height, offset: height * index, index })}
-          windowSize={3}
-          maxToRenderPerBatch={2}
+          windowSize={5}
+          maxToRenderPerBatch={3}
           initialNumToRender={1}
           removeClippedSubviews
           onViewableItemsChanged={onViewable}
           viewabilityConfig={viewConfig}
-          onEndReachedThreshold={2}
+          onEndReachedThreshold={4}
           onEndReached={loadMore}
           renderItem={({ item, index }) => (
             <ShortItem

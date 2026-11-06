@@ -18,10 +18,8 @@ import { useYtSearchStore } from "../store";
 import { useYtUiStore } from "../playerStore";
 import { YT } from "../theme";
 import type { YtVideo } from "../types";
-import VideoRow from "../components/VideoRow";
-import { RowSkeleton } from "../components/Skeletons";
-
-const ROW_H = 110; // 94px thumbnail + 8px padding top and bottom
+import VideoCard from "../components/VideoCard";
+import { FeedSkeleton } from "../components/Skeletons";
 
 const useDebounced = (value: string, ms: number) => {
   const [out, setOut] = useState(value);
@@ -166,7 +164,7 @@ export default function YtSearchScreen() {
 
       {showResults ? (
         results.isLoading ? (
-          <RowSkeleton />
+          <FeedSkeleton />
         ) : results.isError && videos.length === 0 ? (
           <View style={styles.center}>
             <Text style={styles.msg}>Search failed.</Text>
@@ -175,25 +173,15 @@ export default function YtSearchScreen() {
             </TouchableOpacity>
           </View>
         ) : (
-          <FlatList
+          <FlatList showsHorizontalScrollIndicator={false}
             data={videos}
             keyExtractor={(v) => v.id}
             keyboardShouldPersistTaps="handled"
-            renderItem={({ item }) => (
-              <VideoRow
-                video={item}
-                onPress={openResult}
-                right={
-                  <TouchableOpacity hitSlop={10} onPress={() => openMenu(item)} accessibilityLabel="More options">
-                    <Ionicons name="ellipsis-vertical" size={18} color={YT.text} />
-                  </TouchableOpacity>
-                }
-              />
-            )}
-            getItemLayout={(_, index) => ({ length: ROW_H, offset: ROW_H * index, index })}
-            initialNumToRender={8}
-            maxToRenderPerBatch={8}
-            windowSize={9}
+            renderItem={({ item }) => <VideoCard video={item} onPress={openResult} onMenu={openMenu} />}
+            showsVerticalScrollIndicator={false}
+            initialNumToRender={3}
+            maxToRenderPerBatch={4}
+            windowSize={7}
             removeClippedSubviews
             onEndReached={() => results.hasNextPage && !results.isFetchingNextPage && results.fetchNextPage()}
             onEndReachedThreshold={1.5}
@@ -208,10 +196,11 @@ export default function YtSearchScreen() {
           />
         )
       ) : typing ? (
-        <FlatList
+        <FlatList showsHorizontalScrollIndicator={false}
           data={suggestionRows}
           keyExtractor={(r) => r.term}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
           renderItem={renderTermRow}
           ListHeaderComponent={
             suggestions.isFetching && suggestionRows.length === 0 ? (
@@ -220,7 +209,7 @@ export default function YtSearchScreen() {
           }
         />
       ) : (
-        <FlatList
+        <FlatList showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false}
           data={recent}
           keyExtractor={(r) => r.term}
           keyboardShouldPersistTaps="handled"

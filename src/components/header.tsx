@@ -209,7 +209,7 @@ export default function Header() {
               </TouchableOpacity>
             </View>
 
-            <FlatList
+            <FlatList showsHorizontalScrollIndicator={false}
               data={installedProviderDetails}
               keyExtractor={(item) => item.value}
               showsVerticalScrollIndicator={false}

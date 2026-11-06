@@ -3,7 +3,6 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { YT } from "../theme";
-import YtMiniPlayer from "./YtMiniPlayer";
 
 type Item = {
   route: string;
@@ -26,14 +25,11 @@ export default function YtBottomBar({ state, navigation }: any) {
   const insets = useSafeAreaInsets();
   const activeName: string = state.routes[state.index]?.name;
   const onShorts = activeName === "Shorts";
-  const miniBottom = 50 + insets.bottom + 12;
 
   // The bar is hidden while a Short is playing (full-screen vertical video).
   if (onShorts) return null;
 
   return (
-    <>
-    <YtMiniPlayer bottom={miniBottom} />
     <View
       style={[
         styles.bar,
@@ -73,7 +69,6 @@ export default function YtBottomBar({ state, navigation }: any) {
         );
       })}
     </View>
-    </>
   );
 }
 

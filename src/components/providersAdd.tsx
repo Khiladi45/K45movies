@@ -534,7 +534,7 @@ export default function AddProviders() {
 
   return (
     <View style={[styles.container, { backgroundColor: "#050505" }]}>
-      <FlatList
+      <FlatList showsHorizontalScrollIndicator={false}
         data={moreProviders}
         keyExtractor={(item: any) => item.value}
         renderItem={({ item, index }) =>

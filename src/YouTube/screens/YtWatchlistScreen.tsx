@@ -148,7 +148,7 @@ export default function YtWatchlistScreen() {
       </View>
 
       {tab === "saved" ? (
-        <FlatList
+        <FlatList showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false}
           data={saved}
           keyExtractor={(v) => v.id}
           ListEmptyComponent={
@@ -197,7 +197,7 @@ export default function YtWatchlistScreen() {
           contentContainerStyle={{ paddingBottom: 16 }}
         />
       ) : (
-        <FlatList
+        <FlatList showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false}
           data={ytJobs}
           keyExtractor={(j) => j.id}
           ListEmptyComponent={

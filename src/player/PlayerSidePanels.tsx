@@ -170,7 +170,7 @@ export function SubtitleSettingsPanel({
 
   return (
     <SidePanel title="Subtitle Settings" width={width} onClose={onClose}>
-      <ScrollView
+      <ScrollView showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.body}
         showsVerticalScrollIndicator={false}
       >
@@ -311,7 +311,7 @@ export function EpisodesPanel({
 
   return (
     <SidePanel title="Episodes" width={width} onClose={onClose}>
-      <FlatList
+      <FlatList showsHorizontalScrollIndicator={false}
         ref={listRef}
         data={episodes}
         keyExtractor={(ep, i) => `${ep.link}-${i}`}
@@ -382,7 +382,7 @@ export function SourcesPanel({
 
   return (
     <SidePanel title="Providers & Qualities" width={width} onClose={onClose}>
-      <ScrollView
+      <ScrollView showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.body}
         showsVerticalScrollIndicator={false}
       >

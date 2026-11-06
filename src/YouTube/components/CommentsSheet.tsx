@@ -102,7 +102,7 @@ export default function CommentsSheet({ visible, onClose, link }: Props) {
           <Text style={styles.emptyText}>No comments yet.</Text>
         </View>
       ) : (
-        <FlatList
+        <FlatList showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false}
           data={comments}
           keyExtractor={(c, i) => `${c.id}-${i}`}
           renderItem={({ item }) => <Row link={link} comment={item} />}

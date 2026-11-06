@@ -1,6 +1,6 @@
 import { executeProvider, providerApi } from "@/lib/providerApi";
-import { normalizeStreams, selectPlaybackStreams, type PlayableStream } from "@/lib/streams";
-import type { YtCommentsPage, YtHomeTab, YtQuality, YtVideo, YtWatch } from "./types";
+import { normalizeStreams, type PlayableStream } from "@/lib/streams";
+import type { YtCommentsPage, YtDownloadOption, YtHomeTab, YtQuality, YtVideo, YtWatch } from "./types";
 
 /** The bundled YouTube provider. It ships with the app, so it is always there. */
 export const YT_PROVIDER = "youtube";
@@ -8,7 +8,33 @@ export const YT_PROVIDER = "youtube";
 // Filters match K45movies-api/providers/youtube/catalog.ts. "#shorts" switches
 // the provider into Shorts-only (9:16) results.
 export const HOME_TABS: YtHomeTab[] = [
-  { key: "home", label: "Home", filter: "trending", shortsFilter: "#shorts trending" },
+  {
+    key: "home",
+    label: "Home",
+    filter: "trending",
+    shortsFilter: "#shorts trending",
+    // Home mixes many topics, round-robin, so it never runs dry.
+    topics: [
+      "new movie trailers",
+      "tamil new songs",
+      "tamil latest news",
+      "tech news",
+      "telugu new songs",
+      "movie reviews",
+      "malayalam new songs",
+      "cricket highlights",
+      "gadget reviews",
+      "hindi new songs",
+      "comedy scenes",
+      "kannada new songs",
+      "korean drama clips",
+      "gaming highlights",
+      "science facts",
+      "food recipes",
+      "motivation speech",
+      "bike reviews",
+    ],
+  },
   { key: "music", label: "Music", filter: "trending music", shortsFilter: "#shorts music" },
   { key: "live", label: "Live", filter: "live now", shortsFilter: "#shorts live" },
   { key: "gaming", label: "Gaming", filter: "trending gaming", shortsFilter: "#shorts gaming" },
@@ -178,16 +204,51 @@ export async function fetchWatch(
   };
 }
 
-/** Resolves playable streams for a video and picks the best candidate first. */
+/**
+ * Playable streams, best first. Deliberately no probing: probing every URL
+ * before playing cost seconds; the player falls back on error instead.
+ * Per-height HLS renditions (may lack audio) and single-track files are for the
+ * gear menu and downloads, never for playback.
+ */
 export async function fetchPlayback(link: string, signal?: AbortSignal) {
-  const all = await fetchStreamList(link, signal);
-  // Per-height HLS renditions are for the quality picker (they may lack audio);
-  // playback uses the master playlist or the muxed MP4s.
-  const candidates = all.filter((s) => !(s.format === "hls" && s.height));
-  return selectPlaybackStreams(candidates.length ? candidates : all, {
-    preference: "auto",
-    signal,
+  // Start-up path: no per-height playlist request (see the API's `fast`).
+  // A full list already in the cache is reused.
+  const all = await fetchFastStreams(link, signal);
+  const playable = all.filter((s) => !s.raw?.kind && !(s.format === "hls" && s.height));
+  const streams = (playable.length ? playable : all).slice().sort((a, b) => {
+    const rank = (s: PlayableStream) => (s.format === "hls" ? 0 : 1);
+    return rank(a) - rank(b);
   });
+  return { streams, startIndex: 0 };
+}
+
+/** Starts resolving a video's streams so playback begins sooner. Never throws. */
+export function prefetchStreams(link: string) {
+  if (link) fetchFastStreams(link).catch(() => {});
+}
+
+const fastCache = new Map<string, { at: number; promise: Promise<PlayableStream[]> }>();
+
+/** Master playlist + muxed MP4s only: the quickest answer for starting playback. */
+function fetchFastStreams(link: string, signal?: AbortSignal): Promise<PlayableStream[]> {
+  const full = streamCache.get(link);
+  if (full && Date.now() - full.at < STREAM_TTL) return full.promise;
+  const hit = fastCache.get(link);
+  if (hit && Date.now() - hit.at < STREAM_TTL) return hit.promise;
+  const promise = (async () => {
+    const raw: any = await executeProvider(
+      YT_PROVIDER,
+      "stream",
+      "getStream",
+      { link, type: "movie", provider: YT_PROVIDER, fast: true },
+      signal,
+    );
+    const list = Array.isArray(raw) ? raw : Array.isArray(raw?.streams) ? raw.streams : [];
+    return normalizeStreams(list);
+  })();
+  fastCache.set(link, { at: Date.now(), promise });
+  promise.catch(() => fastCache.delete(link));
+  return promise;
 }
 
 const STREAM_TTL = 1000 * 60 * 10;
@@ -211,37 +272,78 @@ export function fetchStreamList(
 }
 
 const isMuxedStream = (s: PlayableStream) =>
-  !/video only/i.test(String(s.raw?.tag || ""));
+  !s.raw?.kind && !/video only/i.test(String(s.raw?.tag || ""));
 
 /**
- * Qualities for the gear menu: every height the API listed (highest first).
- * `muxed` is false for HLS renditions whose audio is a separate track; those
- * play fine through the master playlist but can't be saved as one file.
+ * Qualities for the gear menu: heights the player can switch between on the
+ * adaptive playlist (highest first). Single-track files are not included.
  */
 export function qualitiesOf(streams: PlayableStream[]): YtQuality[] {
   const byHeight = new Map<number, YtQuality>();
   for (const s of streams) {
     const h = s.height || 0;
-    if (!h) continue;
-    const muxed = isMuxedStream(s) && (s.format === "mp4" || s.format === "hls");
+    if (!h || s.raw?.kind) continue;
+    const muxed = isMuxedStream(s);
     const prev = byHeight.get(h);
-    if (!prev) byHeight.set(h, { height: h, label: `${h}p`, muxed });
+    if (!prev) byHeight.set(h, { height: h, label: qualityName(h), muxed });
     else if (muxed) prev.muxed = true;
   }
   return [...byHeight.values()].sort((a, b) => b.height - a.height);
 }
 
-/** Streams that can be downloaded as a single file, best first, one per height. */
-export function downloadableStreams(streams: PlayableStream[]): PlayableStream[] {
-  const picked = new Map<number, PlayableStream>();
-  for (const s of streams) {
-    const h = s.height || 0;
-    if (!h || !isMuxedStream(s)) continue;
-    const prev = picked.get(h);
-    // Prefer an MP4 (one file) over an HLS rendition at the same height.
-    if (!prev || (prev.format !== "mp4" && s.format === "mp4")) picked.set(h, s);
+export const qualityName = (h: number) =>
+  h >= 4320 ? "4320p · 8K" : h >= 2160 ? "2160p · 4K" : h >= 1440 ? "1440p · 2K" : `${h}p`;
+
+const formatSize = (bytes: number) =>
+  bytes >= 1e9 ? `${(bytes / 1e9).toFixed(1)} GB` : `${Math.max(1, Math.round(bytes / 1e6))} MB`;
+
+/**
+ * Everything the download sheet can offer, tallest first, one row per height:
+ * a single audio+video file when one exists, otherwise a video-only MP4 paired
+ * with the best audio-only MP4 (joined by the app after download).
+ */
+export function downloadOptions(streams: PlayableStream[]): YtDownloadOption[] {
+  const audios = streams
+    .filter((s) => s.raw?.kind === "audio" && Number(s.raw?.size) > 0)
+    .sort((a, b) => (Number(b.raw.bitrate) || 0) - (Number(a.raw.bitrate) || 0));
+  const bestAudio = audios.find((s) => /mp4a/i.test(String(s.raw?.codec))) || audios[0];
+
+  const rows = new Map<number, YtDownloadOption>();
+  // Merged pairs first, then a muxed file replaces them at the same height.
+  const videos = streams.filter((s) => s.raw?.kind === "video" && Number(s.raw?.size) > 0 && s.height);
+  for (const v of videos) {
+    if (!bestAudio) break;
+    const h = v.height as number;
+    const prev = rows.get(h);
+    // H.264 plays everywhere; AV1 only when nothing else exists at that height.
+    const codecRank = (x: PlayableStream) => (/avc1/i.test(String(x.raw?.codec)) ? 0 : 1);
+    if (prev && codecRank(prev.video) <= codecRank(v)) continue;
+    const bytes = Number(v.raw.size) + Number(bestAudio.raw.size);
+    const codec = /av01/i.test(String(v.raw?.codec)) ? "AV1" : "MP4";
+    rows.set(h, {
+      height: h,
+      label: qualityName(h),
+      detail: `${codec} · ${formatSize(bytes)}`,
+      video: v,
+      audio: bestAudio,
+    });
   }
-  return [...picked.values()].sort((a, b) => (b.height || 0) - (a.height || 0));
+  for (const s of streams) {
+    if (!isMuxedStream(s) || !s.height || s.format === "dash") continue;
+    // HLS with a separate audio group can't be saved; only muxed MP4 or muxed HLS.
+    if (rows.has(s.height) && rows.get(s.height)!.audio) {
+      // Prefer the real file over a merge only when it's an MP4 of equal height.
+      if (s.format !== "mp4") continue;
+    }
+    if (rows.has(s.height) && !rows.get(s.height)!.audio) continue;
+    rows.set(s.height, {
+      height: s.height,
+      label: qualityName(s.height),
+      detail: s.format === "mp4" ? "MP4" : "HLS",
+      video: s,
+    });
+  }
+  return [...rows.values()].sort((a, b) => b.height - a.height);
 }
 
 /** The master adaptive playlist (Auto), when the provider returned one. */

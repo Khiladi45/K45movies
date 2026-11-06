@@ -35,7 +35,7 @@ const ContinueWatching = memo(function ContinueWatching({ navigation }: any) {
           Continue Watching
         </Text>
       </View>
-      <FlatList
+      <FlatList showsVerticalScrollIndicator={false}
         data={items}
         horizontal
         showsHorizontalScrollIndicator={false}

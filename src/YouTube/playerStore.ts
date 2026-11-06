@@ -2,6 +2,9 @@ import { create } from "zustand";
 import type { YtVideo } from "./types";
 
 type MiniState = {
+  /** Play the first related video when one ends. */
+  autoplay: boolean;
+  toggleAutoplay: () => void;
   /** The video shown in the floating mini player, or null when it is closed. */
   mini: { video: YtVideo; position: number } | null;
   setMini: (video: YtVideo, position: number) => void;
@@ -9,6 +12,8 @@ type MiniState = {
 };
 
 export const useYtPlayerStore = create<MiniState>((set) => ({
+  autoplay: true,
+  toggleAutoplay: () => set((s) => ({ autoplay: !s.autoplay })),
   mini: null,
   setMini: (video, position) => set({ mini: { video, position } }),
   clearMini: () => set({ mini: null }),

@@ -67,7 +67,7 @@ function DownloadedSection({
           <Ionicons name="chevron-forward" size={14} color={primaryColor} />
         </TouchableOpacity>
       </View>
-      <ScrollView
+      <ScrollView showsVerticalScrollIndicator={false}
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.downloadRow}
@@ -259,7 +259,7 @@ export default function Watchlist({ navigation }: any) {
         </View>
       ) : (
         /* Movies Grid */
-        <FlatList
+        <FlatList showsHorizontalScrollIndicator={false}
           data={sortedMovies}
           numColumns={3}
           keyExtractor={(item) => item.link}

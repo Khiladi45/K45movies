@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -13,7 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { HOME_TABS } from "../api";
-import { useYtFeed, useYtShorts } from "../hooks";
+import { useYtFeed, useYtMixedFeed, useYtShorts } from "../hooks";
 import { useYtHiddenStore } from "../store";
 import { useYtUiStore } from "../playerStore";
 import { YT } from "../theme";
@@ -63,7 +63,9 @@ export default function YtHomeScreen() {
   const [tabKey, setTabKey] = useState(HOME_TABS[0].key);
   const tab = HOME_TABS.find((t) => t.key === tabKey) ?? HOME_TABS[0];
 
-  const feed = useYtFeed(tab.filter);
+  const single = useYtFeed(tab.filter, !tab.topics);
+  const mixed = useYtMixedFeed(tab.topics ?? [], !!tab.topics);
+  const feed = tab.topics ? mixed : single;
   const shorts = useYtShorts(tab.shortsFilter);
 
   const rows = useMemo<Row[]>(() => {
@@ -94,12 +96,26 @@ export default function YtHomeScreen() {
     shorts.refetch();
   };
 
-  const loadMore = useCallback(() => {
-    if (feed.hasNextPage && !feed.isFetchingNextPage) feed.fetchNextPage();
-    // Keep the shelves supplied: fetch more Shorts as the feed grows.
-    const needed = Math.ceil(rows.length / 6) * SHELF_SIZE + SHELF_SIZE * 2;
-    if (shortsList.length < needed && shorts.hasNextPage && !shorts.isFetchingNextPage) {
-      shorts.fetchNextPage();
+  const loading = useRef(false);
+  const loadMore = useCallback(async () => {
+    if (loading.current) return;
+    loading.current = true;
+    try {
+      // Keep the shelves supplied: fetch more Shorts as the feed grows.
+      const needed = Math.ceil(rows.length / 6) * SHELF_SIZE + SHELF_SIZE * 2;
+      if (shortsList.length < needed && shorts.hasNextPage && !shorts.isFetchingNextPage) {
+        shorts.fetchNextPage();
+      }
+      // A page can hold only videos we already have; try again so the list
+      // keeps growing instead of stalling at the bottom.
+      for (let i = 0; i < 3; i++) {
+        const before = feed.data?.length ?? 0;
+        if (feed.isFetchingNextPage || !feed.hasNextPage) break;
+        const result = await feed.fetchNextPage();
+        if ((result.data?.length ?? 0) > before || !result.hasNextPage) break;
+      }
+    } finally {
+      loading.current = false;
     }
   }, [feed, shorts, rows.length, shortsList.length]);
 
@@ -122,7 +138,7 @@ export default function YtHomeScreen() {
       </View>
 
       <View style={styles.tabsWrap}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs}>
+        <ScrollView showsVerticalScrollIndicator={false} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs}>
           {HOME_TABS.map((t) => {
             const active = t.key === tabKey;
             return (
@@ -150,7 +166,7 @@ export default function YtHomeScreen() {
           </TouchableOpacity>
         </View>
       ) : (
-        <FlatList
+        <FlatList showsHorizontalScrollIndicator={false}
           data={rows}
           keyExtractor={(row) => row.key}
           renderItem={({ item }) =>
@@ -160,6 +176,7 @@ export default function YtHomeScreen() {
               <VideoCard video={item.video} onPress={openVideo} onMenu={openMenu} />
             )
           }
+          showsVerticalScrollIndicator={false}
           initialNumToRender={3}
           maxToRenderPerBatch={4}
           windowSize={7}

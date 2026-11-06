@@ -51,3 +51,57 @@ export const unlockOrientation = () => {
     require("expo-screen-orientation").unlockAsync().catch(() => {});
   } catch {}
 };
+
+// ---- brightness / volume (fullscreen swipe gestures) ----------------------
+
+let Brightness: any = null;
+let VolumeManager: any = null;
+try {
+  Brightness = require("expo-brightness");
+} catch {}
+try {
+  VolumeManager = require("react-native-volume-manager").VolumeManager;
+} catch {}
+
+let brightnessTouched = false;
+
+export const getBrightness = async (): Promise<number> => {
+  try {
+    const v = await Brightness?.getBrightnessAsync?.();
+    return typeof v === "number" ? v : 0.5;
+  } catch {
+    return 0.5;
+  }
+};
+
+export const setBrightness = (value: number) => {
+  brightnessTouched = true;
+  try {
+    Brightness?.setBrightnessAsync?.(value)?.catch?.(() => {});
+  } catch {}
+};
+
+/** Hands brightness back to the system after the player closes. */
+export const restoreBrightness = () => {
+  if (!brightnessTouched) return;
+  brightnessTouched = false;
+  try {
+    Brightness?.restoreSystemBrightnessAsync?.()?.catch?.(() => {});
+  } catch {}
+};
+
+export const getVolume = async (): Promise<number> => {
+  try {
+    const v = await VolumeManager?.getVolume?.();
+    const n = typeof v === "number" ? v : v?.volume;
+    return typeof n === "number" ? n : 0.5;
+  } catch {
+    return 0.5;
+  }
+};
+
+export const setVolume = (value: number) => {
+  try {
+    VolumeManager?.setVolume?.(value, { showUI: false });
+  } catch {}
+};

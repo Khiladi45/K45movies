@@ -582,7 +582,7 @@ export default function ProviderDiagnosticsScreen({ navigation }: any) {
         <View style={{ width: 34 }} />
       </View>
 
-      <ScrollView
+      <ScrollView showsHorizontalScrollIndicator={false}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[
           styles.content,

@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import {
-  downloadableStreams,
+  downloadOptions,
   fetchComments,
   fetchPlayback,
   fetchSearch,
@@ -51,8 +51,59 @@ function usePagedVideos(
   });
 }
 
-export const useYtFeed = (filter: string) =>
-  usePagedVideos(["yt", "feed", filter], (page, signal) => fetchVideos(filter, page, signal));
+export const useYtFeed = (filter: string, enabled = true) =>
+  usePagedVideos(["yt", "feed", filter], (page, signal) => fetchVideos(filter, page, signal), enabled);
+
+const TOPICS_PER_PAGE = 3;
+const MAX_MIXED_PAGES = 400;
+
+/** One video from each list in turn, so no topic dominates a page. */
+function interleave(lists: YtVideo[][]): YtVideo[] {
+  const out: YtVideo[] = [];
+  const longest = Math.max(0, ...lists.map((l) => l.length));
+  for (let i = 0; i < longest; i++) for (const l of lists) if (l[i]) out.push(l[i]);
+  return out;
+}
+
+/**
+ * Endless mixed feed. Page n fetches three topics (cycling through the list,
+ * going one result page deeper each time round) and interleaves them.
+ */
+export const useYtMixedFeed = (topics: string[], enabled = true) =>
+  useInfiniteQuery({
+    queryKey: ["yt", "mixed", topics.join("|")],
+    enabled: enabled && topics.length > 0,
+    initialPageParam: 0,
+    queryFn: async ({ pageParam, signal }) => {
+      const n = topics.length;
+      const picks = Array.from({ length: TOPICS_PER_PAGE }, (_, k) => {
+        const idx = (pageParam as number) * TOPICS_PER_PAGE + k;
+        return { topic: topics[idx % n], page: Math.floor(idx / n) + 1 };
+      });
+      const lists = await Promise.all(
+        picks.map((p) => fetchVideos(p.topic, p.page, signal).catch(() => [] as YtVideo[])),
+      );
+      return interleave(lists);
+    },
+    getNextPageParam: (last, all, param) => {
+      // Stop only if two pages in a row came back empty (network down, etc.).
+      if (last.length === 0 && all.length > 1 && all[all.length - 2].length === 0) return undefined;
+      return (param as number) < MAX_MIXED_PAGES ? (param as number) + 1 : undefined;
+    },
+    select: (data) => {
+      const seen = new Set<string>();
+      const items: YtVideo[] = [];
+      for (const page of data.pages)
+        for (const v of page)
+          if (!seen.has(v.id)) {
+            seen.add(v.id);
+            items.push(v);
+          }
+      return items;
+    },
+    staleTime: FIVE_MIN,
+    retry: 1,
+  });
 
 export const useYtShorts = (query: string) =>
   usePagedVideos(["yt", "shorts", query], (page, signal) => fetchShorts(query, page, signal));
@@ -114,7 +165,7 @@ export const useYtStreamInfo = (link: string, enabled = true) =>
       return {
         qualities: qualitiesOf(streams),
         master: masterStream(streams),
-        downloads: downloadableStreams(streams),
+        downloads: downloadOptions(streams),
       };
     },
     enabled: enabled && !!link,

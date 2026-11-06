@@ -29,6 +29,11 @@ export type DownloadDirectSource = {
   link: string;
   headers?: Record<string, string>;
   format?: string;
+  /** Audio-only file to join with `link` (a video-only MP4) into one file. */
+  audio?: { link: string; headers?: Record<string, string>; size: number };
+  /** Byte size of `link`, needed to download it in ranges. */
+  size?: number;
+  height?: number;
 };
 
 export type DownloadJob = {

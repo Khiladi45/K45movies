@@ -3,6 +3,7 @@ import { StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from "r
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { YT } from "../theme";
+import { prefetchStreams } from "../api";
 import type { YtVideo } from "../types";
 
 type Props = {
@@ -21,6 +22,9 @@ function VideoCard({ video, onPress, onMenu }: Props) {
     <View style={styles.card}>
       <TouchableOpacity
         activeOpacity={0.9}
+        // Start resolving the stream the moment a finger lands, so playback is
+        // already underway when the page opens.
+        onPressIn={() => prefetchStreams(video.link)}
         onPress={() => onPress(video)}
         accessibilityRole="button"
         accessibilityLabel={video.title}

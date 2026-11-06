@@ -183,7 +183,7 @@ export default function SourcesPanel({
   return (
     <View>
       {providers.length > 0 ? (
-        <ScrollView
+        <ScrollView showsVerticalScrollIndicator={false}
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.chips}

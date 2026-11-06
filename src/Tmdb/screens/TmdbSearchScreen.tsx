@@ -153,7 +153,7 @@ export default function TmdbSearchScreen({ navigation }: any) {
       {!tmdbConfigured() ? (
         <MissingKeyNotice />
       ) : (
-        <FlatList
+        <FlatList showsHorizontalScrollIndicator={false}
           data={active && !isLoading && !isError ? data || [] : []}
           numColumns={3}
           keyExtractor={(item) => `${item.mediaType}:${item.id}`}

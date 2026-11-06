@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
-  Dimensions,
   Easing,
   Modal,
   Pressable,
@@ -9,6 +8,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -26,6 +26,7 @@ type Props = {
 /** Bottom sheet: dimmed backdrop, slides up, tap outside or Back to close. */
 export default function YtSheet({ visible, onClose, title, heightRatio, children }: Props) {
   const insets = useSafeAreaInsets();
+  const { width: screenW, height: screenH } = useWindowDimensions();
   const [mounted, setMounted] = useState(visible);
   const progress = useRef(new Animated.Value(0)).current;
 
@@ -50,19 +51,30 @@ export default function YtSheet({ visible, onClose, title, heightRatio, children
   }, [visible]);
 
   if (!mounted) return null;
-  const screenH = Dimensions.get("window").height;
+  // A floating card, never edge to edge: at most 460px wide, centred. In
+  // landscape it is narrower still and capped by the screen height.
+  const cardW = Math.min(screenW - 24, 460);
+  const landscape = screenW > screenH;
   const translateY = progress.interpolate({ inputRange: [0, 1], outputRange: [screenH, 0] });
 
   return (
-    <Modal transparent visible animationType="none" onRequestClose={onClose} statusBarTranslucent>
+    <Modal
+      transparent
+      visible
+      animationType="none"
+      onRequestClose={onClose}
+      statusBarTranslucent
+      supportedOrientations={["portrait", "landscape"]}
+    >
       <Animated.View style={[styles.backdrop, { opacity: progress }]}>
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
       </Animated.View>
       <Animated.View
         style={[
           styles.sheet,
-          heightRatio ? { height: screenH * heightRatio } : { maxHeight: screenH * 0.85 },
-          { paddingBottom: insets.bottom, transform: [{ translateY }] },
+          { width: cardW, left: (screenW - cardW) / 2 },
+          heightRatio ? { height: screenH * (landscape ? Math.min(heightRatio, 0.9) : heightRatio) } : { maxHeight: screenH * (landscape ? 0.92 : 0.85) },
+          { bottom: Math.max(insets.bottom, 12), paddingBottom: 6, transform: [{ translateY }] },
         ]}
       >
         <View style={styles.grab} />
@@ -86,12 +98,8 @@ const styles = StyleSheet.create({
   backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.6)" },
   sheet: {
     position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: YT.surfaceAlt,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    backgroundColor: "#212121",
+    borderRadius: 22,
     overflow: "hidden",
   },
   grab: {

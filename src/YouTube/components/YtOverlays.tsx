@@ -7,9 +7,11 @@ import { useYtHiddenStore, useYtLibraryStore } from "../store";
 import { useYtUiStore } from "../playerStore";
 import { notify, shareVideo } from "../utils";
 import { YT } from "../theme";
-import type { YtVideo } from "../types";
+import type { YtDownloadOption, YtVideo } from "../types";
 import YtSheet from "./YtSheet";
 import YtToast from "./YtToast";
+import YtMiniPlayer from "./YtMiniPlayer";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type IconName = React.ComponentProps<typeof Ionicons>["name"];
 
@@ -91,7 +93,7 @@ function DownloadSheet() {
   const info = useYtStreamInfo(v?.link ?? "", !!video);
   const [busy, setBusy] = useState(false);
 
-  const begin = async (stream?: any) => {
+  const begin = async (option?: YtDownloadOption) => {
     if (!v || busy) return;
     setBusy(true);
     const result = await startDownload({
@@ -100,7 +102,8 @@ function DownloadSheet() {
       providerId: "youtube",
       type: "movie",
       image: v.image,
-      stream,
+      stream: option?.video,
+      audioStream: option?.audio,
     });
     setBusy(false);
     close();
@@ -111,23 +114,21 @@ function DownloadSheet() {
 
   return (
     <YtSheet visible={!!video} onClose={close} title="Download video">
-      <ScrollView style={styles.dlList} bounces={false}>
+      <ScrollView showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false} style={styles.dlList} bounces={false}>
         {info.isLoading ? (
           [0, 1, 2].map((i) => <View key={i} style={styles.skeleton} />)
         ) : downloads.length > 0 ? (
-          downloads.map((s) => (
+          downloads.map((o) => (
             <TouchableOpacity
-              key={s.link}
+              key={o.height}
               style={styles.dlRow}
               disabled={busy}
-              onPress={() => begin(s)}
+              onPress={() => begin(o)}
               accessibilityRole="button"
             >
               <View style={{ flex: 1 }}>
-                <Text style={styles.dlQuality}>{s.height}p</Text>
-                <Text style={styles.dlMeta}>
-                  {s.format === "mp4" ? "MP4 · video + audio" : "HLS · video + audio"}
-                </Text>
+                <Text style={styles.dlQuality}>{o.label}</Text>
+                <Text style={styles.dlMeta}>{o.detail}</Text>
               </View>
               <Ionicons name="download-outline" size={22} color={YT.blue} />
             </TouchableOpacity>
@@ -150,9 +151,17 @@ function DownloadSheet() {
 }
 
 /** Sheets and toast shared by every screen of the YouTube layout. */
-export default function YtOverlays() {
+const TAB_ROUTES = ["HomeTab", "Watchlist", "Profile", "Providers"];
+const HIDE_MINI_ON = ["YtVideo", "Shorts", "Player"];
+
+export default function YtOverlays({ routeName }: { routeName?: string }) {
+  const insets = useSafeAreaInsets();
+  const showMini = !!routeName && !HIDE_MINI_ON.includes(routeName);
+  // Above the footer on tab screens, above the gesture bar elsewhere.
+  const miniBottom = (TAB_ROUTES.includes(routeName ?? "") ? 50 + insets.bottom : insets.bottom) + 12;
   return (
     <>
+      {showMini ? <YtMiniPlayer bottom={miniBottom} /> : null}
       <MenuSheet />
       <DownloadSheet />
       <YtToast />

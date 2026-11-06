@@ -379,7 +379,7 @@ export default function SeasonList({
                 <Ionicons name="close" size={24} color="#fff" />
               </TouchableOpacity>
             </View>
-            <ScrollView
+            <ScrollView showsHorizontalScrollIndicator={false}
               style={styles.dropdownList}
               showsVerticalScrollIndicator={false}
             >
@@ -435,7 +435,7 @@ export default function SeasonList({
               />
             )}
             <Text style={styles.detailsTitle}>{details?.title}</Text>
-            <ScrollView
+            <ScrollView showsHorizontalScrollIndicator={false}
               style={{ maxHeight: 260 }}
               showsVerticalScrollIndicator={false}
             >
