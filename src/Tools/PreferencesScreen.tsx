@@ -556,7 +556,7 @@ export default function PreferencesScreen({ navigation }: any) {
         <Text style={styles.sectionTitle}>SUBTITLES</Text>
         <View style={styles.card}>
           <SwitchRow
-            icon="subtitles-outline"
+            icon="document-text-outline"
             title="Default subtitles"
             subtitle="Turn on a matching track when playback starts"
             value={prefs.autoSubtitles}

@@ -12,6 +12,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { providerApi } from "@/lib/providerApi";
+import { fillMissingPosters } from "@/lib/tmdbPosters";
 import { useThemeStore } from "@/store/useThemeStore";
 import Skeleton from "@/components/Skeleton";
 
@@ -67,10 +68,8 @@ export default function CategoryScreen({ route, navigation }: any) {
       setError(null);
 
       try {
-        const payload = await providerApi.getPosts(
-          providerId,
-          filter,
-          nextPage,
+        const payload = await fillMissingPosters(
+          await providerApi.getPosts(providerId, filter, nextPage),
         );
         if (!mounted.current) return;
         const incoming = extractPosts(payload).filter(

@@ -7,9 +7,14 @@
 
 const PROVIDERS = [
   {
-    id: "1cinevood",
+    id: "1flex",
     modules: ["catalog","posts","meta","stream","episodes"],
-    load: () => require("./bundles/1cinevood.js"),
+    load: () => require("./bundles/1flex.js"),
+  },
+  {
+    id: "1tamilmv",
+    modules: ["catalog","posts","meta","stream","episodes"],
+    load: () => require("./bundles/1tamilmv.js"),
   },
   {
     id: "4khdhub",
@@ -20,11 +25,6 @@ const PROVIDERS = [
     id: "Joya9tv",
     modules: ["catalog","posts","meta","stream","episodes"],
     load: () => require("./bundles/Joya9tv.js"),
-  },
-  {
-    id: "a111477",
-    modules: ["catalog","posts","meta","stream","episodes"],
-    load: () => require("./bundles/a111477.js"),
   },
   {
     id: "anikoto",
@@ -40,11 +40,6 @@ const PROVIDERS = [
     id: "animesub",
     modules: ["catalog","posts","meta","stream"],
     load: () => require("./bundles/animesub.js"),
-  },
-  {
-    id: "animetsu",
-    modules: ["catalog","posts","meta","stream"],
-    load: () => require("./bundles/animetsu.js"),
   },
   {
     id: "animeworld",
@@ -67,34 +62,14 @@ const PROVIDERS = [
     load: () => require("./bundles/disneyMirror.js"),
   },
   {
-    id: "dooflix",
-    modules: ["catalog","posts","meta","stream"],
-    load: () => require("./bundles/dooflix.js"),
-  },
-  {
-    id: "dramacool",
-    modules: ["catalog","posts","meta","stream"],
-    load: () => require("./bundles/dramacool.js"),
-  },
-  {
     id: "drive",
     modules: ["catalog","posts","meta","stream","episodes"],
     load: () => require("./bundles/drive.js"),
   },
   {
-    id: "everything",
-    modules: ["catalog","posts","meta","stream"],
-    load: () => require("./bundles/everything.js"),
-  },
-  {
     id: "gokuHD",
     modules: ["catalog","posts","meta","stream","episodes"],
     load: () => require("./bundles/gokuHD.js"),
-  },
-  {
-    id: "guardahd",
-    modules: ["catalog","posts","meta","stream"],
-    load: () => require("./bundles/guardahd.js"),
   },
   {
     id: "hdhub4u",
@@ -105,11 +80,6 @@ const PROVIDERS = [
     id: "hiAnime",
     modules: ["catalog","posts","meta","stream"],
     load: () => require("./bundles/hiAnime.js"),
-  },
-  {
-    id: "kartoons",
-    modules: ["catalog","posts","meta","stream","episodes"],
-    load: () => require("./bundles/kartoons.js"),
   },
   {
     id: "kickAssAnime",
@@ -147,6 +117,11 @@ const PROVIDERS = [
     load: () => require("./bundles/movies4u.js"),
   },
   {
+    id: "moviesda",
+    modules: ["catalog","posts","meta","stream","episodes"],
+    load: () => require("./bundles/moviesda.js"),
+  },
+  {
     id: "moviezwap",
     modules: ["catalog","posts","meta","stream","episodes"],
     load: () => require("./bundles/moviezwap.js"),
@@ -167,19 +142,9 @@ const PROVIDERS = [
     load: () => require("./bundles/netflixMirror.js"),
   },
   {
-    id: "ogomovies",
-    modules: ["catalog","posts","meta","stream"],
-    load: () => require("./bundles/ogomovies.js"),
-  },
-  {
     id: "primeMirror",
     modules: ["catalog","posts","meta","stream","episodes"],
     load: () => require("./bundles/primeMirror.js"),
-  },
-  {
-    id: "ringz",
-    modules: ["catalog","posts","meta","stream"],
-    load: () => require("./bundles/ringz.js"),
   },
   {
     id: "showbox",
@@ -200,11 +165,6 @@ const PROVIDERS = [
     id: "uniquestream",
     modules: ["catalog","posts","meta","stream","episodes"],
     load: () => require("./bundles/uniquestream.js"),
-  },
-  {
-    id: "vadapav",
-    modules: ["catalog","posts","meta","stream","episodes"],
-    load: () => require("./bundles/vadapav.js"),
   },
   {
     id: "vega",

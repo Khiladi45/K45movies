@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { providerApi } from "../lib/providerApi";
+import { fillMissingPosters } from "../lib/tmdbPosters";
 
 export const useCatalog = (providerId: string) => {
   return useQuery({
@@ -12,7 +13,10 @@ export const useCatalog = (providerId: string) => {
 export const usePosts = (providerId: string, filter: string) => {
   return useQuery({
     queryKey: ["posts", providerId, filter],
-    queryFn: ({ signal }) => providerApi.getPosts(providerId, filter, 1, signal),
+    queryFn: async ({ signal }) => {
+      const posts = await providerApi.getPosts(providerId, filter, 1, signal);
+      return fillMissingPosters(posts, signal);
+    },
     enabled: !!providerId && !!filter,
   });
 };

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, PanResponder, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { formatClock, getBrightness, getVolume, setBrightness, setVolume } from "../utils";
 
 type Props = {
@@ -265,7 +265,7 @@ export default function YtControls(p: Props) {
 
         <View style={[styles.top, p.fullscreen && { paddingHorizontal: 12 }]} pointerEvents="box-none">
           <TouchableOpacity style={styles.icon} onPress={poke(p.onMinimize)} accessibilityLabel="Minimize player">
-            <Ionicons name="chevron-down" size={30} color="#fff" />
+            <Ionicons name="chevron-down" size={23} color="#fff" />
           </TouchableOpacity>
           {p.fullscreen ? (
             <View style={styles.titleBlock} pointerEvents="none">
@@ -283,23 +283,23 @@ export default function YtControls(p: Props) {
           )}
           <TouchableOpacity style={styles.pill} onPress={poke(p.onAutoplay)} accessibilityRole="switch" accessibilityState={{ checked: p.autoplay }} accessibilityLabel="Autoplay">
             <View style={[styles.pillKnob, p.autoplay && styles.pillKnobOn]}>
-              <Ionicons name={p.autoplay ? "play" : "pause"} size={11} color="#222" />
+              <Ionicons name={p.autoplay ? "play" : "pause"} size={10} color="#222" />
             </View>
           </TouchableOpacity>
           <TouchableOpacity style={styles.icon} onPress={poke(p.onCaptions)} accessibilityLabel="Captions">
-            <Ionicons name="text-outline" size={24} color="#fff" />
+             <MaterialCommunityIcons name="closed-caption-outline"size={25}color="#fff" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.icon} onPress={poke(p.onSettings)} accessibilityLabel="Settings">
-            <Ionicons name="settings-outline" size={24} color="#fff" />
+            <Ionicons name="settings-outline" size={21} color="#fff" />
           </TouchableOpacity>
         </View>
 
         <View style={styles.center} pointerEvents="box-none">
           <TouchableOpacity style={styles.side} onPress={poke(p.onPrev)} accessibilityLabel="Previous">
-            <Ionicons name="play-skip-back" size={30} color="#fff" />
+            <Ionicons name="play-skip-back" size={25} color="#fff" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.play} onPress={poke(p.onToggle)} accessibilityLabel={p.playing ? "Pause" : "Play"}>
-            <Ionicons name={p.playing ? "pause" : "play"} size={54} color="#fff" />
+            <Ionicons name={p.playing ? "pause" : "play"} size={50} color="#fff" />
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.side, !p.onNext && { opacity: 0.4 }]}
@@ -307,7 +307,7 @@ export default function YtControls(p: Props) {
             onPress={poke(p.onNext ?? (() => {}))}
             accessibilityLabel="Next video"
           >
-            <Ionicons name="play-skip-forward" size={30} color="#fff" />
+            <Ionicons name="play-skip-forward" size={25} color="#fff" />
           </TouchableOpacity>
         </View>
 
@@ -318,7 +318,7 @@ export default function YtControls(p: Props) {
             </Text>
             <View style={{ flex: 1 }} />
             <TouchableOpacity style={styles.iconSm} onPress={poke(p.onFullscreen)} accessibilityLabel={p.fullscreen ? "Exit fullscreen" : "Fullscreen"}>
-              <Ionicons name={p.fullscreen ? "contract-outline" : "expand-outline"} size={24} color="#fff" />
+              <MaterialCommunityIcons name={p.fullscreen ? "arrow-collapse" : "arrow-expand"} size={p.fullscreen ? 27 : 23} color="#fff" />
             </TouchableOpacity>
           </View>
           {p.fullscreen ? (
@@ -350,15 +350,15 @@ export default function YtControls(p: Props) {
 }
 
 const styles = StyleSheet.create({
-  shade: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.4)" },
+  shade: { ...StyleSheet.absoluteFill, backgroundColor: "rgba(0,0,0,0.4)" },
   top: { flexDirection: "row", alignItems: "center", paddingHorizontal: 4, paddingTop: 4 },
   titleBlock: { flex: 1, paddingHorizontal: 6 },
   title: { color: "#fff", fontSize: 17, fontWeight: "700" },
   channel: { color: "rgba(255,255,255,0.7)", fontSize: 13, marginTop: 1 },
   icon: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
   iconSm: { width: 40, height: 40, alignItems: "center", justifyContent: "center" },
-  pill: { width: 46, height: 26, borderRadius: 13, backgroundColor: "rgba(255,255,255,0.28)", justifyContent: "center", paddingHorizontal: 2, marginHorizontal: 6 },
-  pillKnob: { width: 22, height: 22, borderRadius: 11, backgroundColor: "#d9d9d9", alignItems: "center", justifyContent: "center", alignSelf: "flex-start" },
+  pill: { width: 36, height: 22, borderRadius: 13, backgroundColor: "rgba(255,255,255,0.28)", justifyContent: "center", paddingHorizontal: 2, marginHorizontal: 6 },
+  pillKnob: { width: 15, height: 15, borderRadius: 11, backgroundColor: "#d9d9d9", alignItems: "center", justifyContent: "center", alignSelf: "flex-start" },
   pillKnobOn: { alignSelf: "flex-end", backgroundColor: "#fff" },
   center: { position: "absolute", left: 0, right: 0, top: 0, bottom: 0, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 56 },
   side: { width: 52, height: 52, alignItems: "center", justifyContent: "center" },
