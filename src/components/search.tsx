@@ -161,7 +161,7 @@ export default function GlobalSearch({ navigation }: any) {
       </View>
 
       {/* 📱 CONTENT AREA */}
-      <FlatList
+      <FlatList showsHorizontalScrollIndicator={false}
         style={styles.content}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
@@ -343,7 +343,7 @@ export default function GlobalSearch({ navigation }: any) {
                 </View>
               </View>
 
-              <FlatList
+              <FlatList showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false}
                 data={items}
                 numColumns={3}
                 scrollEnabled={false}

@@ -3,6 +3,7 @@ import { Directory, File, FileMode, Paths } from "expo-file-system";
 import * as Network from "expo-network";
 import { providerApi } from "@/lib/providerApi";
 import { PlayableStream, selectPlaybackStreams } from "@/lib/streams";
+import { muxFragmentedMp4, type ByteSource } from "@/lib/mp4Mux";
 import { DEFAULT_UA } from "@/services/SandboxManager";
 import {
   DownloadJob,
@@ -564,6 +565,164 @@ async function downloadHls(
   }
 }
 
+
+const RANGE_CHUNK = 8 * 1024 * 1024;
+const RANGE_AHEAD = 3;
+
+/** Downloads `size` bytes of `url` in ranges (googlevideo throttles one big GET). */
+async function downloadRanged(
+  url: string,
+  headers: Record<string, string>,
+  size: number,
+  dest: File,
+  signal: AbortSignal,
+  onBytes: (n: number) => void,
+) {
+  dest.create();
+  const handle = dest.open(FileMode.Append);
+  const total = Math.ceil(size / RANGE_CHUNK);
+  const sep = url.includes("?") ? "&" : "?";
+  const pending = new Map<number, Promise<Uint8Array>>();
+
+  const fetchChunk = async (i: number): Promise<Uint8Array> => {
+    const start = i * RANGE_CHUNK;
+    const end = Math.min(size - 1, start + RANGE_CHUNK - 1);
+    let lastError: any;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        assertNotAborted(signal);
+        const response = await fetch(`${url}${sep}range=${start}-${end}`, { headers, signal });
+        if (!response.ok) throw new Error(`Server returned ${response.status}`);
+        const bytes = new Uint8Array(await response.arrayBuffer());
+        if (bytes.byteLength !== end - start + 1) throw new Error("Short read");
+        return bytes;
+      } catch (error) {
+        if (signal.aborted) throw error;
+        lastError = error;
+      }
+    }
+    throw lastError;
+  };
+
+  try {
+    for (let i = 0; i < total; i++) {
+      for (let j = i; j < Math.min(total, i + RANGE_AHEAD); j++) {
+        if (!pending.has(j)) {
+          const p = fetchChunk(j);
+          p.catch(() => {});
+          pending.set(j, p);
+        }
+      }
+      const bytes = await pending.get(i)!;
+      pending.delete(i);
+      handle.writeBytes(bytes);
+      onBytes(bytes.byteLength);
+    }
+  } finally {
+    try {
+      handle.close();
+    } catch {}
+  }
+}
+
+const readOnlyMode = () => (FileMode as any).ReadOnly ?? (FileMode as any).Read;
+
+function fileSource(file: File): { source: ByteSource; close: () => void } {
+  const handle: any = file.open(readOnlyMode());
+  return {
+    source: {
+      size: file.size || 0,
+      read: async (offset, length) => {
+        handle.offset = offset;
+        return handle.readBytes(length);
+      },
+    },
+    close: () => {
+      try {
+        handle.close();
+      } catch {}
+    },
+  };
+}
+
+/**
+ * 1080p-4K YouTube files come as separate video and audio MP4s. Download both
+ * (in parallel), then join them into one file without re-encoding.
+ */
+async function downloadMergedMp4(
+  job: DownloadJob,
+  jobId: string,
+  controller: AbortController,
+): Promise<{ merged: File; tempDir: Directory; ext: "mp4" }> {
+  const { signal } = controller;
+  const direct = job.direct!;
+  const audio = direct.audio!;
+  const videoSize = direct.size || 0;
+  if (!videoSize || !audio.size) {
+    throw new Error("The file size of this quality is unknown. Pick another quality.");
+  }
+
+  const tempDir = new Directory(Paths.cache, "k45-ymerge", shortHash(jobId));
+  if (tempDir.exists) tempDir.delete();
+  tempDir.create({ intermediates: true });
+
+  const videoFile = new File(tempDir, "video.mp4");
+  const audioFile = new File(tempDir, "audio.mp4");
+  const merged = new File(tempDir, "merged.mp4");
+  const grand = videoSize + audio.size;
+  let received = 0;
+  const report = (n: number) => {
+    received += n;
+    useDownloadsStore.getState().patchJob(jobId, {
+      status: "downloading",
+      bytesReceived: received,
+      bytesTotal: grand,
+      progress: (received / grand) * 0.9,
+    });
+  };
+
+  try {
+    await Promise.all([
+      downloadRanged(direct.link, withUa(direct.headers), videoSize, videoFile, signal, report),
+      downloadRanged(audio.link, withUa(audio.headers), audio.size, audioFile, signal, report),
+    ]);
+    assertNotAborted(signal);
+
+    useDownloadsStore.getState().patchJob(jobId, { status: "merging", progress: 0.9 });
+    merged.create();
+    const out = merged.open(FileMode.Append);
+    const v = fileSource(videoFile);
+    const a = fileSource(audioFile);
+    try {
+      await muxFragmentedMp4(
+        v.source,
+        a.source,
+        { write: (bytes) => out.writeBytes(bytes) },
+        (ratio) =>
+          useDownloadsStore.getState().patchJob(jobId, {
+            status: "merging",
+            progress: 0.9 + ratio * 0.1,
+          }),
+      );
+    } finally {
+      v.close();
+      a.close();
+      try {
+        out.close();
+      } catch {}
+    }
+    deleteQuietly(videoFile);
+    deleteQuietly(audioFile);
+    if (!merged.exists || merged.size <= 0) throw new Error("The joined file is empty.");
+    return { merged, tempDir, ext: "mp4" };
+  } catch (error) {
+    try {
+      if (tempDir.exists) tempDir.delete();
+    } catch {}
+    throw error;
+  }
+}
+
 async function finalizeHls(
   merged: File,
   tempDir: Directory,
@@ -681,6 +840,28 @@ async function runJob(id: string) {
         headers: picked.headers,
         format: picked.format,
       };
+    }
+
+    if (job.direct?.audio) {
+      const result = await downloadMergedMp4(job, id, controller);
+      hlsTempDir = result.tempDir;
+      const label = job.direct.height ? `-${job.direct.height}p` : "";
+      const fileName = `${sanitizeFileName(job.title)}${label}-${shortHash(job.link)}.mp4`;
+      useDownloadsStore.getState().patchJob(id, { status: "saving", progress: 1 });
+      const finalFile = await finalizeHls(result.merged, result.tempDir, "mp4", fileName, job);
+      createdFile = finalFile;
+      assertNotAborted(controller.signal);
+      const size = ensureVerified(finalFile);
+      useDownloadsStore.getState().patchJob(id, {
+        status: "completed",
+        progress: 1,
+        bytesReceived: size,
+        bytesTotal: size,
+        fileUri: finalFile.uri,
+        completedAt: Date.now(),
+        error: undefined,
+      });
+      return;
     }
 
     const url = chosen.link;
@@ -842,6 +1023,8 @@ type StartOptions = {
   image?: string;
   /** Stream picked in the quality sheet; downloaded without re-resolving. */
   stream?: PlayableStream;
+  /** With a video-only `stream`: the audio-only file to join it with. */
+  audioStream?: PlayableStream;
 };
 
 export async function startDownload(
@@ -887,6 +1070,16 @@ export async function startDownload(
           link: options.stream.link,
           headers: options.stream.headers,
           format: options.stream.format,
+          size: Number(options.stream.raw?.size) || undefined,
+          height: options.stream.height || undefined,
+          audio:
+            options.audioStream && Number(options.audioStream.raw?.size) > 0
+              ? {
+                  link: options.audioStream.link,
+                  headers: options.audioStream.headers,
+                  size: Number(options.audioStream.raw.size),
+                }
+              : undefined,
         }
       : undefined,
     storage: useCustom ? "custom" : "app",

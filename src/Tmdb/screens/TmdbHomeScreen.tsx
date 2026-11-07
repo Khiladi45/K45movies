@@ -60,7 +60,7 @@ function Hero() {
 
   return (
     <View style={styles.heroWrap}>
-      <FlatList
+      <FlatList showsVerticalScrollIndicator={false}
         data={items}
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -162,7 +162,7 @@ export default function TmdbHomeScreen() {
 
   return (
     <View style={styles.screen}>
-      <FlatList
+      <FlatList showsHorizontalScrollIndicator={false}
         data={[0]}
         keyExtractor={() => "home"}
         showsVerticalScrollIndicator={false}

@@ -128,7 +128,7 @@ export default function UserSettings({ navigation }: any) {
 
   return (
     <View style={styles.container}>
-      <ScrollView
+      <ScrollView showsHorizontalScrollIndicator={false}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
@@ -576,7 +576,7 @@ function AddEditProfileModal({
 
           {/* Preset Avatars */}
           <Text style={styles.presetTitle}>Or choose an avatar</Text>
-          <ScrollView
+          <ScrollView showsVerticalScrollIndicator={false}
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.presetScroll}

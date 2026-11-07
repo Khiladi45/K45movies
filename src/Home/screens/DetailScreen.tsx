@@ -94,7 +94,7 @@ function Shimmer({ style, width, height, borderRadius = 6 }: any) {
 // ===== Full-page skeleton matching the real layout =====
 function DetailSkeleton() {
   return (
-    <ScrollView
+    <ScrollView showsHorizontalScrollIndicator={false}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ paddingBottom: 40 }}
     >
@@ -785,7 +785,7 @@ export default function DetailScreen({ route, navigation }: any) {
           transform: [{ translateY: slideAnim }],
         }}
       >
-        <ScrollView
+        <ScrollView showsHorizontalScrollIndicator={false}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 40 }}
         >
@@ -885,7 +885,7 @@ export default function DetailScreen({ route, navigation }: any) {
 
           {/* 🎭 GENRES */}
           {genreList.length > 0 && (
-            <ScrollView
+            <ScrollView showsVerticalScrollIndicator={false}
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.genreScroll}
@@ -1006,7 +1006,7 @@ export default function DetailScreen({ route, navigation }: any) {
             <Text style={modalStyles.subtitle} numberOfLines={1}>
               {meta.title || movie.title}
             </Text>
-            <ScrollView
+            <ScrollView showsHorizontalScrollIndicator={false}
               style={modalStyles.list}
               showsVerticalScrollIndicator={false}
             >

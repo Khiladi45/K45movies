@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import { View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import BottomTabs from "./footer";
@@ -12,12 +13,20 @@ import CategoryScreen from "@/Home/screens/CategoryScreen";
 import PreferencesScreen from "@/Tools/PreferencesScreen";
 import ProviderDiagnosticsScreen from "@/Tools/ProviderDiagnosticsScreen";
 import TmdbDetailScreen from "@/Tmdb/screens/TmdbDetailScreen";
+import YtVideoScreen from "@/YouTube/screens/YtVideoScreen";
+import YtSearchScreen from "@/YouTube/screens/YtSearchScreen";
+import YtOverlays from "@/YouTube/components/YtOverlays";
+import { useLayoutStore } from "@/store/useLayoutStore";
 
 const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
+  const youtube = useLayoutStore((s) => s.layout === "youtube");
+  const [routeName, setRouteName] = useState<string | undefined>();
+  const syncRoute = () => setRouteName(navigationRef.getCurrentRoute()?.name);
   return (
-    <NavigationContainer ref={navigationRef}>
+    <View style={{ flex: 1 }}>
+    <NavigationContainer ref={navigationRef} onReady={syncRoute} onStateChange={syncRoute}>
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
@@ -53,6 +62,23 @@ export default function AppNavigator() {
           component={TmdbDetailScreen}
           options={{
             title: "Details",
+            animation: "slide_from_bottom",
+          }}
+        />
+
+        {/* YouTube layout only: search (suggestions + results) */}
+        <Stack.Screen
+          name="YtSearch"
+          component={YtSearchScreen}
+          options={{ animation: "slide_from_right" }}
+        />
+
+        {/* YouTube layout only: video page with player and related videos */}
+        <Stack.Screen
+          name="YtVideo"
+          component={YtVideoScreen}
+          options={{
+            title: "Video",
             animation: "slide_from_bottom",
           }}
         />
@@ -103,5 +129,7 @@ export default function AppNavigator() {
         />
       </Stack.Navigator>
     </NavigationContainer>
+    {youtube ? <YtOverlays routeName={routeName} /> : null}
+    </View>
   );
 }

@@ -1,10 +1,23 @@
-import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  Animated,
+  Easing,
+  LayoutAnimation,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  UIManager,
+  View,
+} from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { Dropdown } from "react-native-element-dropdown";
 import { useThemeStore } from "@/store/useThemeStore";
 import { useLayoutStore, type AppLayout } from "@/store/useLayoutStore";
 import { AUDIO_LANGUAGE_OPTIONS } from "@/lib/languages";
+
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 const OPTIONS: {
   value: AppLayout;
@@ -24,6 +37,13 @@ const OPTIONS: {
     description: "Browse movies and series from TMDB, then find streams",
     icon: "movie-open-outline",
   },
+  {
+    value: "youtube",
+    title: "YouTube Layout",
+    description:
+      "Video feed with Shorts, a video page, search history and a Watchlist",
+    icon: "youtube",
+  },
 ];
 
 /**
@@ -36,6 +56,30 @@ export default function LayoutSettingsSection() {
   const setLayout = useLayoutStore((s) => s.setLayout);
   const preferredLanguage = useLayoutStore((s) => s.preferredLanguage);
   const setPreferredLanguage = useLayoutStore((s) => s.setPreferredLanguage);
+  // "Choose Layout" starts collapsed; tapping the header opens the options.
+  const [open, setOpen] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const turn = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.timing(turn, {
+      toValue: open ? 1 : 0,
+      duration: 200,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [open, turn]);
+
+  const toggle = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setOpen((v) => !v);
+  };
+  const togglePicker = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setPickerOpen((v) => !v);
+  };
+  const current = layout === "youtube" ? "YouTube Layout" : layout === "movie" ? "Movie Based" : "Provider Based";
+  const selectedLanguage =
+    AUDIO_LANGUAGE_OPTIONS.find((o) => o.value === preferredLanguage) ?? AUDIO_LANGUAGE_OPTIONS[0];
 
   return (
     <View style={styles.sectionContainer}>
@@ -51,7 +95,14 @@ export default function LayoutSettingsSection() {
       </View>
 
       <View style={styles.card}>
-        <View style={styles.rowHead}>
+        <TouchableOpacity
+          style={styles.rowHead}
+          activeOpacity={0.8}
+          onPress={toggle}
+          accessibilityRole="button"
+          accessibilityState={{ expanded: open }}
+          accessibilityLabel="Choose Layout"
+        >
           <View
             style={[styles.iconBox, { backgroundColor: `${primaryColor}1A` }]}
           >
@@ -63,12 +114,22 @@ export default function LayoutSettingsSection() {
           </View>
           <View style={styles.rowText}>
             <Text style={styles.title}>Choose Layout</Text>
-            <Text style={styles.subtitle}>
-              Switch how Home and Search find content
+            <Text style={styles.subtitle} numberOfLines={1}>
+              {open ? "Switch how Home and Search find content" : current}
             </Text>
           </View>
-        </View>
+          <Animated.View
+            style={{
+              transform: [
+                { rotate: turn.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "180deg"] }) },
+              ],
+            }}
+          >
+            <Ionicons name="chevron-down" size={22} color="#8b93a0" />
+          </Animated.View>
+        </TouchableOpacity>
 
+        {open ? (
         <View style={styles.options}>
           {OPTIONS.map((option) => {
             const selected = layout === option.value;
@@ -113,8 +174,9 @@ export default function LayoutSettingsSection() {
             );
           })}
         </View>
+        ) : null}
 
-        {layout === "movie" ? (
+        {layout === "movie" && open ? (
           <View style={styles.languageBlock}>
             <View style={styles.rowHead}>
               <View
@@ -129,27 +191,45 @@ export default function LayoutSettingsSection() {
                 </Text>
               </View>
             </View>
-            <Dropdown
-              style={styles.dropdown}
-              containerStyle={styles.dropdownList}
-              placeholderStyle={styles.dropdownPlaceholder}
-              selectedTextStyle={styles.dropdownSelected}
-              itemTextStyle={styles.dropdownItem}
-              inputSearchStyle={styles.dropdownSearch}
-              activeColor={`${primaryColor}22`}
-              iconColor="#8b93a0"
-              data={AUDIO_LANGUAGE_OPTIONS}
-              labelField="label"
-              valueField="value"
-              search
-              searchPlaceholder="Search language"
-              maxHeight={320}
-              placeholder="Select language"
-              value={preferredLanguage}
-              onChange={(item: { value: string }) =>
-                setPreferredLanguage(item.value)
-              }
-            />
+            <TouchableOpacity
+              style={[styles.field, pickerOpen && { borderColor: primaryColor }]}
+              activeOpacity={0.85}
+              onPress={togglePicker}
+              accessibilityRole="button"
+              accessibilityLabel="Preferred audio language"
+            >
+              <Text style={styles.fieldText}>{selectedLanguage.label}</Text>
+              <Ionicons name={pickerOpen ? "chevron-up" : "chevron-down"} size={20} color="#8b93a0" />
+            </TouchableOpacity>
+            {pickerOpen ? (
+              <View style={styles.list}>
+                {AUDIO_LANGUAGE_OPTIONS.map((option, i) => {
+                  const active = option.value === preferredLanguage;
+                  return (
+                    <TouchableOpacity
+                      key={option.value}
+                      style={[
+                        styles.listRow,
+                        i > 0 && styles.listRowBorder,
+                        active && { backgroundColor: `${primaryColor}1A` },
+                      ]}
+                      activeOpacity={0.8}
+                      onPress={() => {
+                        setPreferredLanguage(option.value);
+                        togglePicker();
+                      }}
+                      accessibilityRole="radio"
+                      accessibilityState={{ selected: active }}
+                    >
+                      <Text style={[styles.listText, active && { color: "#fff", fontWeight: "700" }]}>
+                        {option.label}
+                      </Text>
+                      {active ? <Ionicons name="checkmark" size={20} color={primaryColor} /> : null}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            ) : null}
           </View>
         ) : null}
       </View>
@@ -211,27 +291,34 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#1a1a1a",
   },
-  dropdown: {
+  field: {
     marginTop: 14,
-    height: 48,
-    borderRadius: 12,
+    height: 50,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: "#1f1f1f",
+    backgroundColor: "#0f0f0f",
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  fieldText: { color: "#fff", fontSize: 15, fontWeight: "600" },
+  list: {
+    marginTop: 8,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: "#1f1f1f",
     backgroundColor: "#0f0f0f",
-    paddingHorizontal: 14,
+    overflow: "hidden",
   },
-  dropdownList: {
-    backgroundColor: "#0f0f0f",
-    borderRadius: 12,
-    borderColor: "#1f1f1f",
+  listRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    height: 48,
   },
-  dropdownPlaceholder: { color: "#777", fontSize: 14 },
-  dropdownSelected: { color: "#fff", fontSize: 14, fontWeight: "600" },
-  dropdownItem: { color: "#ddd", fontSize: 14 },
-  dropdownSearch: {
-    color: "#fff",
-    borderRadius: 10,
-    borderColor: "#1f1f1f",
-    height: 42,
-  },
+  listRowBorder: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: "#1f1f1f" },
+  listText: { color: "#cfd3da", fontSize: 15 },
 });

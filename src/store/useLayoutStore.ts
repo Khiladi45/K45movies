@@ -17,12 +17,13 @@ const zustandMMKVStorage = {
   },
 };
 
-export type AppLayout = "provider" | "movie";
+export type AppLayout = "provider" | "movie" | "youtube";
 
 type LayoutState = {
   // "provider" is the original app behaviour and the default. "movie" turns on
-  // the TMDB-driven layout; nothing in the provider flow reads this value
-  // except the small gate components that pick which screen to render.
+  // the TMDB-driven layout; "youtube" swaps the whole tab bar and screens for
+  // the YouTube-style layout (see src/YouTube). Nothing in the provider flow
+  // reads this value except the small gate components and the tab switch.
   layout: AppLayout;
   // ISO 639-1 audio language used to sort qualities in the Movie Based layout,
   // or "none".
@@ -46,7 +47,10 @@ export const useLayoutStore = create<LayoutState>()(
         const saved = (persisted as Partial<LayoutState>) || {};
         return {
           ...current,
-          layout: saved.layout === "movie" ? "movie" : "provider",
+          layout:
+            saved.layout === "movie" || saved.layout === "youtube"
+              ? saved.layout
+              : "provider",
           preferredLanguage:
             typeof saved.preferredLanguage === "string" &&
             saved.preferredLanguage

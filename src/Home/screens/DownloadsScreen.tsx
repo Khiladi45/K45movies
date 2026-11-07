@@ -251,7 +251,7 @@ export default function DownloadsScreen({ navigation }: any) {
         </View>
       )}
 
-      <FlatList
+      <FlatList showsHorizontalScrollIndicator={false}
         data={jobs}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <JobRow job={item} onPlay={play} />}

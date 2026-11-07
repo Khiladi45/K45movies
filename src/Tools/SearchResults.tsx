@@ -104,7 +104,7 @@ export default function SearchResults({ route, navigation }: any) {
           ))}
         </View>
       ) : (
-        <FlatList
+        <FlatList showsHorizontalScrollIndicator={false}
           data={results || []}
           numColumns={3}
           keyExtractor={(item: any, index) => item.link || `${index}`}

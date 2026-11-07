@@ -171,7 +171,7 @@ export default function ThemeSettingsScreen({ navigation }: any) {
         pointerEvents="none"
       />
 
-      <ScrollView
+      <ScrollView showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >

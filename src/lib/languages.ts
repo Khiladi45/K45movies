@@ -31,21 +31,18 @@ export const LANGUAGE_NAME_BY_CODE: Record<string, string> = Object.fromEntries(
   ALL.map((item) => [item.value, item.label]),
 );
 
-// Shown first in the dropdown because they are the most common picks for this
-// app's audience; everything else follows alphabetically.
-const PINNED = ["ta", "hi", "te", "ml", "kn", "en", "bn", "mr"];
 
 export const NO_LANGUAGE = "none";
 
+// The audio-language picker only offers the languages this app's audience uses.
+export const PICKER_LANGUAGES = ["ta", "te", "ml", "kn", "hi", "en", "ko", "ja"];
+
 export const AUDIO_LANGUAGE_OPTIONS: LanguageOption[] = [
   { value: NO_LANGUAGE, label: "No preference" },
-  ...PINNED.map((code) => ({
+  ...PICKER_LANGUAGES.map((code) => ({
     value: code,
     label: LANGUAGE_NAME_BY_CODE[code],
   })),
-  ...ALL.filter((item) => !PINNED.includes(item.value)).sort((a, b) =>
-    a.label.localeCompare(b.label),
-  ),
 ];
 
 export const languageName = (code?: string | null): string =>

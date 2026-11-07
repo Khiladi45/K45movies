@@ -137,7 +137,7 @@ export default function HomeScreen({ navigation }: any) {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#000" }}>
-      <FlatList
+      <FlatList showsHorizontalScrollIndicator={false}
         data={validCatalogs}
         ListHeaderComponent={
           <>
@@ -524,7 +524,7 @@ const CategorySection = memo(function CategorySection({
           </TouchableOpacity>
         )}
       </View>
-      <FlatList
+      <FlatList showsVerticalScrollIndicator={false}
         data={posts}
         horizontal
         showsHorizontalScrollIndicator={false}

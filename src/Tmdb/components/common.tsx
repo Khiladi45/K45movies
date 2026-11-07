@@ -162,7 +162,7 @@ export const TmdbRow = memo(function TmdbRow({
   return (
     <View style={styles.row}>
       <RowHeader title={title} />
-      <FlatList
+      <FlatList showsVerticalScrollIndicator={false}
         data={data}
         horizontal
         showsHorizontalScrollIndicator={false}

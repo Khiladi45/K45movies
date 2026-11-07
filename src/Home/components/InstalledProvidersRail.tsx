@@ -96,7 +96,7 @@ const InstalledProvidersRail = memo(function InstalledProvidersRail() {
         <Text style={styles.headerTitle}>Providers</Text>
         <Text style={styles.headerCount}>{cards.length}</Text>
       </View> */}
-      <FlatList
+      <FlatList showsVerticalScrollIndicator={false}
         ref={listRef}
         data={cards}
         getItemLayout={(_data, index) => ({

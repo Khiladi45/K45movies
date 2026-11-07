@@ -3298,7 +3298,7 @@ const renderSeekButton = (side: "left" | "right") => {
               />
               <View style={styles.panel}>
                 <Text style={styles.panelTitle}>{PANEL_TITLES[panel]}</Text>
-                <ScrollView
+                <ScrollView showsHorizontalScrollIndicator={false}
                   showsVerticalScrollIndicator={false}
                   bounces={false}
                 >

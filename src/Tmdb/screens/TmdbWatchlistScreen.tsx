@@ -74,7 +74,7 @@ export default function TmdbWatchlistScreen({ navigation }: any) {
           </TouchableOpacity>
         </View>
       ) : (
-        <FlatList
+        <FlatList showsHorizontalScrollIndicator={false}
           data={sorted}
           numColumns={COLUMNS}
           keyExtractor={(item) => item.key}

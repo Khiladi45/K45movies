@@ -230,7 +230,7 @@ function CastRow({ details }: { details: TmdbDetails }) {
   return (
     <View style={styles.section}>
       <RowHeader title="Cast" />
-      <FlatList
+      <FlatList showsVerticalScrollIndicator={false}
         data={details.cast}
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -268,7 +268,7 @@ function SimilarRow({ details, navigation }: { details: TmdbDetails; navigation:
   return (
     <View style={styles.section}>
       <RowHeader title={details.mediaType === "tv" ? "More Like This" : "Similar Movies"} />
-      <FlatList
+      <FlatList showsVerticalScrollIndicator={false}
         data={details.similar}
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -295,7 +295,7 @@ function SimilarRow({ details, navigation }: { details: TmdbDetails; navigation:
 function GenreLine({ genres }: { genres: string[] }) {
   if (genres.length === 0) return null;
   return (
-    <ScrollView
+    <ScrollView showsVerticalScrollIndicator={false}
       horizontal
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.genreScroll}
@@ -362,7 +362,7 @@ function MovieDetail({ details, navigation }: { details: TmdbDetails; navigation
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 60 }}>
+      <ScrollView showsHorizontalScrollIndicator={false} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 60 }}>
         <View style={styles.movieBackdrop}>
           {backdrop ? (
             <Image source={{ uri: backdrop }} style={StyleSheet.absoluteFill} contentFit="cover" />
@@ -603,7 +603,7 @@ function SeriesDetail({ details, navigation }: { details: TmdbDetails; navigatio
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 60 }}>
+      <ScrollView showsHorizontalScrollIndicator={false} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 60 }}>
         <View style={styles.seriesBackdrop}>
           {backdrop ? (
             <Image source={{ uri: backdrop }} style={StyleSheet.absoluteFill} contentFit="cover" />
@@ -683,7 +683,7 @@ function SeriesDetail({ details, navigation }: { details: TmdbDetails; navigatio
             <View style={[styles.accent, { backgroundColor: primaryColor }]} />
             <Text style={styles.sectionTitle}>Seasons</Text>
           </View>
-          <ScrollView
+          <ScrollView showsVerticalScrollIndicator={false}
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ gap: 10, paddingRight: 16 }}
@@ -775,7 +775,7 @@ function SeriesDetail({ details, navigation }: { details: TmdbDetails; navigatio
               </TouchableOpacity>
             </View>
             {error ? <ErrorBanner message={error} onClose={clearError} /> : null}
-            <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 460 }}>
+            <ScrollView showsHorizontalScrollIndicator={false} showsVerticalScrollIndicator={false} style={{ maxHeight: 460 }}>
               <SourcesPanel
                 options={sources.options}
                 providers={sources.providers}
