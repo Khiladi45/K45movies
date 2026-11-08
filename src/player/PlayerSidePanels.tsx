@@ -7,9 +7,10 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
+import TouchableOpacity from "@/TV/components/FocusTouchable";
+import { IS_TV } from "@/TV/isTV";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import {
   SUBTITLE_ALIGNS,
@@ -55,7 +56,7 @@ export function SidePanel({
 
   return (
     <View style={styles.backdrop} pointerEvents="box-none">
-      <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+      <Pressable focusable={!IS_TV} style={StyleSheet.absoluteFill} onPress={onClose} />
       <Animated.View
         style={[styles.panel, { width, transform: [{ translateX: slide }] }]}
       >

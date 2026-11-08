@@ -6,16 +6,19 @@ import {
   DeviceEventEmitter,
   PanResponder,
   Platform,
+  useTVEventHandler,
   Pressable,
   ScrollView,
   StatusBar,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
   findNodeHandle,
   useWindowDimensions,
 } from "react-native";
+import TouchableOpacity from "@/TV/components/FocusTouchable";
+import { IS_TV } from "@/TV/isTV";
+import TvPlayerControls, { type TvPanel } from "@/TV/TvPlayerControls";
 import Video, {
   BufferingStrategyType,
   ResizeMode,
@@ -1193,7 +1196,7 @@ export default function PlayerOverlay() {
       setShowControls(false);
       setGesture(null);
       resetZoom(false);
-      if (ScreenOrientation?.lockAsync && ScreenOrientation?.OrientationLock) {
+      if (!IS_TV && ScreenOrientation?.lockAsync && ScreenOrientation?.OrientationLock) {
         ScreenOrientation.lockAsync(
           ScreenOrientation.OrientationLock.PORTRAIT_UP,
         ).catch(() => {});
@@ -1207,7 +1210,10 @@ export default function PlayerOverlay() {
     wake();
     // Fullscreen playback is landscape-first: lock it so opening the player
     // never briefly sits in portrait. The rotate button unlocks/toggles.
-    if (ScreenOrientation?.lockAsync && ScreenOrientation?.OrientationLock) {
+    // TVs are landscape already and have no rotation to manage.
+    if (IS_TV) {
+      // nothing to lock
+    } else if (ScreenOrientation?.lockAsync && ScreenOrientation?.OrientationLock) {
       ScreenOrientation.lockAsync(
         ScreenOrientation.OrientationLock.LANDSCAPE,
       ).catch(() => {});
@@ -2107,17 +2113,79 @@ export default function PlayerOverlay() {
   // button in the bottom bar is the way into mini-player mode.
   const stopPlaybackRef = useRef(stopPlayback);
   stopPlaybackRef.current = stopPlayback;
+  // Open player panel, read by the TV Back handling below.
+  const tvPanelRef = useRef<string | null>(null);
+  tvPanelRef.current = panel;
   useEffect(() => {
     if (!expanded) return;
     const subscription = BackHandler.addEventListener(
       "hardwareBackPress",
       () => {
+        // TV remote: Back closes an open panel first, then the player.
+        if (IS_TV && tvPanelRef.current) {
+          setPanel(null);
+          wake();
+          return true;
+        }
         stopPlaybackRef.current();
         return true;
       },
     );
     return () => subscription.remove();
   }, [expanded]);
+
+  // ---- Android TV remote ----------------------------------------------------
+  // While the controls are hidden: OK / arrows bring them up, Left/Right seek
+  // 10s (held: 30s). Play/Pause and the media keys always work. With the
+  // controls or a panel showing, arrows move focus as usual and every key
+  // keeps the controls awake.
+  const tvKeyRef = useRef<(evt: any) => void>(() => {});
+  tvKeyRef.current = (evt: any) => {
+    if (!IS_TV || !expanded) return;
+    const type = String(evt?.eventType || "");
+    const pressed = evt?.eventKeyAction == null || evt.eventKeyAction === 0;
+    if (!pressed || type === "focus" || type === "blur") return;
+    const hidden = !showControlsRef.current && !tvPanelRef.current;
+    const seek = (delta: number) => {
+      seekTo(currentTimeRef.current + delta);
+      showToast(`${delta > 0 ? "+" : "−"}${Math.abs(delta)}s`);
+    };
+    switch (type) {
+      case "playPause":
+        togglePlay();
+        return;
+      case "fastForward":
+        seek(10);
+        return;
+      case "rewind":
+        seek(-10);
+        return;
+      case "right":
+        if (hidden) return seek(10);
+        break;
+      case "left":
+        if (hidden) return seek(-10);
+        break;
+      case "longRight":
+        if (hidden) return seek(30);
+        break;
+      case "longLeft":
+        if (hidden) return seek(-30);
+        break;
+      default:
+        break;
+    }
+    // Any other key (OK, up, down, or arrows with controls showing) wakes the
+    // controls; a panel stays open until Back closes it.
+    wake(!!tvPanelRef.current);
+  };
+  const onTvKey = useCallback((evt: any) => tvKeyRef.current(evt), []);
+  useTVEventHandler(onTvKey);
+
+  // On TV there is no mini-player: leaving the player screen ends playback.
+  useEffect(() => {
+    if (IS_TV && !expanded && currentVideoUrl) closePlayer();
+  }, [expanded, currentVideoUrl, closePlayer]);
 
   const handleLock = () => {
     const next = !locked;
@@ -2829,9 +2897,9 @@ const renderSeekButton = (side: "left" | "right") => {
             }}
             bufferingStrategy={BufferingStrategyType.DEPENDING_ON_MEMORY}
             playWhenInactive
-            playInBackground={prefs.backgroundPlayback}
-            showNotificationControls={prefs.backgroundPlayback}
-            enterPictureInPictureOnLeave={prefs.backgroundPlayback && expanded}
+            playInBackground={!IS_TV && prefs.backgroundPlayback}
+            showNotificationControls={!IS_TV && prefs.backgroundPlayback}
+            enterPictureInPictureOnLeave={!IS_TV && prefs.backgroundPlayback && expanded}
             onPictureInPictureStatusChanged={(event: any) =>
               setInPip(!!event?.isActive)
             }
@@ -2851,6 +2919,7 @@ const renderSeekButton = (side: "left" | "right") => {
 
       {expanded ? (
         <>
+          {IS_TV ? null : (
           <View
             style={styles.gestureLayer}
             pointerEvents={locked ? "none" : "auto"}
@@ -2869,6 +2938,7 @@ const renderSeekButton = (side: "left" | "right") => {
               handleTap(e);
             }}
           />
+          )}
 
           {activeCue ? (
             <View
@@ -2998,7 +3068,7 @@ const renderSeekButton = (side: "left" | "right") => {
             </View>
           )}
 
-          {showControls && !locked && (
+          {!IS_TV && showControls && !locked && (
             <View
               style={[
                 styles.topBar,
@@ -3110,7 +3180,7 @@ const renderSeekButton = (side: "left" | "right") => {
             </View>
           )}
 
-          {showControls && !locked && (
+          {!IS_TV && showControls && !locked && (
             <View
               style={[
                 styles.bottomBar,
@@ -3241,7 +3311,29 @@ const renderSeekButton = (side: "left" | "right") => {
 
           {/* Centered over the video area, independent of the bottom row's
               button widths, so the play button sits at true center. */}
-      {!locked && !startupLoading && hasRendered && (showControls || seekHint) ? (
+      {IS_TV && showControls && !panel && !locked && !startupLoading ? (
+        <TvPlayerControls
+          title={playerMeta?.title || "Playing"}
+          subtitle={playerMeta?.episode || undefined}
+          paused={paused}
+          currentTime={currentTime}
+          duration={duration}
+          buffered={buffered}
+          qualityLabel={qualityLabel}
+          serverLabel={serverLabel}
+          onTogglePlay={togglePlay}
+          onSeekBy={(delta) => seekTo(currentTimeRef.current + delta)}
+          onRestart={() => seekTo(0)}
+          onOpenPanel={(next: TvPanel) => {
+            setPanel(next);
+            wake(true);
+          }}
+          hasSources={!!playerMeta?.tmdb && queueOptions.length > 1}
+          hasEpisodes={sideEpisodes.length > 1}
+          onNextEpisode={nextEpisode ? () => void playNextEpisode() : undefined}
+        />
+      ) : null}
+      {!IS_TV && !locked && !startupLoading && hasRendered && (showControls || seekHint) ? (
        <View style={styles.centerPlayback} pointerEvents="box-none">
           {renderSeekButton("left")}
          <TouchableOpacity
@@ -3348,6 +3440,7 @@ const renderSeekButton = (side: "left" | "right") => {
           {panel && !SIDE_PANELS.includes(panel) && (
             <View style={styles.panelBackdrop}>
               <Pressable
+                focusable={!IS_TV}
                 style={StyleSheet.absoluteFill}
                 onPress={() => {
                   setPanel(null);
