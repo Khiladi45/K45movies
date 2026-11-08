@@ -945,6 +945,8 @@ export default function PlayerOverlay() {
     const seconds = prefsRef.current.controlsTimeout || 5;
     hideTimer.current = setTimeout(() => {
       if (!mountedRef.current) return;
+      // TV: a paused video keeps its controls on screen.
+      if (IS_TV && pausedRef.current) return;
       setShowControls(false);
       setPanel(null);
     }, seconds * 1000);
@@ -2202,6 +2204,13 @@ export default function PlayerOverlay() {
   const onTvKey = useCallback((evt: any) => tvKeyRef.current(evt), []);
   useTVEventHandler(onTvKey);
 
+  // TV: when playback resumes, start the auto-hide countdown again.
+  useEffect(() => {
+    if (IS_TV && expanded && !paused && showControlsRef.current && !tvPanelRef.current) {
+      wake();
+    }
+  }, [paused, expanded, wake]);
+
   // On TV there is no mini-player: leaving the player screen ends playback.
   useEffect(() => {
     if (IS_TV && !expanded && currentVideoUrl) closePlayer();
@@ -3340,6 +3349,26 @@ const renderSeekButton = (side: "left" | "right") => {
 
           {/* Centered over the video area, independent of the bottom row's
               button widths, so the play button sits at true center. */}
+      {IS_TV &&
+      expanded &&
+      !panel &&
+      !(error && !switching) &&
+      !(ended && !switching) &&
+      !(showControls && !locked && !startupLoading) ? (
+        // Remote catcher. Android only sends remote keys to the app while
+        // something in it has focus; with the controls hidden nothing else is
+        // focusable, so OK / arrows / Play-Pause would be lost (only Back,
+        // handled by the system, still worked). This invisible full-screen
+        // target holds focus; the key handler above does the seeking, and OK
+        // brings the controls back.
+        <Pressable
+          focusable
+          hasTVPreferredFocus
+          style={StyleSheet.absoluteFill}
+          onPress={() => wake()}
+          accessibilityLabel="Show player controls"
+        />
+      ) : null}
       {IS_TV && showControls && !panel && !locked && !startupLoading ? (
         <TvPlayerControls
           title={playerMeta?.title || "Playing"}

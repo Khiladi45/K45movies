@@ -2,7 +2,7 @@
 // phone page (useMovieSources / useEpisodeSources + playSource), laid out for
 // a remote: Play has the first focus and starts the best source (preferred
 // language, closest to 1080p), with every source listed below it.
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { ActivityIndicator, FlatList, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -28,6 +28,7 @@ import Focusable from "../components/Focusable";
 import { PosterRow } from "../components/PosterRow";
 import { useOpenTvTitle } from "./TvHomeScreen";
 import { TV } from "../theme";
+import { useRestoreTvFocus } from "../useRestoreTvFocus";
 
 type Sources = {
   options: SourceOption[];
@@ -111,7 +112,9 @@ function Header({
   busy,
   stage,
   error,
+  playRef,
 }: {
+  playRef: RefObject<View | null>;
   details: TmdbDetails;
   onPlay: () => void;
   playLabel: string;
@@ -151,6 +154,7 @@ function Header({
       ) : null}
       <View style={styles.actions}>
         <Focusable
+          ref={playRef}
           hasTVPreferredFocus
           style={[styles.button, { backgroundColor: primaryColor }]}
           onPress={onPlay}
@@ -207,7 +211,15 @@ function usePlayWhenReady(
   return { wanted, request: () => setWanted(true) };
 }
 
-function MovieBody({ details, navigation }: { details: TmdbDetails; navigation: any }) {
+function MovieBody({
+  details,
+  navigation,
+  playRef,
+}: {
+  details: TmdbDetails;
+  navigation: any;
+  playRef: RefObject<View | null>;
+}) {
   const media = useMemo<BridgeMedia>(
     () => ({
       mediaType: "movie",
@@ -227,6 +239,7 @@ function MovieBody({ details, navigation }: { details: TmdbDetails; navigation: 
   return (
     <>
       <Header
+        playRef={playRef}
         details={details}
         playLabel={sources.options.length || !sources.loading ? "Play" : "Play when ready"}
         busy={!!playingId || pending.wanted}
@@ -249,7 +262,15 @@ function MovieBody({ details, navigation }: { details: TmdbDetails; navigation: 
   );
 }
 
-function SeriesBody({ details, navigation }: { details: TmdbDetails; navigation: any }) {
+function SeriesBody({
+  details,
+  navigation,
+  playRef,
+}: {
+  details: TmdbDetails;
+  navigation: any;
+  playRef: RefObject<View | null>;
+}) {
   const resume = useTmdbContinueWatchingStore((s) =>
     s.items.find((item) => item.key === continueKey("tv", details.id)),
   );
@@ -297,6 +318,7 @@ function SeriesBody({ details, navigation }: { details: TmdbDetails; navigation:
   return (
     <>
       <Header
+        playRef={playRef}
         details={details}
         playLabel={`${resume && !selected ? "Continue" : "Play"} S${current.season} E${current.episode}`}
         busy={!!playingId || pending.wanted}
@@ -373,6 +395,9 @@ function SeriesBody({ details, navigation }: { details: TmdbDetails; navigation:
 export default function TvDetailScreen({ route, navigation }: any) {
   const { id, mediaType } = route.params || {};
   const { data, isError, isLoading } = useTmdbDetails(mediaType, id);
+  const playRef = useRef<View | null>(null);
+  // Back from the player: focus returns to where it was (else Play).
+  useRestoreTvFocus(playRef);
   const backdrop = data ? tmdbImage(data.backdrop, "w780") : null;
 
   return (
@@ -393,9 +418,9 @@ export default function TvDetailScreen({ route, navigation }: any) {
       ) : (
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
           {data.mediaType === "tv" ? (
-            <SeriesBody details={data} navigation={navigation} />
+            <SeriesBody details={data} navigation={navigation} playRef={playRef} />
           ) : (
-            <MovieBody details={data} navigation={navigation} />
+            <MovieBody details={data} navigation={navigation} playRef={playRef} />
           )}
         </ScrollView>
       )}

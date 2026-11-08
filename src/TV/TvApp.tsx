@@ -1,7 +1,7 @@
 // Root of the Android TV interface (Movie Based layout only). Uses the app's
 // shared navigationRef, so the player, resume and failover code that call
 // navigate("Player") / goBack() work unchanged.
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { Alert, BackHandler, StyleSheet, View } from "react-native";
 import {
   DarkTheme,
@@ -18,11 +18,15 @@ import TvMyListScreen from "./screens/TvMyListScreen";
 import TvSettingsScreen from "./screens/TvSettingsScreen";
 import TvDetailScreen from "./screens/TvDetailScreen";
 import { TV } from "./theme";
+import { useRestoreTvFocus } from "./useRestoreTvFocus";
 
 const Stack = createNativeStackNavigator();
 
 function TvMain() {
   const [section, setSection] = useState<TvSection>("home");
+  const activeNavRef = useRef<View | null>(null);
+  // Back from a title page or the player: focus returns to where it was.
+  useRestoreTvFocus(activeNavRef);
 
   // Back: from another section return Home; on Home ask before leaving.
   useFocusEffect(
@@ -44,7 +48,7 @@ function TvMain() {
 
   return (
     <View style={styles.main}>
-      <SideNav section={section} onSelect={setSection} />
+      <SideNav section={section} onSelect={setSection} activeRef={activeNavRef} />
       <View style={styles.content}>
         {section === "home" ? <TvHomeScreen /> : null}
         {section === "search" ? <TvSearchScreen /> : null}

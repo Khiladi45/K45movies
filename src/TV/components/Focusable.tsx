@@ -1,4 +1,12 @@
-import React, { forwardRef, useState, type ReactNode } from "react";
+import React, {
+  forwardRef,
+  useCallback,
+  useContext,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import { NavigationRouteContext } from "@react-navigation/native";
 import {
   Pressable,
   StyleSheet,
@@ -9,6 +17,7 @@ import {
 } from "react-native";
 import { useThemeStore } from "@/store/useThemeStore";
 import { TV } from "../theme";
+import { rememberFocus } from "../focusMemory";
 
 type Props = Omit<PressableProps, "children" | "style"> & {
   children: ReactNode | ((focused: boolean) => ReactNode);
@@ -41,13 +50,25 @@ const Focusable = forwardRef<View, Props>(function Focusable(
 ) {
   const [focused, setFocused] = useState(false);
   const primaryColor = useThemeStore((s) => s.primaryColor);
+  // Undefined outside a navigator screen (e.g. the player controls).
+  const route = useContext(NavigationRouteContext);
+  const own = useRef<View | null>(null);
+  const setRefs = useCallback(
+    (node: View | null) => {
+      own.current = node;
+      if (typeof ref === "function") ref(node);
+      else if (ref) ref.current = node;
+    },
+    [ref],
+  );
   return (
     <Pressable
-      ref={ref}
+      ref={setRefs}
       focusable
       {...rest}
       onFocus={(event) => {
         setFocused(true);
+        rememberFocus(route?.key, own);
         onFocus?.(event);
       }}
       onBlur={(event) => {

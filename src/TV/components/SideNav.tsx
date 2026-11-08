@@ -1,4 +1,4 @@
-import React from "react";
+import React, { type RefObject } from "react";
 import { StyleSheet, Text, TVFocusGuideView, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useThemeStore } from "@/store/useThemeStore";
@@ -21,9 +21,12 @@ const ITEMS: { key: TvSection; label: string; icon: keyof typeof Ionicons.glyphM
 export default function SideNav({
   section,
   onSelect,
+  activeRef,
 }: {
   section: TvSection;
   onSelect: (section: TvSection) => void;
+  /** Attached to the active item, used as the focus fallback. */
+  activeRef?: RefObject<View | null>;
 }) {
   const primaryColor = useThemeStore((s) => s.primaryColor);
   return (
@@ -35,6 +38,7 @@ export default function SideNav({
           return (
             <Focusable
               key={item.key}
+              ref={active ? activeRef : undefined}
               style={styles.item}
               onPress={() => onSelect(item.key)}
               accessibilityLabel={item.label}
