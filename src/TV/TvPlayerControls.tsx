@@ -8,7 +8,14 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useThemeStore } from "@/store/useThemeStore";
 import Focusable from "./components/Focusable";
 
-export type TvPanel = "audio" | "subtitle" | "quality" | "server" | "sources" | "episodes";
+export type TvPanel =
+  | "audio"
+  | "subtitle"
+  | "quality"
+  | "server"
+  | "sources"
+  | "episodes"
+  | "aspect";
 
 const fmt = (seconds: number) => {
   const s = Math.max(0, Math.floor(seconds || 0));
@@ -57,6 +64,7 @@ export default function TvPlayerControls({
   buffered,
   qualityLabel,
   serverLabel,
+  fitLabel,
   onTogglePlay,
   onSeekBy,
   onOpenPanel,
@@ -73,6 +81,7 @@ export default function TvPlayerControls({
   buffered: number;
   qualityLabel?: string;
   serverLabel?: string;
+  fitLabel?: string;
   onTogglePlay: () => void;
   onSeekBy: (seconds: number) => void;
   onOpenPanel: (panel: TvPanel) => void;
@@ -127,6 +136,11 @@ export default function TvPlayerControls({
             icon="high-definition-box"
             label={qualityLabel ? `Quality · ${qualityLabel}` : "Quality"}
             onPress={() => onOpenPanel("quality")}
+          />
+          <Button
+            icon="fit-to-screen-outline"
+            label={fitLabel ? `Screen fit · ${fitLabel}` : "Screen fit"}
+            onPress={() => onOpenPanel("aspect")}
           />
           <Button
             icon="server-network"

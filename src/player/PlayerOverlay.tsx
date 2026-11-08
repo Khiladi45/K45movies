@@ -78,6 +78,7 @@ import {
   QualityPreference,
 } from "@/lib/streams";
 import { HD_TARGET_HEIGHT } from "@/lib/streamRanking";
+import { autoFit } from "@/lib/screenFit";
 
 const mmkv = createMMKV();
 import { orderEpisodes } from "@/lib/episodes";
@@ -108,7 +109,12 @@ const readGalaxyMarkup = (uri: string) => {
 const galaxyPage = (markup: string) =>
   `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0;padding:0;background:transparent;width:100%;height:100%;overflow:hidden}svg{width:100%;height:100%;display:block}</style></head><body>${markup}</body></html>`;
 const RATES = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+// "auto" is resolved per video: when the picture's shape is close to the
+// screen's it is stretched to fill (no thin bars); otherwise the whole picture
+// is fitted with black bars (e.g. 2.39:1 films on a 16:9 TV).
+const AUTO_ASPECT = "auto";
 const ASPECTS: { key: any; label: string }[] = [
+  { key: AUTO_ASPECT, label: "Auto (fill or fit with black bars)" },
   { key: ResizeMode.CONTAIN, label: "Fit" },
   { key: ResizeMode.COVER, label: "Cover" },
   { key: ResizeMode.STRETCH, label: "Stretch" },
@@ -594,7 +600,10 @@ export default function PlayerOverlay() {
   const [duration, setDuration] = useState(0);
   const [buffered, setBuffered] = useState(0);
   const [rate, setRate] = useState(1);
-  const [aspectIdx, setAspectIdx] = useState(0);
+  // TV starts on Auto; phones keep starting on Fit as before.
+  const [aspectIdx, setAspectIdx] = useState(IS_TV ? 0 : 1);
+  // Width / height of the playing video, for the Auto screen fit.
+  const [videoAspect, setVideoAspect] = useState<number | null>(null);
   const [locked, setLocked] = useState(false);
   const [panel, setPanel] = useState<null | string>(null);
   const [showControls, setShowControls] = useState(true);
@@ -1282,6 +1291,17 @@ export default function PlayerOverlay() {
 
   const onLoad = (data: any) => {
     const total = Number(data?.duration) || 0;
+    const natural = data?.naturalSize;
+    const naturalW = Number(natural?.width) || 0;
+    const naturalH = Number(natural?.height) || 0;
+    if (naturalW > 0 && naturalH > 0) {
+      // Portrait-tagged videos report width/height swapped.
+      setVideoAspect(
+        natural?.orientation === "portrait" && naturalW > naturalH
+          ? naturalH / naturalW
+          : naturalW / naturalH,
+      );
+    }
     const incomingAudio = Array.isArray(data?.audioTracks)
       ? data.audioTracks
       : [];
@@ -2731,6 +2751,15 @@ const renderSeekButton = (side: "left" | "right") => {
     };
   }, [selectedAudioIndex]);
 
+  const resolvedResizeMode = useMemo(() => {
+    const key = ASPECTS[aspectIdx]?.key ?? ResizeMode.CONTAIN;
+    if (key !== AUTO_ASPECT) return key;
+    const screenAspect = screenHeight > 0 ? screenWidth / screenHeight : 16 / 9;
+    return autoFit(videoAspect, screenAspect) === "stretch"
+      ? ResizeMode.STRETCH
+      : ResizeMode.CONTAIN;
+  }, [aspectIdx, videoAspect, screenWidth, screenHeight]);
+
   const videoSource = useMemo(() => {
     // Last line of defence against scheme-less links (see ensureHttpUrl).
     const uri = ensureHttpUrl(currentStream?.link || currentVideoUrl);
@@ -2858,7 +2887,7 @@ const renderSeekButton = (side: "left" | "right") => {
               }
               source={videoSource}
             resizeMode={
-              expanded ? ASPECTS[aspectIdx].key : ResizeMode.COVER
+              expanded ? resolvedResizeMode : ResizeMode.COVER
             }
             paused={paused}
             rate={rate}
@@ -3321,6 +3350,11 @@ const renderSeekButton = (side: "left" | "right") => {
           buffered={buffered}
           qualityLabel={qualityLabel}
           serverLabel={serverLabel}
+          fitLabel={
+            ASPECTS[aspectIdx]?.key === AUTO_ASPECT
+              ? `Auto (${resolvedResizeMode === ResizeMode.STRETCH ? "fill" : "fit"})`
+              : ASPECTS[aspectIdx]?.label
+          }
           onTogglePlay={togglePlay}
           onSeekBy={(delta) => seekTo(currentTimeRef.current + delta)}
           onRestart={() => seekTo(0)}
