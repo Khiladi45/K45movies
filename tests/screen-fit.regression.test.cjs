@@ -18,4 +18,11 @@ assert.strictEqual(scaleYFor("height120"), 1.2);
 assert.strictEqual(scaleYFor("contain"), 1);
 assert.strictEqual(scaleYFor("auto"), 1);
 assert.strictEqual(scaleYFor(undefined), 1);
+// Auto is the default screen fit on phones and TV.
+const overlay = require("fs").readFileSync(
+  path.join(__dirname, "..", "src", "player", "PlayerOverlay.tsx"),
+  "utf8",
+);
+assert.ok(overlay.includes("const [aspectIdx, setAspectIdx] = useState(0);"), "Auto default everywhere");
+assert.ok(/const ASPECTS[\s\S]*?\{ key: AUTO_ASPECT,/.test(overlay), "Auto is the first aspect");
 console.log("PASS screen-fit regression");

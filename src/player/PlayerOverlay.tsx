@@ -19,7 +19,19 @@ import {
 } from "react-native";
 import TouchableOpacity from "@/TV/components/FocusTouchable";
 import { IS_TV } from "@/TV/isTV";
-import TvPlayerControls, { type TvPanel } from "@/TV/TvPlayerControls";
+import StartupLoader from "./StartupLoader";
+import { usePlaybackStageStore } from "@/store/usePlaybackStageStore";
+import TvPlayerControls, {
+  type TvFocusZone,
+  type TvPanel,
+} from "@/TV/TvPlayerControls";
+import {
+  clampSeek,
+  nextScrubTarget,
+  remoteAction,
+  SCRUB_COMMIT_MS,
+  SCRUB_HOLD_INTERVAL_MS,
+} from "@/lib/tvScrub";
 import Video, {
   BufferingStrategyType,
   ResizeMode,
@@ -607,8 +619,9 @@ export default function PlayerOverlay() {
   const [duration, setDuration] = useState(0);
   const [buffered, setBuffered] = useState(0);
   const [rate, setRate] = useState(1);
-  // TV starts on Auto; phones keep starting on Fit as before.
-  const [aspectIdx, setAspectIdx] = useState(IS_TV ? 0 : 1);
+  // Auto fit by default on phones and TV: fills the screen when the video's
+  // shape is close to it, otherwise fits the whole picture with black bars.
+  const [aspectIdx, setAspectIdx] = useState(0);
   // Width / height of the playing video, for the Auto screen fit.
   const [videoAspect, setVideoAspect] = useState<number | null>(null);
   const [locked, setLocked] = useState(false);
@@ -741,6 +754,15 @@ export default function PlayerOverlay() {
     currentStream,
     selectedVideo,
   };
+
+  // Loading screen steps: while the placeholder is up the playback helper sets
+  // source → servers → audio; once a real stream is mounted it is buffering
+  // until the first frame.
+  useEffect(() => {
+    const { stage, setStage } = usePlaybackStageStore.getState();
+    if (!pendingStream) setStage("buffering");
+    else if (stage === "buffering") setStage("source");
+  }, [pendingStream]);
 
   // Backstop for the placeholder player: if nothing resolves the stream (or
   // the screen that owns the fetch unmounts), do not strand the user on the
@@ -2083,6 +2105,7 @@ export default function PlayerOverlay() {
     wake();
   };
 
+  const seekToRef = useRef<(time: number) => void>(() => {});
   const togglePlay = () => {
     if (ended) {
       playerRef.current?.seek(0);
@@ -2097,13 +2120,16 @@ export default function PlayerOverlay() {
   };
 
   const seekTo = (time: number) => {
-    const target = clamp(time, 0, durationRef.current || 0);
+    // An unknown duration (0) must not cap the target: that sent every seek
+    // to 0:00 until the length was known.
+    const target = clampSeek(time, durationRef.current || 0);
     playerRef.current?.seek(target);
     currentTimeRef.current = target;
     setCurrentTime(target);
     setEnded(false);
     wake();
   };
+  seekToRef.current = seekTo;
 
   const expandFromMini = () => {
     usePlayerStore.getState().expand();
@@ -2164,61 +2190,120 @@ export default function PlayerOverlay() {
   }, [expanded]);
 
   // ---- Android TV remote ----------------------------------------------------
-  // While the controls are hidden: OK / arrows bring them up, Left/Right seek
-  // 10s (held: 30s). Play/Pause and the media keys always work. With the
-  // controls or a panel showing, arrows move focus as usual and every key
-  // keeps the controls awake.
-  const tvSeekBarFocusedRef = useRef(false);
-  const tvLastSeekAtRef = useRef(0);
-  const onTvSeekBarFocusChange = useCallback((focused: boolean) => {
-    tvSeekBarFocusedRef.current = focused;
+  // react-native-tvos only reports key-UP events for normal presses on
+  // Android (eventKeyAction 1), and a held key as one "long*" down event plus
+  // one up event on release. The old handler only listened for key-down, so
+  // Left/Right and the media keys never did anything.
+  //  - Center zone (big Play/Pause focused, or controls hidden):
+  //    Left/Right seek with a timeline preview, applied once you stop;
+  //    holding seeks continuously (faster after 1.5s); holding OK plays 2x.
+  //  - OK itself is handled by the focused button (play/pause).
+  //  - Play / Pause / Play-Pause / FF / Rewind media keys always work.
+  const tvZoneRef = useRef<TvFocusZone>("center");
+  const onTvZoneChange = useCallback((zone: TvFocusZone) => {
+    tvZoneRef.current = zone;
   }, []);
+  const [scrubTarget, setScrubTarget] = useState<number | null>(null);
+  const scrubPendingRef = useRef<number | null>(null);
+  const scrubCommitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scrubHoldTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const scrubHoldStart = useRef(0);
+  const [holdBoost, setHoldBoost] = useState(false);
+
+  const commitScrub = useCallback(() => {
+    if (scrubCommitTimer.current) clearTimeout(scrubCommitTimer.current);
+    scrubCommitTimer.current = null;
+    const target = scrubPendingRef.current;
+    scrubPendingRef.current = null;
+    setScrubTarget(null);
+    if (target != null) seekToRef.current(target);
+  }, []);
+  const scheduleScrubCommit = useCallback(
+    (delay = SCRUB_COMMIT_MS) => {
+      if (scrubCommitTimer.current) clearTimeout(scrubCommitTimer.current);
+      scrubCommitTimer.current = setTimeout(commitScrub, delay);
+    },
+    [commitScrub],
+  );
+  const scrubStep = useCallback((direction: 1 | -1, heldMs: number) => {
+    const next = nextScrubTarget(
+      scrubPendingRef.current,
+      currentTimeRef.current,
+      direction,
+      heldMs,
+      durationRef.current,
+    );
+    scrubPendingRef.current = next;
+    setScrubTarget(next);
+  }, []);
+  const stopScrubHold = useCallback(() => {
+    if (scrubHoldTimer.current) clearInterval(scrubHoldTimer.current);
+    scrubHoldTimer.current = null;
+  }, []);
+  useEffect(
+    () => () => {
+      stopScrubHold();
+      if (scrubCommitTimer.current) clearTimeout(scrubCommitTimer.current);
+    },
+    [stopScrubHold],
+  );
+
   const tvKeyRef = useRef<(evt: any) => void>(() => {});
   tvKeyRef.current = (evt: any) => {
     if (!IS_TV || !expanded) return;
     const type = String(evt?.eventType || "");
-    const pressed = evt?.eventKeyAction == null || evt.eventKeyAction === 0;
-    if (!pressed || type === "focus" || type === "blur") return;
-    const hidden = !showControlsRef.current && !tvPanelRef.current;
-    // Left/Right seek when the controls are hidden or the timeline is focused.
-    const scrub = hidden || (tvSeekBarFocusedRef.current && !tvPanelRef.current);
-    const seek = (delta: number) => {
-      // Android repeats a held key every ~50ms as another press; seek at
-      // most ~5 times a second so holding scrubs at a usable speed.
-      const now = Date.now();
-      if (now - tvLastSeekAtRef.current < 200) return;
-      tvLastSeekAtRef.current = now;
-      seekTo(currentTimeRef.current + delta);
-      showToast(`${delta > 0 ? "+" : "−"}${Math.abs(delta)}s`);
-    };
-    switch (type) {
-      case "playPause":
+    if (type === "focus" || type === "blur") return;
+    const panelOpen = !!tvPanelRef.current;
+    const hidden = !showControlsRef.current && !panelOpen;
+    const scrubZone = !panelOpen && (hidden || tvZoneRef.current === "center");
+    const action = remoteAction(type, evt?.eventKeyAction, scrubZone);
+    switch (action.kind) {
+      case "step":
+        stopScrubHold();
+        scrubStep(action.direction, 0);
+        wake();
+        scheduleScrubCommit();
+        return;
+      case "holdStart":
+        stopScrubHold();
+        scrubHoldStart.current = Date.now();
+        scrubStep(action.direction, 0);
+        wake(true);
+        scrubHoldTimer.current = setInterval(() => {
+          scrubStep(action.direction, Date.now() - scrubHoldStart.current);
+        }, SCRUB_HOLD_INTERVAL_MS);
+        return;
+      case "holdEnd":
+        if (scrubHoldTimer.current) {
+          stopScrubHold();
+          scheduleScrubCommit(250);
+          wake();
+        }
+        return;
+      case "boostStart":
+        setHoldBoost(true);
+        return;
+      case "boostEnd":
+        setHoldBoost(false);
+        return;
+      case "togglePlay":
         togglePlay();
         return;
-      case "fastForward":
-        seek(10);
+      case "play":
+        if (pausedRef.current) togglePlay();
+        else wake();
         return;
-      case "rewind":
-        seek(-10);
+      case "pause":
+        if (!pausedRef.current) togglePlay();
+        else wake();
         return;
-      case "right":
-        if (scrub) return seek(10);
-        break;
-      case "left":
-        if (scrub) return seek(-10);
-        break;
-      case "longRight":
-        if (scrub) return seek(30);
-        break;
-      case "longLeft":
-        if (scrub) return seek(-30);
-        break;
+      case "wake":
+        // A panel stays open until Back closes it.
+        wake(panelOpen);
+        return;
       default:
-        break;
+        return;
     }
-    // Any other key (OK, up, down, or arrows with controls showing) wakes the
-    // controls; a panel stays open until Back closes it.
-    wake(!!tvPanelRef.current);
   };
   const onTvKey = useCallback((evt: any) => tvKeyRef.current(evt), []);
   useTVEventHandler(onTvKey);
@@ -2409,6 +2494,56 @@ const renderSeekButton = (side: "left" | "right") => {
   // Single tap toggles controls; repeated taps on one side seek by an
   // increasing amount (10s, then +20s, then +30s…) without touching the
   // timeline or the control buttons.
+  // ---- press and hold for 2x (phones) --------------------------------------
+  // One finger held still for 450ms plays at 2x until it is lifted. Moving
+  // more than 12px first (a swipe) or a second finger (pinch) cancels it.
+  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const holdOriginRef = useRef<{ x: number; y: number } | null>(null);
+  const holdActiveRef = useRef(false);
+  const cancelHoldTimer = () => {
+    if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
+    holdTimerRef.current = null;
+  };
+  const startHoldBoost = (event: any) => {
+    cancelHoldTimer();
+    const touches = event?.nativeEvent?.touches;
+    if (Array.isArray(touches) && touches.length > 1) {
+      holdOriginRef.current = null;
+      return;
+    }
+    holdOriginRef.current = {
+      x: Number(event?.nativeEvent?.pageX) || 0,
+      y: Number(event?.nativeEvent?.pageY) || 0,
+    };
+    holdTimerRef.current = setTimeout(() => {
+      holdTimerRef.current = null;
+      if (!mountedRef.current || panState.current || pinchState.current.active) return;
+      if (pausedRef.current) return;
+      holdActiveRef.current = true;
+      setHoldBoost(true);
+    }, 450);
+  };
+  const moveHoldBoost = (event: any) => {
+    const origin = holdOriginRef.current;
+    const touches = event?.nativeEvent?.touches;
+    if (!origin || (Array.isArray(touches) && touches.length > 1)) {
+      cancelHoldTimer();
+      return;
+    }
+    const dx = (Number(event?.nativeEvent?.pageX) || 0) - origin.x;
+    const dy = (Number(event?.nativeEvent?.pageY) || 0) - origin.y;
+    if (Math.hypot(dx, dy) > 12) cancelHoldTimer();
+  };
+  /** Ends a hold; true when it was a 2x hold (so the touch is not a tap). */
+  const endHoldBoost = () => {
+    cancelHoldTimer();
+    holdOriginRef.current = null;
+    if (!holdActiveRef.current) return false;
+    holdActiveRef.current = false;
+    setHoldBoost(false);
+    return true;
+  };
+
   const handleTap = (event?: any) => {
     if (lockedRef.current || panel || !expandedRef.current) return;
     if (panState.current) return;
@@ -2882,9 +3017,10 @@ const renderSeekButton = (side: "left" | "right") => {
       <View style={StyleSheet.absoluteFill}>
         {startupLoading ? (
           <View style={styles.loadingScreen}>
-            <LoadingIndicator
-              text={pendingStream ? "Starting stream" : "Preparing stream"}
-              size={expanded ? 116 : 56}
+            <StartupLoader
+              title={playerMeta?.title}
+              image={playerMeta?.image}
+              compact={!expanded}
             />
           </View>
         ) : (
@@ -2920,7 +3056,7 @@ const renderSeekButton = (side: "left" | "right") => {
               expanded ? resolvedResizeMode : ResizeMode.COVER
             }
             paused={paused}
-            rate={rate}
+            rate={holdBoost ? 2 : rate}
             onLoad={onLoad}
             onProgress={onProgress}
             onBuffer={(event) => setBuffering(event.isBuffering)}
@@ -2989,11 +3125,21 @@ const renderSeekButton = (side: "left" | "right") => {
                 : (e) => {
                     handleZoomTouches(e);
                     hideNavBarSoon();
+                    startHoldBoost(e);
                   }
             }
-            onTouchMove={locked ? undefined : handleZoomTouches}
+            onTouchMove={
+              locked
+                ? undefined
+                : (e) => {
+                    handleZoomTouches(e);
+                    moveHoldBoost(e);
+                  }
+            }
             onTouchEnd={(e) => {
               handleZoomTouches(e);
+              // A press-and-hold for 2x is not a tap.
+              if (endHoldBoost()) return;
               handleTap(e);
             }}
           />
@@ -3055,14 +3201,19 @@ const renderSeekButton = (side: "left" | "right") => {
             !paused &&
             !ended &&
             !error &&
-            (buffering || !hasRendered) && (
+            (buffering || !hasRendered) &&
+            (!hasRendered && expanded ? (
+              // Until the first frame: the same step-by-step loader, drawn
+              // over the (still black) video.
+              <StartupLoader title={playerMeta?.title} overlay />
+            ) : (
               <View style={styles.centerOverlay} pointerEvents="none">
                 <LoadingIndicator
                   text={!hasRendered ? "Starting stream" : "Buffering"}
                   size={expanded ? 96 : 56}
                 />
               </View>
-            )}
+            ))}
 
           {ended && !switching && (
             <View style={styles.centerOverlay} pointerEvents="box-none">
@@ -3370,12 +3521,17 @@ const renderSeekButton = (side: "left" | "right") => {
 
           {/* Centered over the video area, independent of the bottom row's
               button widths, so the play button sits at true center. */}
+      {holdBoost && expanded ? (
+        <View pointerEvents="none" style={styles.boostBadge}>
+          <Text style={styles.boostText}>2x  ▶▶</Text>
+        </View>
+      ) : null}
       {IS_TV &&
       expanded &&
       !panel &&
       !(error && !switching) &&
       !(ended && !switching) &&
-      !(showControls && !locked && !startupLoading) ? (
+      !(showControls && !locked && !startupLoading && hasRendered) ? (
         // Remote catcher. Android only sends remote keys to the app while
         // something in it has focus; with the controls hidden nothing else is
         // focusable, so OK / arrows / Play-Pause would be lost (only Back,
@@ -3386,11 +3542,15 @@ const renderSeekButton = (side: "left" | "right") => {
           focusable
           hasTVPreferredFocus
           style={StyleSheet.absoluteFill}
-          onPress={() => wake()}
+          onFocus={() => onTvZoneChange("center")}
+          // OK with the controls hidden: play/pause (and show the controls).
+          onPress={() => togglePlay()}
+          // Holding OK is 2x (remote listener); don't toggle on release.
+          onLongPress={() => {}}
           accessibilityLabel="Show player controls"
         />
       ) : null}
-      {IS_TV && showControls && !panel && !locked && !startupLoading ? (
+      {IS_TV && showControls && !panel && !locked && !startupLoading && hasRendered ? (
         <TvPlayerControls
           title={playerMeta?.title || "Playing"}
           subtitle={playerMeta?.episode || undefined}
@@ -3408,7 +3568,8 @@ const renderSeekButton = (side: "left" | "right") => {
           onTogglePlay={togglePlay}
           onSeekBy={(delta) => seekTo(currentTimeRef.current + delta)}
           onRestart={() => seekTo(0)}
-          onSeekBarFocusChange={onTvSeekBarFocusChange}
+          onZoneChange={onTvZoneChange}
+          scrubTarget={scrubTarget}
           onOpenPanel={(next: TvPanel) => {
             setPanel(next);
             wake(true);
@@ -3669,6 +3830,18 @@ const absoluteFillStyle = {
 };
 
 const styles = StyleSheet.create({
+  boostBadge: {
+    position: "absolute",
+    top: 28,
+    alignSelf: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 18,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.25)",
+  },
+  boostText: { color: "#fff", fontSize: 15, fontWeight: "800", letterSpacing: 1 },
   fullscreen: {
     ...absoluteFillStyle,
     backgroundColor: "#000",

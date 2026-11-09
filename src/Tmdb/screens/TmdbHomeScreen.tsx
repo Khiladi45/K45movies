@@ -22,7 +22,7 @@ import {
 } from "@/lib/tmdbApi";
 import ContinueWatchingRow from "../components/ContinueWatchingRow";
 import { MissingKeyNotice, TmdbRow, useOpenTitle } from "../components/common";
-import { homeRows } from "../homeRows";
+import { homeRows, isNewReleasesRow } from "../homeRows";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const HERO_WIDTH = SCREEN_WIDTH - 34;
@@ -160,8 +160,16 @@ export default function TmdbHomeScreen() {
         renderItem={() => (
           <View>
             <Hero />
+            {rows.filter(isNewReleasesRow).map((row) => (
+              <TmdbRow
+                key={row.rowKey}
+                title={row.title}
+                rowKey={row.rowKey}
+                fetcher={row.fetcher}
+              />
+            ))}
             <ContinueWatchingRow />
-            {rows.map((row) => (
+            {rows.filter((row) => !isNewReleasesRow(row)).map((row) => (
               <TmdbRow
                 key={row.rowKey}
                 title={row.title}

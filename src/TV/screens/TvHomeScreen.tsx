@@ -6,7 +6,7 @@ import { useLayoutStore } from "@/store/useLayoutStore";
 import { useTmdbContinueWatchingStore } from "@/store/useTmdbContinueWatchingStore";
 import { resumeTmdbItem } from "@/lib/resumePlayback";
 import { tmdbConfigured, tmdbImage, type TmdbItem } from "@/lib/tmdbApi";
-import { homeRows } from "@/Tmdb/homeRows";
+import { homeRows, isNewReleasesRow } from "@/Tmdb/homeRows";
 import Focusable from "../components/Focusable";
 import TvHero from "../components/TvHero";
 import { TmdbFetchRow } from "../components/PosterRow";
@@ -25,7 +25,13 @@ export function useOpenTvTitle() {
   );
 }
 
-function ContinueRow({ onOpen }: { onOpen: (item: any) => void }) {
+function ContinueRow({
+  onOpen,
+  takeFocus,
+}: {
+  onOpen: (item: any) => void;
+  takeFocus: boolean;
+}) {
   const items = useTmdbContinueWatchingStore((s) => s.items);
   if (items.length === 0) return null;
   return (
@@ -44,7 +50,7 @@ function ContinueRow({ onOpen }: { onOpen: (item: any) => void }) {
           return (
             <Focusable
               grow
-              hasTVPreferredFocus={index === 0}
+              hasTVPreferredFocus={takeFocus && index === 0}
               style={styles.wide}
               onPress={() => {
                 // Entries saved with player state skip the details page.
@@ -75,6 +81,9 @@ function ContinueRow({ onOpen }: { onOpen: (item: any) => void }) {
 export default function TvHomeScreen() {
   const preferred = useLayoutStore((s) => s.preferredLanguage);
   const rows = useMemo(() => homeRows(preferred), [preferred]);
+  // "New in <language> this week" leads, above Continue Watching.
+  const newRows = rows.filter(isNewReleasesRow);
+  const otherRows = rows.filter((row) => !isNewReleasesRow(row));
   const open = useOpenTvTitle();
   const hasContinue = useTmdbContinueWatchingStore((s) => s.items.length > 0);
 
@@ -90,15 +99,25 @@ export default function TvHomeScreen() {
     <View style={styles.screen}>
       <TvHero height={210} />
       <ScrollView style={styles.rows} showsVerticalScrollIndicator={false}>
-        <ContinueRow onOpen={open} />
-        {rows.map((row, index) => (
+        {newRows.map((row) => (
           <TmdbFetchRow
             key={row.rowKey}
             title={row.title}
             rowKey={row.rowKey}
             fetcher={row.fetcher}
             onOpen={open}
-            firstHasFocus={!hasContinue && index === 0}
+            firstHasFocus
+          />
+        ))}
+        <ContinueRow onOpen={open} takeFocus={newRows.length === 0} />
+        {otherRows.map((row, index) => (
+          <TmdbFetchRow
+            key={row.rowKey}
+            title={row.title}
+            rowKey={row.rowKey}
+            fetcher={row.fetcher}
+            onOpen={open}
+            firstHasFocus={newRows.length === 0 && !hasContinue && index === 0}
           />
         ))}
         <View style={{ height: 40 }} />

@@ -9,6 +9,7 @@ import { findPreferredStreamIndex } from "@/lib/audioLanguages";
 import { usePlayerStore, type PlayerMeta } from "@/store/usePlayerStore";
 import { usePreferencesStore } from "@/store/usePreferencesStore";
 import { getPreferredLanguage } from "@/store/useLayoutStore";
+import { setPlaybackStage } from "@/store/usePlaybackStageStore";
 import {
   continueKey,
   useTmdbContinueWatchingStore,
@@ -109,6 +110,7 @@ function link(signal: AbortSignal | undefined, controller: AbortController) {
  * this rarely costs an extra request.
  */
 async function chooseStart(streams: any[], signal?: AbortSignal) {
+  setPlaybackStage("servers");
   const selection = await selectPlaybackStreams(streams, {
     preference: usePreferencesStore.getState().defaultQuality,
     signal,
@@ -118,6 +120,7 @@ async function chooseStart(streams: any[], signal?: AbortSignal) {
   let startIndex = selection.startIndex;
   const preferred = getPreferredLanguage();
   if (preferred && selection.streams.length > 1 && !signal?.aborted) {
+    setPlaybackStage("audio");
     const hit = await findPreferredStreamIndex(
       selection.streams,
       preferred,
@@ -186,6 +189,7 @@ export async function playSource(
       .restore(continueKey(target.mediaType, target.id));
 
     hooks.onStage?.("Preparing stream…");
+    setPlaybackStage("source");
     usePlayerStore.getState().setVideo(PENDING, [], 0, meta);
     hooks.openPlayer();
 

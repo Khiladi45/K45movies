@@ -2,6 +2,7 @@
 import { NO_LANGUAGE, languageName } from "@/lib/languages";
 import {
   getDiscover,
+  getNewReleasesInLanguage,
   getNowPlaying,
   getOnTheAir,
   getPopular,
@@ -27,6 +28,14 @@ export function homeRows(preferredLanguage: string | null | undefined): HomeRow[
   const rows: HomeRow[] = [];
   if (language) {
     const langName = languageName(language);
+    rows.push(
+      // First row: this week's releases in the preferred language, best rated first.
+      {
+        title: `New in ${langName} this week`,
+        rowKey: `new-week-${language}`,
+        fetcher: (signal) => getNewReleasesInLanguage(language, 7, signal),
+      },
+    );
     rows.push(
       {
         title: `Popular ${langName} Movies`,
@@ -61,3 +70,7 @@ export function homeRows(preferredLanguage: string | null | undefined): HomeRow[
   );
   return rows;
 }
+
+/** The "New in <language> this week" row is shown above Continue Watching. */
+export const isNewReleasesRow = (row: HomeRow | undefined) =>
+  !!row && row.rowKey.startsWith("new-week-");
