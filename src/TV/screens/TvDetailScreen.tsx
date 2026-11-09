@@ -2,7 +2,15 @@
 // phone page (useMovieSources / useEpisodeSources + playSource), laid out for
 // a remote: Play has the first focus and starts the best source (preferred
 // language, closest to 1080p), with every source listed below it.
-import React, { useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type RefObject,
+} from "react";
 import { ActivityIndicator, FlatList, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -52,6 +60,48 @@ function statusLine(sources: Sources): string {
   return parts.join("  ·  ");
 }
 
+const TvSourceRow = memo(function TvSourceRow({
+  option,
+  providerName,
+  playing,
+  onPlay,
+}: {
+  option: SourceOption;
+  providerName: string;
+  playing: boolean;
+  onPlay: (option: SourceOption) => void;
+}) {
+  const langs = option.languages.map((code) => languageName(code)).filter(Boolean);
+  return (
+    <Focusable
+      style={styles.source}
+      onPress={() => onPlay(option)}
+      accessibilityLabel={`Play ${option.label}`}
+    >
+      <View style={styles.sourceMain}>
+        <Text style={styles.sourceLabel} numberOfLines={1}>
+          {option.label}
+        </Text>
+        <Text style={styles.sourceMeta} numberOfLines={1}>
+          {[
+            providerName,
+            option.height ? `${option.height}p` : "",
+            option.sizeText || "",
+            langs.length ? langs.join(", ") : option.multiAudio ? "Multi audio" : "",
+          ]
+            .filter(Boolean)
+            .join("  ·  ")}
+        </Text>
+      </View>
+      {playing ? (
+        <ActivityIndicator color="#fff" />
+      ) : (
+        <Ionicons name="play" size={18} color="#fff" />
+      )}
+    </Focusable>
+  );
+});
+
 function SourceList({
   sources,
   playingId,
@@ -65,42 +115,23 @@ function SourceList({
     () => Object.fromEntries(sources.providers.map((p) => [p.providerId, p.name])),
     [sources.providers],
   );
+  // Stable callback so only new or changed rows re-render as providers answer.
+  const onPlayRef = useRef(onPlay);
+  onPlayRef.current = onPlay;
+  const playStable = useCallback((option: SourceOption) => onPlayRef.current(option), []);
   return (
     <View style={styles.sources}>
       <Text style={styles.sectionTitle}>Sources</Text>
       <Text style={styles.status}>{statusLine(sources)}</Text>
-      {sources.options.map((option) => {
-        const langs = option.languages.map((code) => languageName(code)).filter(Boolean);
-        return (
-          <Focusable
-            key={option.id}
-            style={styles.source}
-            onPress={() => onPlay(option)}
-            accessibilityLabel={`Play ${option.label}`}
-          >
-            <View style={styles.sourceMain}>
-              <Text style={styles.sourceLabel} numberOfLines={1}>
-                {option.label}
-              </Text>
-              <Text style={styles.sourceMeta} numberOfLines={1}>
-                {[
-                  names[option.providerId] || option.providerId,
-                  option.height ? `${option.height}p` : "",
-                  option.sizeText || "",
-                  langs.length ? langs.join(", ") : option.multiAudio ? "Multi audio" : "",
-                ]
-                  .filter(Boolean)
-                  .join("  ·  ")}
-              </Text>
-            </View>
-            {playingId === option.id ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Ionicons name="play" size={18} color="#fff" />
-            )}
-          </Focusable>
-        );
-      })}
+      {sources.options.map((option) => (
+        <TvSourceRow
+          key={option.id}
+          option={option}
+          providerName={names[option.providerId] || option.providerId}
+          playing={playingId === option.id}
+          onPlay={playStable}
+        />
+      ))}
     </View>
   );
 }

@@ -9,6 +9,8 @@
 //      one playable row per quality (movies) or per episode quality (series)
 
 import { queryClient } from "@/lib/queryClient";
+import { yieldToUI } from "@/lib/uiYield";
+import { IS_TV } from "@/TV/isTV";
 import { providerApi } from "@/lib/providerApi";
 import { loadEpisodes } from "@/lib/playerSwitch";
 import {
@@ -28,7 +30,9 @@ import type { LinkItem, DirectLink } from "@/components/SeasonList";
 import { usePlayerStore, type PlayerEpisode } from "@/store/usePlayerStore";
 import type { TmdbMediaType } from "@/lib/tmdbApi";
 
-export const PROVIDER_CONCURRENCY = 3;
+// TV boxes have slow CPUs and provider scraping shares the UI thread, so run
+// fewer at once there to keep focus movement smooth.
+export const PROVIDER_CONCURRENCY = IS_TV ? 2 : 3;
 export const MAX_LANGUAGE_PROBES = 8;
 
 export type BridgeMedia = {
@@ -136,6 +140,9 @@ async function runPool<T>(
       await waitIfPaused(signal);
       if (signal?.aborted || next >= items.length) return;
       const item = items[next++];
+      // Give the UI a turn between heavy provider steps.
+      await yieldToUI();
+      if (signal?.aborted) return;
       try {
         await worker(item);
       } catch {

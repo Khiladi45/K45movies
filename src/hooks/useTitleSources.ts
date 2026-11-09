@@ -4,6 +4,7 @@ import { useProviderStore } from "@/store/useProviderStore";
 import { priorityProviderFor, useLayoutStore } from "@/store/useLayoutStore";
 import { prioritizeProviderRows, providersInPriorityOrder } from "@/lib/streamRanking";
 import { NO_LANGUAGE } from "@/lib/languages";
+import { afterInteractions, createBatcher } from "@/lib/uiYield";
 import { sortQualitiesStrict } from "@/lib/audioLanguages";
 import {
   MAX_LANGUAGE_PROBES,
@@ -72,16 +73,37 @@ export function useProviderMatches(media: BridgeMedia | null) {
         ]),
       ),
     );
-    void matchProviders(
-      media,
-      installed,
-      (next) => {
-        if (controller.signal.aborted) return;
-        setStates((prev) => ({ ...prev, [next.providerId]: next }));
-      },
-      controller.signal,
-    );
-    return () => controller.abort();
+    // Answers are applied in small batches: one render per batch instead of
+    // one per provider keeps the page smooth while sources load.
+    const batch = createBatcher<ProviderState>((items) => {
+      if (controller.signal.aborted) return;
+      setStates((prev) => {
+        const next = { ...prev };
+        items.forEach((item) => {
+          next[item.providerId] = item;
+        });
+        return next;
+      });
+    });
+    void (async () => {
+      // Let the page finish opening before the first provider request.
+      await afterInteractions();
+      if (controller.signal.aborted) return;
+      await matchProviders(
+        media,
+        installed,
+        (next) => {
+          if (controller.signal.aborted) return;
+          batch.push(next);
+        },
+        controller.signal,
+      );
+      batch.flush();
+    })();
+    return () => {
+      controller.abort();
+      batch.cancel();
+    };
     // `key` captures everything the search depends on.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
@@ -138,11 +160,21 @@ function useLanguageAwareOptions(
     targets.forEach((option) => probed.current.add(option.id));
     budget.current -= targets.length;
     setPending((count) => count + targets.length);
+    const batch = createBatcher<[string, string[]]>((items) => {
+      if (signal.aborted) return;
+      setResolved((prev) => {
+        const next = { ...prev };
+        items.forEach(([id, codes]) => {
+          next[id] = codes;
+        });
+        return next;
+      });
+    }, 250);
     void enrichLanguages(
       targets,
       (id, codes) => {
         if (signal.aborted) return;
-        setResolved((prev) => ({ ...prev, [id]: codes }));
+        batch.push([id, codes]);
       },
       signal,
       (id) => {
@@ -152,6 +184,7 @@ function useLanguageAwareOptions(
         setRetryTick((tick) => tick + 1);
       },
     ).finally(() => {
+      batch.flush();
       if (!signal.aborted) setPending((count) => Math.max(0, count - targets.length));
     });
   }, [raw, preferredCode, ready, retryTick]);
@@ -264,6 +297,20 @@ export function useEpisodeSources(
       if (started.current.has(key)) return;
       started.current.add(key);
       setResolving((prev) => [...prev, state.providerId]);
+      const batch = createBatcher<[string, SourceOption[]]>((items) => {
+        if (signal.aborted) return;
+        setByProvider((prev) => {
+          let next = prev;
+          items.forEach(([providerId, options]) => {
+            const existing = next[providerId] || [];
+            const fresh = options.filter(
+              (option) => !existing.some((known) => known.id === option.id),
+            );
+            if (fresh.length) next = { ...next, [providerId]: [...existing, ...fresh] };
+          });
+          return next;
+        });
+      });
       void resolveEpisodeOptions(
         media,
         state.matches,
@@ -271,18 +318,11 @@ export function useEpisodeSources(
         episode,
         (providerId, options) => {
           if (signal.aborted) return;
-          setByProvider((prev) => {
-            const existing = prev[providerId] || [];
-            const fresh = options.filter(
-              (option) => !existing.some((known) => known.id === option.id),
-            );
-            return fresh.length === 0
-              ? prev
-              : { ...prev, [providerId]: [...existing, ...fresh] };
-          });
+          batch.push([providerId, options]);
         },
         signal,
       ).finally(() => {
+        batch.flush();
         if (!signal.aborted) {
           setResolving((prev) => prev.filter((id) => id !== state.providerId));
         }

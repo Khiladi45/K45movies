@@ -1,4 +1,5 @@
 import { providerContext } from "../lib/providerContext";
+import { yieldToUI } from "../lib/uiYieldCore";
 import {
   has as registryHas,
   ids as registryIds,
@@ -95,7 +96,9 @@ class LocalProviderRunnerClass {
         signal.addEventListener("abort", onAbort, { once: true });
       }
 
-      Promise.resolve()
+      // Start on a fresh task (not a microtask) so pending renders and
+      // touches run before the provider's synchronous parsing begins.
+      yieldToUI()
         .then(() =>
           target({
             ...(args ?? {}),
