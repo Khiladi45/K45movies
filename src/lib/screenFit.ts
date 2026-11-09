@@ -16,3 +16,11 @@ export function autoFit(
   const diff = Math.abs(videoAspect - screenAspect) / screenAspect;
   return diff <= AUTO_STRETCH_TOLERANCE ? "stretch" : "fit";
 }
+
+/** Screen-fit mode that stretches only the height. */
+export const HEIGHT_120 = "height120";
+
+/** Vertical stretch applied on top of the resize mode (1 = none). */
+export function scaleYFor(aspectKey: unknown): number {
+  return aspectKey === HEIGHT_120 ? 1.2 : 1;
+}

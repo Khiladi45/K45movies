@@ -7,6 +7,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TVFocusGuideView,
   View,
 } from "react-native";
 import TouchableOpacity from "@/TV/components/FocusTouchable";
@@ -60,6 +61,15 @@ export function SidePanel({
       <Animated.View
         style={[styles.panel, { width, transform: [{ translateX: slide }] }]}
       >
+        {/* TV: keep remote focus inside the panel while it is open. */}
+        <TVFocusGuideView
+          autoFocus={IS_TV}
+          trapFocusUp={IS_TV}
+          trapFocusDown={IS_TV}
+          trapFocusLeft={IS_TV}
+          trapFocusRight={IS_TV}
+          style={{ flex: 1 }}
+        >
         <View style={styles.header}>
           <Text style={styles.title}>{title}</Text>
           <TouchableOpacity
@@ -71,6 +81,7 @@ export function SidePanel({
           </TouchableOpacity>
         </View>
         {children}
+        </TVFocusGuideView>
       </Animated.View>
     </View>
   );

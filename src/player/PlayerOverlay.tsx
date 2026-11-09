@@ -6,6 +6,7 @@ import {
   DeviceEventEmitter,
   PanResponder,
   Platform,
+  TVFocusGuideView,
   useTVEventHandler,
   Pressable,
   ScrollView,
@@ -78,7 +79,7 @@ import {
   QualityPreference,
 } from "@/lib/streams";
 import { HD_TARGET_HEIGHT } from "@/lib/streamRanking";
-import { autoFit } from "@/lib/screenFit";
+import { autoFit, HEIGHT_120, scaleYFor } from "@/lib/screenFit";
 
 const mmkv = createMMKV();
 import { orderEpisodes } from "@/lib/episodes";
@@ -118,6 +119,8 @@ const ASPECTS: { key: any; label: string }[] = [
   { key: ResizeMode.CONTAIN, label: "Fit" },
   { key: ResizeMode.COVER, label: "Cover" },
   { key: ResizeMode.STRETCH, label: "Stretch" },
+  // Fit, then 20% taller with the width unchanged (top/bottom edges cropped).
+  { key: HEIGHT_120, label: "Height 120%" },
   { key: ResizeMode.NONE, label: "100%" },
 ];
 
@@ -398,6 +401,8 @@ type PanelRowProps = {
   selected?: boolean;
   accent: string;
   onPress: () => void;
+  /** TV: this row takes remote focus when the menu opens. */
+  preferred?: boolean;
 };
 
 function PanelRow({
@@ -407,9 +412,11 @@ function PanelRow({
   selected,
   accent,
   onPress,
+  preferred,
 }: PanelRowProps) {
   return (
     <TouchableOpacity
+      hasTVPreferredFocus={preferred}
       style={[
         panelStyles.row,
         selected && { backgroundColor: "rgba(255,255,255,0.08)" },
@@ -2774,6 +2781,7 @@ const renderSeekButton = (side: "left" | "right") => {
 
   const resolvedResizeMode = useMemo(() => {
     const key = ASPECTS[aspectIdx]?.key ?? ResizeMode.CONTAIN;
+    if (key === HEIGHT_120) return ResizeMode.CONTAIN;
     if (key !== AUTO_ASPECT) return key;
     const screenAspect = screenHeight > 0 ? screenWidth / screenHeight : 16 / 9;
     return autoFit(videoAspect, screenAspect) === "stretch"
@@ -2888,6 +2896,7 @@ const renderSeekButton = (side: "left" | "right") => {
                   { translateX: zoomTranslate.x },
                   { translateY: zoomTranslate.y },
                   { scale: zoomScale },
+                  { scaleY: expanded ? scaleYFor(ASPECTS[aspectIdx]?.key) : 1 },
                 ],
               },
             ]}
@@ -3523,7 +3532,16 @@ const renderSeekButton = (side: "left" | "right") => {
                   wake();
                 }}
               />
-              <View style={styles.panel}>
+              {/* TV: focus starts on the current option and cannot leave the
+                  menu (it used to fall onto controls behind it). */}
+              <TVFocusGuideView
+                autoFocus={IS_TV}
+                trapFocusUp={IS_TV}
+                trapFocusDown={IS_TV}
+                trapFocusLeft={IS_TV}
+                trapFocusRight={IS_TV}
+                style={styles.panel}
+              >
                 <Text style={styles.panelTitle}>{PANEL_TITLES[panel]}</Text>
                 <ScrollView showsHorizontalScrollIndicator={false}
                   showsVerticalScrollIndicator={false}
@@ -3540,12 +3558,23 @@ const renderSeekButton = (side: "left" | "right") => {
                             : "No options available."}
                     </Text>
                   ) : (
-                    panelRows().map((row, index) => (
-                      <PanelRow key={`${panel}-${index}`} {...row} />
-                    ))
+                    (() => {
+                      const rows = panelRows();
+                      const focusIndex = Math.max(
+                        0,
+                        rows.findIndex((row) => row.selected),
+                      );
+                      return rows.map((row, index) => (
+                        <PanelRow
+                          key={`${panel}-${index}`}
+                          {...row}
+                          preferred={IS_TV && index === focusIndex}
+                        />
+                      ));
+                    })()
                   )}
                 </ScrollView>
-              </View>
+              </TVFocusGuideView>
             </View>
           )}
         </>
@@ -3643,6 +3672,8 @@ const styles = StyleSheet.create({
   fullscreen: {
     ...absoluteFillStyle,
     backgroundColor: "#000",
+    // Keeps zoomed / "Height 120%" video inside the screen.
+    overflow: "hidden",
     zIndex: 1000,
     elevation: 1000,
   },
