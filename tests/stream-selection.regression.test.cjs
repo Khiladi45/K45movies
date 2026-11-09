@@ -4,7 +4,13 @@
 const assert = require("assert");
 const path = require("path");
 
-const { hdRank, pickPreferredIndex, HD_TARGET_HEIGHT } = require(
+const {
+  hdRank,
+  pickPreferredIndex,
+  HD_TARGET_HEIGHT,
+  providersInPriorityOrder,
+  prioritizeProviderRows,
+} = require(
   path.join(__dirname, "..", "src", "lib", "streamRanking.ts"),
 );
 
@@ -56,5 +62,27 @@ assert.strictEqual(
   pickPreferredIndex([{ languages: ["en"], height: 1080 }], "ta"),
   -1,
 );
+
+// Priority provider (e.g. the user's first choice for Tamil) is searched first.
+assert.deepStrictEqual(
+  providersInPriorityOrder(["vega", "moviezwap", "hdhub4u"], "moviezwap"),
+  ["moviezwap", "vega", "hdhub4u"],
+);
+assert.deepStrictEqual(providersInPriorityOrder(["vega"], "notInstalled"), ["vega"]);
+assert.deepStrictEqual(providersInPriorityOrder(["vega"], null), ["vega"]);
+
+// ...and its rows lead the list, highest quality first; others keep order.
+const rows = [
+  { id: "a", providerId: "vega", height: 1080 },
+  { id: "b", providerId: "moviezwap", height: 720 },
+  { id: "c", providerId: "hdhub4u", height: 2160 },
+  { id: "d", providerId: "moviezwap", height: 1080 },
+  { id: "e", providerId: "moviezwap", height: null },
+];
+assert.deepStrictEqual(
+  prioritizeProviderRows(rows, "moviezwap").map((r) => r.id),
+  ["d", "b", "e", "a", "c"],
+);
+assert.deepStrictEqual(prioritizeProviderRows(rows, null).map((r) => r.id), ["a", "b", "c", "d", "e"]);
 
 console.log("PASS stream-selection regression");

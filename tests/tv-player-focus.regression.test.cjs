@@ -25,12 +25,19 @@ assert.ok(
 );
 
 // 3. Remote keys are handled while hidden (seek) and a paused TV keeps controls.
-assert.ok(/case "left":\s*if \(hidden\) return seek\(-10\);/.test(overlay), "left seeks when hidden");
-assert.ok(/case "right":\s*if \(hidden\) return seek\(10\);/.test(overlay), "right seeks when hidden");
+assert.ok(/case "left":\s*if \(scrub\) return seek\(-10\);/.test(overlay), "left seeks when hidden or on the timeline");
+assert.ok(/case "right":\s*if \(scrub\) return seek\(10\);/.test(overlay), "right seeks when hidden or on the timeline");
 assert.ok(/if \(IS_TV && pausedRef\.current\) return;/.test(overlay), "paused TV keeps its controls");
 
 // 4. TV screens restore focus when shown again.
 assert.ok(read("src/TV/TvApp.tsx").includes("useRestoreTvFocus(activeNavRef)"), "TV home restores focus");
 assert.ok(read("src/TV/screens/TvDetailScreen.tsx").includes("useRestoreTvFocus(playRef)"), "title page restores focus");
+
+// 5. The TV timeline is a focusable slider that traps Left/Right and tells the
+//    overlay to seek while it has focus.
+const controls = read("src/TV/TvPlayerControls.tsx");
+assert.ok(/function SeekBar[\s\S]*hasTVPreferredFocus[\s\S]*nextFocusLeft=\{self\}[\s\S]*nextFocusRight=\{self\}/.test(controls), "seek bar takes focus and traps left/right");
+assert.ok(/const scrub = hidden \|\| \(tvSeekBarFocusedRef\.current && !tvPanelRef\.current\);/.test(overlay), "overlay seeks while the timeline is focused");
+assert.ok(/tvLastSeekAtRef\.current < 200/.test(overlay), "held keys are rate-limited");
 
 console.log("PASS tv-player-focus regression");

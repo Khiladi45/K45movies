@@ -2161,6 +2161,11 @@ export default function PlayerOverlay() {
   // 10s (held: 30s). Play/Pause and the media keys always work. With the
   // controls or a panel showing, arrows move focus as usual and every key
   // keeps the controls awake.
+  const tvSeekBarFocusedRef = useRef(false);
+  const tvLastSeekAtRef = useRef(0);
+  const onTvSeekBarFocusChange = useCallback((focused: boolean) => {
+    tvSeekBarFocusedRef.current = focused;
+  }, []);
   const tvKeyRef = useRef<(evt: any) => void>(() => {});
   tvKeyRef.current = (evt: any) => {
     if (!IS_TV || !expanded) return;
@@ -2168,7 +2173,14 @@ export default function PlayerOverlay() {
     const pressed = evt?.eventKeyAction == null || evt.eventKeyAction === 0;
     if (!pressed || type === "focus" || type === "blur") return;
     const hidden = !showControlsRef.current && !tvPanelRef.current;
+    // Left/Right seek when the controls are hidden or the timeline is focused.
+    const scrub = hidden || (tvSeekBarFocusedRef.current && !tvPanelRef.current);
     const seek = (delta: number) => {
+      // Android repeats a held key every ~50ms as another press; seek at
+      // most ~5 times a second so holding scrubs at a usable speed.
+      const now = Date.now();
+      if (now - tvLastSeekAtRef.current < 200) return;
+      tvLastSeekAtRef.current = now;
       seekTo(currentTimeRef.current + delta);
       showToast(`${delta > 0 ? "+" : "−"}${Math.abs(delta)}s`);
     };
@@ -2183,16 +2195,16 @@ export default function PlayerOverlay() {
         seek(-10);
         return;
       case "right":
-        if (hidden) return seek(10);
+        if (scrub) return seek(10);
         break;
       case "left":
-        if (hidden) return seek(-10);
+        if (scrub) return seek(-10);
         break;
       case "longRight":
-        if (hidden) return seek(30);
+        if (scrub) return seek(30);
         break;
       case "longLeft":
-        if (hidden) return seek(-30);
+        if (scrub) return seek(-30);
         break;
       default:
         break;
@@ -3387,6 +3399,7 @@ const renderSeekButton = (side: "left" | "right") => {
           onTogglePlay={togglePlay}
           onSeekBy={(delta) => seekTo(currentTimeRef.current + delta)}
           onRestart={() => seekTo(0)}
+          onSeekBarFocusChange={onTvSeekBarFocusChange}
           onOpenPanel={(next: TvPanel) => {
             setPanel(next);
             wake(true);

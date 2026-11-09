@@ -28,8 +28,12 @@ type LayoutState = {
   // ISO 639-1 audio language used to sort qualities in the Movie Based layout,
   // or "none".
   preferredLanguage: string;
+  // Language code → provider id searched first and listed first (highest
+  // quality first) when that language is the preferred one.
+  priorityProviders: Record<string, string>;
   setLayout: (layout: AppLayout) => void;
   setPreferredLanguage: (code: string) => void;
+  setPriorityProvider: (language: string, providerId: string | null) => void;
 };
 
 export const useLayoutStore = create<LayoutState>()(
@@ -37,8 +41,16 @@ export const useLayoutStore = create<LayoutState>()(
     (set) => ({
       layout: "provider",
       preferredLanguage: NO_LANGUAGE,
+      priorityProviders: {},
       setLayout: (layout) => set({ layout }),
       setPreferredLanguage: (preferredLanguage) => set({ preferredLanguage }),
+      setPriorityProvider: (language, providerId) =>
+        set((state) => {
+          const next = { ...state.priorityProviders };
+          if (providerId) next[language] = providerId;
+          else delete next[language];
+          return { priorityProviders: next };
+        }),
     }),
     {
       name: "k45-layout-storage",
@@ -56,6 +68,14 @@ export const useLayoutStore = create<LayoutState>()(
             saved.preferredLanguage
               ? saved.preferredLanguage
               : NO_LANGUAGE,
+          priorityProviders:
+            saved.priorityProviders && typeof saved.priorityProviders === "object"
+              ? Object.fromEntries(
+                  Object.entries(saved.priorityProviders).filter(
+                    ([lang, id]) => typeof lang === "string" && typeof id === "string" && id,
+                  ),
+                )
+              : {},
         };
       },
     },
@@ -67,3 +87,10 @@ export const getPreferredLanguage = (): string | null => {
   const code = useLayoutStore.getState().preferredLanguage;
   return code && code !== NO_LANGUAGE ? code : null;
 };
+
+/** Provider to search and list first for a language, if the user chose one. */
+export const priorityProviderFor = (
+  priorityProviders: Record<string, string>,
+  language: string | null | undefined,
+): string | null =>
+  language && language !== NO_LANGUAGE ? priorityProviders[language] || null : null;

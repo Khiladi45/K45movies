@@ -8,7 +8,8 @@ import {
   type DefaultQuality,
 } from "@/store/usePreferencesStore";
 import { useProviderStore } from "@/store/useProviderStore";
-import { AUDIO_LANGUAGE_OPTIONS } from "@/lib/languages";
+import { AUDIO_LANGUAGE_OPTIONS, NO_LANGUAGE, languageName } from "@/lib/languages";
+import { useInstalledProviderNames } from "@/components/PriorityProviderPicker";
 import { useProviders } from "@/lib/providerApi";
 import { ProviderManager } from "@/services/ProviderManager";
 import { SandboxManager } from "@/services/SandboxManager";
@@ -151,6 +152,9 @@ function ProvidersBlock() {
 export default function TvSettingsScreen() {
   const preferredLanguage = useLayoutStore((s) => s.preferredLanguage);
   const setPreferredLanguage = useLayoutStore((s) => s.setPreferredLanguage);
+  const priorityProviders = useLayoutStore((s) => s.priorityProviders);
+  const setPriorityProvider = useLayoutStore((s) => s.setPriorityProvider);
+  const installedNames = useInstalledProviderNames();
   const prefs = usePreferencesStore();
 
   return (
@@ -163,6 +167,18 @@ export default function TvSettingsScreen() {
         value={preferredLanguage}
         onChange={setPreferredLanguage}
       />
+      {preferredLanguage && preferredLanguage !== NO_LANGUAGE ? (
+        <ChoiceRow<string>
+          title={`First provider for ${languageName(preferredLanguage)}`}
+          subtitle="Searched first; its highest-quality sources are suggested first."
+          options={[
+            { label: "None", value: "" },
+            ...installedNames.map((p) => ({ label: p.name, value: p.id })),
+          ]}
+          value={priorityProviders[preferredLanguage] || ""}
+          onChange={(value) => setPriorityProvider(preferredLanguage, value || null)}
+        />
+      ) : null}
       <ChoiceRow<DefaultQuality>
         title="Default quality"
         subtitle="HD 1080p starts fastest at good quality; 4K stays selectable in the player."

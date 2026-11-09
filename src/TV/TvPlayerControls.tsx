@@ -1,8 +1,8 @@
 // Remote-friendly controls for the player on Android TV. The overlay keeps
 // doing all the playback work; this only renders focusable buttons and the
 // progress line, and calls back into the overlay.
-import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { findNodeHandle, StyleSheet, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useThemeStore } from "@/store/useThemeStore";
@@ -55,6 +55,63 @@ function Button({
   );
 }
 
+/**
+ * The timeline as a remote-operable slider. It takes focus when the controls
+ * appear; while focused, Left/Right are trapped here (the overlay seeks ±10s
+ * per press, repeating while held) and OK plays/pauses. Down reaches the
+ * buttons.
+ */
+function SeekBar({
+  progress,
+  loaded,
+  color,
+  onTogglePlay,
+  onFocusChange,
+}: {
+  progress: number;
+  loaded: number;
+  color: string;
+  onTogglePlay: () => void;
+  onFocusChange?: (focused: boolean) => void;
+}) {
+  const ref = useRef<View | null>(null);
+  const [self, setSelf] = useState<number | undefined>(undefined);
+  useEffect(() => {
+    const handle = findNodeHandle(ref.current);
+    if (handle != null) setSelf(handle);
+  }, []);
+  useEffect(() => () => onFocusChange?.(false), [onFocusChange]);
+  return (
+    <Focusable
+      ref={ref}
+      hasTVPreferredFocus
+      ring={false}
+      nextFocusLeft={self}
+      nextFocusRight={self}
+      style={styles.seek}
+      onPress={onTogglePlay}
+      onFocus={() => onFocusChange?.(true)}
+      onBlur={() => onFocusChange?.(false)}
+      accessibilityLabel="Timeline: left and right seek 10 seconds"
+    >
+      {(focused) => (
+        <View style={[styles.track, focused && styles.trackFocused]}>
+          <View style={[styles.loaded, { width: `${loaded * 100}%` }]} />
+          <View style={[styles.played, { width: `${progress * 100}%`, backgroundColor: color }]} />
+          {focused ? (
+            <View
+              style={[
+                styles.thumb,
+                { left: `${progress * 100}%`, borderColor: color },
+              ]}
+            />
+          ) : null}
+        </View>
+      )}
+    </Focusable>
+  );
+}
+
 export default function TvPlayerControls({
   title,
   subtitle,
@@ -72,6 +129,7 @@ export default function TvPlayerControls({
   hasSources,
   onNextEpisode,
   onRestart,
+  onSeekBarFocusChange,
 }: {
   title: string;
   subtitle?: string;
@@ -89,6 +147,8 @@ export default function TvPlayerControls({
   hasSources: boolean;
   onNextEpisode?: () => void;
   onRestart: () => void;
+  /** Tells the overlay to seek with Left/Right while the timeline is focused. */
+  onSeekBarFocusChange?: (focused: boolean) => void;
 }) {
   const primaryColor = useThemeStore((s) => s.primaryColor);
   const progress = duration > 0 ? Math.min(1, currentTime / duration) : 0;
@@ -110,17 +170,19 @@ export default function TvPlayerControls({
       <LinearGradient colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.85)"]} style={styles.bottom}>
         <View style={styles.timeRow}>
           <Text style={styles.time}>{fmt(currentTime)}</Text>
-          <View style={styles.track}>
-            <View style={[styles.loaded, { width: `${loaded * 100}%` }]} />
-            <View style={[styles.played, { width: `${progress * 100}%`, backgroundColor: primaryColor }]} />
-          </View>
+          <SeekBar
+            progress={progress}
+            loaded={loaded}
+            color={primaryColor}
+            onTogglePlay={onTogglePlay}
+            onFocusChange={onSeekBarFocusChange}
+          />
           <Text style={styles.time}>{fmt(duration)}</Text>
         </View>
         <View style={styles.buttons}>
           <Button icon="restart" label="Restart" onPress={onRestart} />
           <Button icon="rewind-10" label="Back 10s" onPress={() => onSeekBy(-10)} />
           <Button
-            preferred
             icon={paused ? "play" : "pause"}
             label={paused ? "Play" : "Pause"}
             onPress={onTogglePlay}
@@ -154,7 +216,9 @@ export default function TvPlayerControls({
             <Button icon="format-list-numbered" label="Episodes" onPress={() => onOpenPanel("episodes")} />
           ) : null}
         </View>
-        <Text style={styles.hint}>◀ ▶ seek 10s while controls are hidden · OK shows controls</Text>
+        <Text style={styles.hint}>
+          On the timeline: ◀ ▶ seek 10s (hold to keep seeking) · OK play/pause · ▼ buttons
+        </Text>
       </LinearGradient>
     </View>
   );
@@ -167,9 +231,21 @@ const styles = StyleSheet.create({
   bottom: { position: "absolute", left: 0, right: 0, bottom: 0, paddingHorizontal: 32, paddingTop: 40, paddingBottom: 18 },
   timeRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   time: { color: "#fff", fontSize: 13, fontVariant: ["tabular-nums"], minWidth: 52, textAlign: "center" },
-  track: { flex: 1, height: 4, backgroundColor: "rgba(255,255,255,0.25)", borderRadius: 2, overflow: "hidden" },
-  loaded: { position: "absolute", left: 0, top: 0, bottom: 0, backgroundColor: "rgba(255,255,255,0.35)" },
-  played: { position: "absolute", left: 0, top: 0, bottom: 0 },
+  seek: { flex: 1, paddingVertical: 8, borderRadius: 4 },
+  track: { height: 4, backgroundColor: "rgba(255,255,255,0.25)", borderRadius: 2 },
+  trackFocused: { height: 8, borderRadius: 4 },
+  thumb: {
+    position: "absolute",
+    top: -5,
+    width: 18,
+    height: 18,
+    marginLeft: -9,
+    borderRadius: 9,
+    backgroundColor: "#fff",
+    borderWidth: 3,
+  },
+  loaded: { position: "absolute", left: 0, top: 0, bottom: 0, borderRadius: 4, backgroundColor: "rgba(255,255,255,0.35)" },
+  played: { position: "absolute", left: 0, top: 0, bottom: 0, borderRadius: 4 },
   buttons: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 12 },
   spacer: { flex: 1 },
   button: {

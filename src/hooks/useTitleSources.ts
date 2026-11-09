@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useProviders } from "@/lib/providerApi";
 import { useProviderStore } from "@/store/useProviderStore";
-import { useLayoutStore } from "@/store/useLayoutStore";
+import { priorityProviderFor, useLayoutStore } from "@/store/useLayoutStore";
+import { prioritizeProviderRows, providersInPriorityOrder } from "@/lib/streamRanking";
 import { NO_LANGUAGE } from "@/lib/languages";
 import { sortQualitiesStrict } from "@/lib/audioLanguages";
 import {
@@ -43,7 +44,15 @@ function useProviderNames() {
  * each provider answers.
  */
 export function useProviderMatches(media: BridgeMedia | null) {
-  const installed = useProviderStore((s) => s.installedProviders);
+  const installedRaw = useProviderStore((s) => s.installedProviders);
+  // The preferred language's priority provider gets the first search request.
+  const priority = useLayoutStore((s) =>
+    priorityProviderFor(s.priorityProviders, s.preferredLanguage),
+  );
+  const installed = useMemo(
+    () => providersInPriorityOrder(installedRaw, priority),
+    [installedRaw, priority],
+  );
   const [states, setStates] = useState<Record<string, ProviderState>>({});
   const key = media
     ? `${media.mediaType}|${media.title}|${media.year}|${installed.join(",")}`
@@ -91,6 +100,9 @@ function useLanguageAwareOptions(
 ) {
   const preferred = useLayoutStore((s) => s.preferredLanguage);
   const preferredCode = preferred && preferred !== NO_LANGUAGE ? preferred : null;
+  const priority = useLayoutStore((s) =>
+    priorityProviderFor(s.priorityProviders, s.preferredLanguage),
+  );
   const [resolved, setResolved] = useState<Record<string, string[]>>({});
   const [pending, setPending] = useState(0);
   // Bumped when a probe was interrupted by playback starting, so it is queued
@@ -155,8 +167,10 @@ function useLanguageAwareOptions(
         : option,
     );
     // Strict order: preferred language, then multi-audio, then the rest.
-    return sortQualitiesStrict(merged, preferredCode);
-  }, [raw, resolved, preferredCode]);
+    // Strict order, then the priority provider's rows (highest quality first)
+    // ahead of everything else.
+    return prioritizeProviderRows(sortQualitiesStrict(merged, preferredCode), priority);
+  }, [raw, resolved, preferredCode, priority]);
 
   return { options, preferredCode, checkingAudio: pending > 0 };
 }

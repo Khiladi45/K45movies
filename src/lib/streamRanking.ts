@@ -37,3 +37,33 @@ export function pickPreferredIndex(
   });
   return best;
 }
+
+/** Search order: the priority provider first, the rest unchanged. */
+export function providersInPriorityOrder(
+  installed: string[],
+  priority: string | null | undefined,
+): string[] {
+  if (!priority || !installed.includes(priority)) return installed;
+  return [priority, ...installed.filter((id) => id !== priority)];
+}
+
+/**
+ * Puts the priority provider's rows first, highest quality first (taller
+ * first, unknown heights last); every other row keeps its order after them.
+ */
+export function prioritizeProviderRows<T extends { providerId: string; height: number | null }>(
+  rows: T[],
+  priority: string | null | undefined,
+): T[] {
+  if (!priority) return rows;
+  const mine = rows
+    .map((row, index) => ({ row, index }))
+    .filter(({ row }) => row.providerId === priority)
+    .sort(
+      (a, b) =>
+        (b.row.height ?? -1) - (a.row.height ?? -1) || a.index - b.index,
+    )
+    .map(({ row }) => row);
+  if (mine.length === 0) return rows;
+  return [...mine, ...rows.filter((row) => row.providerId !== priority)];
+}
