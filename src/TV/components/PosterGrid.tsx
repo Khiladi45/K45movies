@@ -1,4 +1,4 @@
-import React from "react";
+import React, { type RefObject } from "react";
 import { FlatList, StyleSheet, Text, View } from "react-native";
 import type { TmdbItem } from "@/lib/tmdbApi";
 import { PosterCard } from "./PosterRow";
@@ -12,11 +12,14 @@ export default function PosterGrid({
   onOpen,
   empty,
   header,
+  firstRef,
 }: {
   items: TmdbItem[];
   onOpen: (item: TmdbItem) => void;
   empty?: string;
   header?: React.ReactElement | null;
+  /** Attached to the first poster so a screen can move focus to it. */
+  firstRef?: RefObject<View | null>;
 }) {
   return (
     <FlatList
@@ -30,9 +33,14 @@ export default function PosterGrid({
       contentContainerStyle={styles.content}
       columnWrapperStyle={styles.row}
       removeClippedSubviews={false}
-      renderItem={({ item }) => (
+      renderItem={({ item, index }) => (
         <View>
-          <PosterCard item={item} onPress={onOpen} reportFocus={false} />
+          <PosterCard
+            ref={index === 0 ? firstRef : undefined}
+            item={item}
+            onPress={onOpen}
+            reportFocus={false}
+          />
         </View>
       )}
     />

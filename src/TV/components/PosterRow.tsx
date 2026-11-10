@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React, { forwardRef, memo } from "react";
 import { FlatList, StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { useTmdbRow } from "@/hooks/useTmdb";
@@ -7,20 +7,22 @@ import Focusable from "./Focusable";
 import { useTvFocusStore } from "../focusStore";
 import { TV } from "../theme";
 
-export const PosterCard = memo(function PosterCard({
-  item,
-  onPress,
-  hasTVPreferredFocus,
-  reportFocus = true,
-}: {
+type PosterCardProps = {
   item: TmdbItem;
   onPress: (item: TmdbItem) => void;
   hasTVPreferredFocus?: boolean;
   reportFocus?: boolean;
-}) {
+};
+
+export const PosterCard = memo(
+  forwardRef<View, PosterCardProps>(function PosterCard(
+    { item, onPress, hasTVPreferredFocus, reportFocus = true },
+    ref,
+  ) {
   const uri = tmdbImage(item.poster, "w342");
   return (
     <Focusable
+      ref={ref}
       grow
       hasTVPreferredFocus={hasTVPreferredFocus}
       style={styles.card}
@@ -41,7 +43,8 @@ export const PosterCard = memo(function PosterCard({
       )}
     </Focusable>
   );
-});
+  }),
+);
 
 /** A titled horizontal row of posters. Native focus scrolls it as you move. */
 export const PosterRow = memo(function PosterRow({
