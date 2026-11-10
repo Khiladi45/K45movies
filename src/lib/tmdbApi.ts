@@ -135,6 +135,8 @@ function toItem(raw: any, fallbackType?: TmdbMediaType): TmdbItem | null {
   };
 }
 
+import { bestRatedFirst, releaseWindow } from "./releaseWindow";
+
 const toItems = (results: any[], fallbackType?: TmdbMediaType): TmdbItem[] =>
   (Array.isArray(results) ? results : [])
     .map((raw) => toItem(raw, fallbackType))
@@ -178,6 +180,34 @@ export const getPopularInLanguage = async (
     ).results,
     type,
   );
+
+/**
+ * Movies in a language released in the last `days` days, best rated first.
+ * New releases often have few votes, so unrated ones follow by popularity
+ * and the row is not empty.
+ */
+export const getNewReleasesInLanguage = async (
+  language: string,
+  days = 7,
+  signal?: AbortSignal,
+) => {
+  const { from, to } = releaseWindow(new Date(), days);
+  const base = {
+    with_original_language: language,
+    "primary_release_date.gte": from,
+    "primary_release_date.lte": to,
+    include_adult: false,
+  };
+  const [rated, popular] = await Promise.all([
+    request(
+      "/discover/movie",
+      { ...base, sort_by: "vote_average.desc", "vote_count.gte": 1 },
+      signal,
+    ),
+    request("/discover/movie", { ...base, sort_by: "popularity.desc" }, signal),
+  ]);
+  return bestRatedFirst(toItems(rated.results, "movie"), toItems(popular.results, "movie"));
+};
 
 /** A random page of popular titles, so Home feels different between launches. */
 export const getDiscover = async (

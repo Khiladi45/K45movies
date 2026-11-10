@@ -9,6 +9,8 @@
 //      one playable row per quality (movies) or per episode quality (series)
 
 import { queryClient } from "@/lib/queryClient";
+import { yieldToUI } from "@/lib/uiYield";
+import { IS_TV } from "@/TV/isTV";
 import { providerApi } from "@/lib/providerApi";
 import { loadEpisodes } from "@/lib/playerSwitch";
 import {
@@ -28,7 +30,9 @@ import type { LinkItem, DirectLink } from "@/components/SeasonList";
 import { usePlayerStore, type PlayerEpisode } from "@/store/usePlayerStore";
 import type { TmdbMediaType } from "@/lib/tmdbApi";
 
-export const PROVIDER_CONCURRENCY = 3;
+// TV boxes have slow CPUs and provider scraping shares the UI thread, so run
+// fewer at once there to keep focus movement smooth.
+export const PROVIDER_CONCURRENCY = IS_TV ? 2 : 3;
 export const MAX_LANGUAGE_PROBES = 8;
 
 export type BridgeMedia = {
@@ -107,9 +111,18 @@ export function waitIfPaused(signal?: AbortSignal): Promise<void> {
   });
 }
 
-usePlayerStore.subscribe((state) =>
-  setSourceChecksPaused(!!state.currentVideoUrl),
-);
+// Language probes running in the background when playback starts. They are
+// interrupted so they do not compete with the stream that is starting; the
+// caller is told and re-queues them for after the player closes.
+const backgroundProbes = new Set<AbortController>();
+
+usePlayerStore.subscribe((state) => {
+  const paused = !!state.currentVideoUrl;
+  if (paused && !checksPaused) {
+    backgroundProbes.forEach((controller) => controller.abort());
+  }
+  setSourceChecksPaused(paused);
+});
 setSourceChecksPaused(!!usePlayerStore.getState().currentVideoUrl);
 
 // ---- helpers ---------------------------------------------------------------
@@ -127,6 +140,9 @@ async function runPool<T>(
       await waitIfPaused(signal);
       if (signal?.aborted || next >= items.length) return;
       const item = items[next++];
+      // Give the UI a turn between heavy provider steps.
+      await yieldToUI();
+      if (signal?.aborted) return;
       try {
         await worker(item);
       } catch {
@@ -230,15 +246,41 @@ function searchQueries(media: BridgeMedia): string[] {
   });
 }
 
+/**
+ * queryClient.fetchQuery that is cancelled (so the provider request is
+ * aborted) when the caller's signal fires, e.g. the title screen closed.
+ */
+async function fetchCancellable<T>(
+  queryKey: unknown[],
+  queryFn: (signal: AbortSignal) => Promise<T>,
+  signal?: AbortSignal,
+): Promise<T> {
+  if (signal?.aborted) throw new Error("canceled");
+  const onAbort = () => {
+    void queryClient.cancelQueries({ queryKey, exact: true });
+  };
+  signal?.addEventListener("abort", onAbort, { once: true });
+  try {
+    return await queryClient.fetchQuery({
+      queryKey,
+      queryFn: ({ signal: querySignal }) => queryFn(querySignal),
+      staleTime: 1000 * 60 * 5,
+    });
+  } finally {
+    signal?.removeEventListener("abort", onAbort);
+  }
+}
+
 async function searchProvider(
   providerId: string,
   query: string,
+  signal?: AbortSignal,
 ): Promise<ProviderPost[]> {
-  const results = await queryClient.fetchQuery({
-    queryKey: ["bridge-search", providerId, query.toLowerCase()],
-    queryFn: () => providerApi.search(query, [providerId]),
-    staleTime: 1000 * 60 * 5,
-  });
+  const results = await fetchCancellable(
+    ["bridge-search", providerId, query.toLowerCase()],
+    (querySignal) => providerApi.search(query, [providerId], querySignal),
+    signal,
+  );
   return (Array.isArray(results) ? results : [])
     .filter((item: any) => item && item.title && item.link)
     .map((item: any) => ({
@@ -249,12 +291,12 @@ async function searchProvider(
     }));
 }
 
-const loadMeta = (providerId: string, link: string) =>
-  queryClient.fetchQuery({
-    queryKey: ["meta", providerId, link],
-    queryFn: ({ signal }) => providerApi.getMeta(providerId, link, signal),
-    staleTime: 1000 * 60 * 5,
-  });
+const loadMeta = (providerId: string, link: string, signal?: AbortSignal) =>
+  fetchCancellable(
+    ["meta", providerId, link],
+    (querySignal) => providerApi.getMeta(providerId, link, querySignal),
+    signal,
+  );
 
 async function buildMatches(
   providerId: string,
@@ -262,6 +304,7 @@ async function buildMatches(
   posts: ProviderPost[],
   limit: number,
   skipLinks: Set<string> = new Set(),
+  signal?: AbortSignal,
 ): Promise<ProviderMatch[]> {
   const seen = new Set<string>(skipLinks);
   const ranked = posts
@@ -282,7 +325,7 @@ async function buildMatches(
   await Promise.all(
     ranked.map(async ({ post, score }) => {
       try {
-        const meta = await loadMeta(providerId, post.link);
+        const meta = await loadMeta(providerId, post.link, signal);
         matches.push({
           providerId,
           post,
@@ -301,15 +344,19 @@ async function buildMatches(
 async function matchProvider(
   providerId: string,
   media: BridgeMedia,
+  signal?: AbortSignal,
 ): Promise<ProviderMatch[]> {
   for (const query of searchQueries(media)) {
-    await waitIfPaused();
-    const posts = await searchProvider(providerId, query);
+    await waitIfPaused(signal);
+    if (signal?.aborted) return [];
+    const posts = await searchProvider(providerId, query, signal);
     const matches = await buildMatches(
       providerId,
       media,
       posts,
       MAX_MATCHES[media.mediaType],
+      new Set(),
+      signal,
     );
     if (matches.length > 0) return matches;
   }
@@ -331,7 +378,7 @@ export async function matchProviders(
     PROVIDER_CONCURRENCY,
     async (providerId) => {
       try {
-        const matches = await matchProvider(providerId, media);
+        const matches = await matchProvider(providerId, media, signal);
         if (signal?.aborted) return;
         onUpdate(
           matches.length > 0
@@ -601,9 +648,10 @@ export async function resolveEpisodeOptions(
         const posts = await searchProvider(
           providerId,
           `${media.title} season ${season}`,
+          signal,
         );
         const known = new Set(providerMatches.map((m) => m.post.link));
-        const extra = await buildMatches(providerId, media, posts, 2, known);
+        const extra = await buildMatches(providerId, media, posts, 2, known, signal);
         for (const match of extra) {
           if (signal?.aborted) return;
           await episodeOptionsForMatch(
@@ -623,6 +671,98 @@ export async function resolveEpisodeOptions(
   );
 }
 
+// ---- resolved streams (shared) ---------------------------------------------
+// A row's getStream result is reused for a few minutes, so the language probe
+// and the play button never scrape the same row twice. Concurrent callers
+// share one request; it is only aborted when every caller has given up.
+
+const STREAM_TTL_MS = 4 * 60 * 1000;
+
+type StreamEntry = {
+  at: number;
+  promise: Promise<any[]>;
+  controller: AbortController;
+  waiters: number;
+  settled: boolean;
+};
+
+const streamCache = new Map<string, StreamEntry>();
+const streamKey = (providerId: string, link: string) => `${providerId}|${link}`;
+
+/** Raw provider streams for a row (array, possibly empty). */
+export function resolveStreams(
+  providerId: string,
+  link: string,
+  type: string,
+  signal?: AbortSignal,
+): Promise<any[]> {
+  if (signal?.aborted) return Promise.reject(new Error("canceled"));
+  const key = streamKey(providerId, link);
+  let entry = streamCache.get(key);
+  if (!entry || Date.now() - entry.at > STREAM_TTL_MS) {
+    const controller = new AbortController();
+    const created: StreamEntry = {
+      at: Date.now(),
+      controller,
+      waiters: 0,
+      settled: false,
+      promise: providerApi
+        .getStream(providerId, link, type, controller.signal)
+        .then((raw: any) => (Array.isArray(raw) ? raw : raw ? [raw] : [])),
+    };
+    created.promise.then(
+      (list) => {
+        created.settled = true;
+        // Nothing playable is not worth remembering.
+        if (list.length === 0 && streamCache.get(key) === created) {
+          streamCache.delete(key);
+        }
+      },
+      () => {
+        created.settled = true;
+        if (streamCache.get(key) === created) streamCache.delete(key);
+      },
+    );
+    streamCache.set(key, created);
+    entry = created;
+  }
+
+  const shared = entry;
+  shared.waiters += 1;
+  return new Promise<any[]>((resolve, reject) => {
+    let done = false;
+    const leave = () => {
+      if (done) return false;
+      done = true;
+      shared.waiters -= 1;
+      signal?.removeEventListener("abort", onAbort);
+      return true;
+    };
+    function onAbort() {
+      if (!leave()) return;
+      if (shared.waiters <= 0 && !shared.settled) {
+        shared.controller.abort();
+        if (streamCache.get(key) === shared) streamCache.delete(key);
+      }
+      reject(new Error("canceled"));
+    }
+    signal?.addEventListener("abort", onAbort, { once: true });
+    shared.promise.then(
+      (list) => {
+        if (leave()) resolve(list);
+      },
+      (error) => {
+        if (leave()) reject(error);
+      },
+    );
+  });
+}
+
+/** Drops a row's cached streams (e.g. they turned out to be dead). */
+export function forgetStreams(providerId: string, link: string) {
+  streamCache.delete(streamKey(providerId, link));
+}
+
 // ---- language enrichment ---------------------------------------------------
 
 const probeCache = new Map<string, string[]>();
@@ -630,12 +770,14 @@ const probeCache = new Map<string, string[]>();
 /**
  * Looks inside rows whose language is unknown (or "multi audio") by resolving
  * their streams and reading provider metadata / HLS audio groups. Bounded to
- * MAX_LANGUAGE_PROBES rows and two at a time.
+ * MAX_LANGUAGE_PROBES rows and two at a time. A probe cut short because
+ * playback started is reported through `onInterrupted` so it can be retried.
  */
 export async function enrichLanguages(
   options: SourceOption[],
   onResolved: (id: string, languages: string[]) => void,
   signal?: AbortSignal,
+  onInterrupted?: (id: string) => void,
 ): Promise<void> {
   const targets = options
     .filter(
@@ -654,18 +796,35 @@ export async function enrichLanguages(
         onResolved(option.id, cached);
         return;
       }
-      const raw = await providerApi.getStream(
-        option.providerId,
-        option.link,
-        option.type,
-        signal,
-      );
-      const streams = normalizeStreams(
-        Array.isArray(raw) ? raw : raw ? [raw] : [],
-      );
-      const codes = await detectLanguagesFromStreams(streams, { signal });
-      probeCache.set(option.link, codes);
-      if (!signal?.aborted) onResolved(option.id, codes);
+      const item = new AbortController();
+      const onAbort = () => item.abort();
+      if (signal?.aborted) return;
+      signal?.addEventListener("abort", onAbort, { once: true });
+      backgroundProbes.add(item);
+      try {
+        const raw = await resolveStreams(
+          option.providerId,
+          option.link,
+          option.type,
+          item.signal,
+        );
+        const streams = normalizeStreams(raw);
+        const codes = await detectLanguagesFromStreams(streams, {
+          signal: item.signal,
+        });
+        if (item.signal.aborted) throw new Error("canceled");
+        probeCache.set(option.link, codes);
+        if (!signal?.aborted) onResolved(option.id, codes);
+      } catch (error) {
+        if (item.signal.aborted && !signal?.aborted) {
+          onInterrupted?.(option.id);
+          return;
+        }
+        throw error;
+      } finally {
+        backgroundProbes.delete(item);
+        signal?.removeEventListener("abort", onAbort);
+      }
     },
     signal,
   );

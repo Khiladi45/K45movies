@@ -14,6 +14,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useThemeStore } from "@/store/useThemeStore";
 import { useLayoutStore, type AppLayout } from "@/store/useLayoutStore";
 import { AUDIO_LANGUAGE_OPTIONS } from "@/lib/languages";
+import PriorityProviderPicker from "./PriorityProviderPicker";
 
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -230,6 +231,7 @@ export default function LayoutSettingsSection() {
                 })}
               </View>
             ) : null}
+            <PriorityProviderPicker />
           </View>
         ) : null}
       </View>

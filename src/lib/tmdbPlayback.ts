@@ -3,13 +3,13 @@
 // provider titles: open the player on a placeholder, resolve the provider
 // stream, pick a server, then hand the real stream to usePlayerStore.
 
-import { providerApi } from "@/lib/providerApi";
 import { episodeLabel, toPlayerEpisodes } from "@/lib/episodes";
 import { selectPlaybackStreams } from "@/lib/streams";
 import { findPreferredStreamIndex } from "@/lib/audioLanguages";
 import { usePlayerStore, type PlayerMeta } from "@/store/usePlayerStore";
 import { usePreferencesStore } from "@/store/usePreferencesStore";
 import { getPreferredLanguage } from "@/store/useLayoutStore";
+import { setPlaybackStage } from "@/store/usePlaybackStageStore";
 import {
   continueKey,
   useTmdbContinueWatchingStore,
@@ -19,7 +19,11 @@ import {
   nextQueueOption,
   useSourceQueueStore,
 } from "@/store/useSourceQueueStore";
-import type { SourceOption } from "@/lib/titleBridge";
+import {
+  forgetStreams,
+  resolveStreams,
+  type SourceOption,
+} from "@/lib/titleBridge";
 import type { TmdbMediaType } from "@/lib/tmdbApi";
 
 export type PlayTarget = {
@@ -36,7 +40,8 @@ export type PlayTarget = {
 };
 
 const PENDING = "pending://stream";
-let inFlight = false;
+// The playSource call in progress; a newer tap aborts it.
+let current: AbortController | null = null;
 
 export function buildPlayerMeta(
   option: SourceOption,
@@ -89,6 +94,43 @@ function failPending(link: string) {
   }
 }
 
+/** Aborts `controller` when `signal` fires; returns the detach function. */
+function link(signal: AbortSignal | undefined, controller: AbortController) {
+  if (!signal) return () => {};
+  if (signal.aborted) controller.abort();
+  const onAbort = () => controller.abort();
+  signal.addEventListener("abort", onAbort, { once: true });
+  return () => signal.removeEventListener("abort", onAbort);
+}
+
+/**
+ * Probes the servers and picks the one to start on: the preferred audio
+ * language when known (closest to 1080p among matches), otherwise the first
+ * server that answered. Language data mostly comes from the probe itself, so
+ * this rarely costs an extra request.
+ */
+async function chooseStart(streams: any[], signal?: AbortSignal) {
+  setPlaybackStage("servers");
+  const selection = await selectPlaybackStreams(streams, {
+    preference: usePreferencesStore.getState().defaultQuality,
+    signal,
+    budgetMs: 3000,
+    probeTimeoutMs: 2600,
+  });
+  let startIndex = selection.startIndex;
+  const preferred = getPreferredLanguage();
+  if (preferred && selection.streams.length > 1 && !signal?.aborted) {
+    setPlaybackStage("audio");
+    const hit = await findPreferredStreamIndex(
+      selection.streams,
+      preferred,
+      signal,
+    );
+    if (hit >= 0) startIndex = hit;
+  }
+  return { selection, startIndex };
+}
+
 /**
  * Plays one quality row. Throws an Error with a user-readable message when no
  * stream could be started (the caller shows it); resolves quietly when the
@@ -110,10 +152,30 @@ export async function playSource(
     unchecked?: number;
   },
 ): Promise<void> {
-  if (inFlight) return;
-  inFlight = true;
+  // A newer tap replaces the one still resolving.
+  current?.abort();
+  const controller = new AbortController();
+  current = controller;
+  const detach = link(hooks.signal, controller);
+  const signal = controller.signal;
   const meta = buildPlayerMeta(option, target);
+  // Closes the placeholder player, unless a newer tap now owns it (a double
+  // tap on the same row shares the link, so the link alone is not enough).
+  const fail = () => {
+    if (current === controller) failPending(option.link);
+  };
   try {
+    // Start (or join) the provider request before the player opens: opening
+    // it interrupts background language probes, and one of them may already
+    // be resolving this very row.
+    const streamsPromise = resolveStreams(
+      option.providerId,
+      option.link,
+      option.type,
+      signal,
+    );
+    streamsPromise.catch(() => {});
+
     const known = queue?.options?.length ? queue.options : [];
     useSourceQueueStore.getState().setQueue({
       options: known.some((o) => o.id === option.id) ? known : [option, ...known],
@@ -127,57 +189,39 @@ export async function playSource(
       .restore(continueKey(target.mediaType, target.id));
 
     hooks.onStage?.("Preparing stream…");
+    setPlaybackStage("source");
     usePlayerStore.getState().setVideo(PENDING, [], 0, meta);
     hooks.openPlayer();
 
-    let raw: any;
+    let streams: any[];
     try {
-      raw = await providerApi.getStream(
-        option.providerId,
-        option.link,
-        option.type,
-        hooks.signal,
-      );
+      streams = await streamsPromise;
     } catch (error: any) {
-      failPending(option.link);
+      fail();
+      if (signal.aborted) return;
       throw new Error(
         error?.message || "Could not get a playable stream from this provider.",
       );
     }
-    if (hooks.signal?.aborted) return;
+    if (signal.aborted) {
+      fail();
+      return;
+    }
 
     hooks.onStage?.("Checking servers…");
-    const streams: any[] = Array.isArray(raw) ? raw : raw ? [raw] : [];
-    const selection = await selectPlaybackStreams(streams, {
-      preference: usePreferencesStore.getState().defaultQuality,
-      signal: hooks.signal,
-      budgetMs: 3000,
-      probeTimeoutMs: 2600,
-    });
-    if (hooks.signal?.aborted) return;
+    const { selection, startIndex } = await chooseStart(streams, signal);
+    if (signal.aborted) {
+      fail();
+      return;
+    }
     if (selection.streams.length === 0) {
-      failPending(option.link);
+      forgetStreams(option.providerId, option.link);
+      fail();
       throw new Error(
         selection.skippedDownloadOnly > 0
           ? "This provider only offers download-only servers."
           : "This provider returned no playable stream.",
       );
-    }
-
-    // Prefer a server whose audio matches the user's language, but never one
-    // the probe already found dead.
-    let startIndex = selection.startIndex;
-    const preferred = getPreferredLanguage();
-    if (preferred && selection.streams.length > 1) {
-      hooks.onStage?.("Choosing audio…");
-      const hit = await findPreferredStreamIndex(
-        selection.streams,
-        preferred,
-        hooks.signal,
-      );
-      if (hit >= 0 && selection.streams[hit].probe?.status !== "failed") {
-        startIndex = hit;
-      }
     }
 
     const state = usePlayerStore.getState();
@@ -189,7 +233,8 @@ export async function playSource(
     state.setVideo(chosen.link, selection.streams, startIndex, meta);
     hooks.openPlayer();
   } finally {
-    inFlight = false;
+    detach();
+    if (current === controller) current = null;
   }
 }
 
@@ -197,30 +242,26 @@ export async function playSource(
 // ---- switching sources from inside the player ------------------------------
 
 let switching = false;
+// Aborted when the player closes, so a source switch still resolving in the
+// background stops instead of reopening a closed player.
+let switchController: AbortController | null = null;
+
+usePlayerStore.subscribe((state) => {
+  if (!state.currentVideoUrl) switchController?.abort();
+});
 
 /** Resolves a row to playable streams and the server to start on. */
-async function resolveOption(option: SourceOption) {
-  const raw = await providerApi.getStream(
+async function resolveOption(option: SourceOption, signal?: AbortSignal) {
+  const list = await resolveStreams(
     option.providerId,
     option.link,
     option.type,
+    signal,
   );
-  const list: any[] = Array.isArray(raw) ? raw : raw ? [raw] : [];
-  const selection = await selectPlaybackStreams(list, {
-    preference: usePreferencesStore.getState().defaultQuality,
-    budgetMs: 3000,
-    probeTimeoutMs: 2600,
-  });
+  const { selection, startIndex } = await chooseStart(list, signal);
   if (selection.streams.length === 0) {
+    forgetStreams(option.providerId, option.link);
     throw new Error("This provider returned no playable stream.");
-  }
-  let startIndex = selection.startIndex;
-  const preferred = getPreferredLanguage();
-  if (preferred && selection.streams.length > 1) {
-    const hit = await findPreferredStreamIndex(selection.streams, preferred);
-    if (hit >= 0 && selection.streams[hit].probe?.status !== "failed") {
-      startIndex = hit;
-    }
   }
   return { streams: selection.streams, startIndex };
 }
@@ -246,18 +287,22 @@ export async function switchToOption(
       resumeAt: position > 2 ? position : undefined,
       notice,
     };
-    const { streams, startIndex } = await resolveOption(option);
+    switchController = new AbortController();
+    const signal = switchController.signal;
+    const { streams, startIndex } = await resolveOption(option, signal);
     const player = usePlayerStore.getState();
-    if (!player.currentVideoUrl) return "ok"; // the user closed the player
+    if (signal.aborted || !player.currentVideoUrl) return "ok"; // player closed
     const chosen = streams[startIndex] || streams[0];
     player.setVideo(chosen.link, streams, startIndex, meta);
     useSourceQueueStore.getState().setCurrent(option.id);
     return "ok";
   } catch {
+    if (switchController?.signal.aborted) return "ok"; // player closed
     useSourceQueueStore.getState().markFailed(option.id);
     return "failed";
   } finally {
     switching = false;
+    switchController = null;
   }
 }
 

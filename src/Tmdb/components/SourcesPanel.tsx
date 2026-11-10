@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo, useCallback, useRef } from "react";
 import {
   ActivityIndicator,
   ScrollView,
@@ -49,13 +49,14 @@ function StatusChip({ status }: { status: ProviderStatus }) {
   );
 }
 
-function SourceRow({
+// Memoised: while providers answer, only new or changed rows re-render.
+const SourceRow = memo(function SourceRow({
   option,
   providerName,
   preferredCode,
   playing,
   disabled,
-  onPress,
+  onPlay,
   stage,
 }: {
   option: SourceOption;
@@ -63,9 +64,10 @@ function SourceRow({
   preferredCode: string | null;
   playing: boolean;
   disabled: boolean;
-  onPress: () => void;
+  onPlay: (option: SourceOption) => void;
   stage: string | null;
 }) {
+  const onPress = () => onPlay(option);
   const { primaryColor } = useThemeStore();
   const meta = [providerName, option.sizeText].filter(Boolean).join(" · ");
   return (
@@ -120,7 +122,7 @@ function SourceRow({
       )}
     </TouchableOpacity>
   );
-}
+});
 
 /**
  * Quality list for a movie or one episode. Providers report in one at a time;
@@ -154,6 +156,11 @@ export default function SourcesPanel({
   const split =
     [preferredRows, multiRows, otherRows].filter((g) => g.length > 0).length > 1;
   const busy = playingId != null;
+  // Stable callback for the memoised rows; always calls the latest onPlay
+  // (which builds the queue from the current list).
+  const onPlayRef = useRef(onPlay);
+  onPlayRef.current = onPlay;
+  const playStable = useCallback((option: SourceOption) => onPlayRef.current(option), []);
 
   const renderRow = (option: SourceOption) => (
     <SourceRow
@@ -164,7 +171,7 @@ export default function SourcesPanel({
       playing={playingId === option.id}
       disabled={busy}
       stage={stage}
-      onPress={() => onPlay(option)}
+      onPlay={playStable}
     />
   );
 

@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useProviders } from "@/lib/providerApi";
 import { useProviderStore } from "@/store/useProviderStore";
-import { useLayoutStore } from "@/store/useLayoutStore";
+import { priorityProviderFor, useLayoutStore } from "@/store/useLayoutStore";
+import { prioritizeProviderRows, providersInPriorityOrder } from "@/lib/streamRanking";
 import { NO_LANGUAGE } from "@/lib/languages";
+import { afterInteractions, createBatcher } from "@/lib/uiYield";
 import { sortQualitiesStrict } from "@/lib/audioLanguages";
 import {
   MAX_LANGUAGE_PROBES,
@@ -43,7 +45,15 @@ function useProviderNames() {
  * each provider answers.
  */
 export function useProviderMatches(media: BridgeMedia | null) {
-  const installed = useProviderStore((s) => s.installedProviders);
+  const installedRaw = useProviderStore((s) => s.installedProviders);
+  // The preferred language's priority provider gets the first search request.
+  const priority = useLayoutStore((s) =>
+    priorityProviderFor(s.priorityProviders, s.preferredLanguage),
+  );
+  const installed = useMemo(
+    () => providersInPriorityOrder(installedRaw, priority),
+    [installedRaw, priority],
+  );
   const [states, setStates] = useState<Record<string, ProviderState>>({});
   const key = media
     ? `${media.mediaType}|${media.title}|${media.year}|${installed.join(",")}`
@@ -63,16 +73,37 @@ export function useProviderMatches(media: BridgeMedia | null) {
         ]),
       ),
     );
-    void matchProviders(
-      media,
-      installed,
-      (next) => {
-        if (controller.signal.aborted) return;
-        setStates((prev) => ({ ...prev, [next.providerId]: next }));
-      },
-      controller.signal,
-    );
-    return () => controller.abort();
+    // Answers are applied in small batches: one render per batch instead of
+    // one per provider keeps the page smooth while sources load.
+    const batch = createBatcher<ProviderState>((items) => {
+      if (controller.signal.aborted) return;
+      setStates((prev) => {
+        const next = { ...prev };
+        items.forEach((item) => {
+          next[item.providerId] = item;
+        });
+        return next;
+      });
+    });
+    void (async () => {
+      // Let the page finish opening before the first provider request.
+      await afterInteractions();
+      if (controller.signal.aborted) return;
+      await matchProviders(
+        media,
+        installed,
+        (next) => {
+          if (controller.signal.aborted) return;
+          batch.push(next);
+        },
+        controller.signal,
+      );
+      batch.flush();
+    })();
+    return () => {
+      controller.abort();
+      batch.cancel();
+    };
     // `key` captures everything the search depends on.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
@@ -91,8 +122,14 @@ function useLanguageAwareOptions(
 ) {
   const preferred = useLayoutStore((s) => s.preferredLanguage);
   const preferredCode = preferred && preferred !== NO_LANGUAGE ? preferred : null;
+  const priority = useLayoutStore((s) =>
+    priorityProviderFor(s.priorityProviders, s.preferredLanguage),
+  );
   const [resolved, setResolved] = useState<Record<string, string[]>>({});
   const [pending, setPending] = useState(0);
+  // Bumped when a probe was interrupted by playback starting, so it is queued
+  // again (it waits for the player to close before running).
+  const [retryTick, setRetryTick] = useState(0);
   const probed = useRef(new Set<string>());
   const budget = useRef(MAX_LANGUAGE_PROBES);
   const controller = useRef<AbortController | null>(null);
@@ -123,17 +160,34 @@ function useLanguageAwareOptions(
     targets.forEach((option) => probed.current.add(option.id));
     budget.current -= targets.length;
     setPending((count) => count + targets.length);
+    const batch = createBatcher<[string, string[]]>((items) => {
+      if (signal.aborted) return;
+      setResolved((prev) => {
+        const next = { ...prev };
+        items.forEach(([id, codes]) => {
+          next[id] = codes;
+        });
+        return next;
+      });
+    }, 250);
     void enrichLanguages(
       targets,
       (id, codes) => {
         if (signal.aborted) return;
-        setResolved((prev) => ({ ...prev, [id]: codes }));
+        batch.push([id, codes]);
       },
       signal,
+      (id) => {
+        if (signal.aborted) return;
+        probed.current.delete(id);
+        budget.current += 1;
+        setRetryTick((tick) => tick + 1);
+      },
     ).finally(() => {
+      batch.flush();
       if (!signal.aborted) setPending((count) => Math.max(0, count - targets.length));
     });
-  }, [raw, preferredCode, ready]);
+  }, [raw, preferredCode, ready, retryTick]);
 
   const options = useMemo(() => {
     const merged = raw.map((option) =>
@@ -146,8 +200,10 @@ function useLanguageAwareOptions(
         : option,
     );
     // Strict order: preferred language, then multi-audio, then the rest.
-    return sortQualitiesStrict(merged, preferredCode);
-  }, [raw, resolved, preferredCode]);
+    // Strict order, then the priority provider's rows (highest quality first)
+    // ahead of everything else.
+    return prioritizeProviderRows(sortQualitiesStrict(merged, preferredCode), priority);
+  }, [raw, resolved, preferredCode, priority]);
 
   return { options, preferredCode, checkingAudio: pending > 0 };
 }
@@ -241,6 +297,20 @@ export function useEpisodeSources(
       if (started.current.has(key)) return;
       started.current.add(key);
       setResolving((prev) => [...prev, state.providerId]);
+      const batch = createBatcher<[string, SourceOption[]]>((items) => {
+        if (signal.aborted) return;
+        setByProvider((prev) => {
+          let next = prev;
+          items.forEach(([providerId, options]) => {
+            const existing = next[providerId] || [];
+            const fresh = options.filter(
+              (option) => !existing.some((known) => known.id === option.id),
+            );
+            if (fresh.length) next = { ...next, [providerId]: [...existing, ...fresh] };
+          });
+          return next;
+        });
+      });
       void resolveEpisodeOptions(
         media,
         state.matches,
@@ -248,18 +318,11 @@ export function useEpisodeSources(
         episode,
         (providerId, options) => {
           if (signal.aborted) return;
-          setByProvider((prev) => {
-            const existing = prev[providerId] || [];
-            const fresh = options.filter(
-              (option) => !existing.some((known) => known.id === option.id),
-            );
-            return fresh.length === 0
-              ? prev
-              : { ...prev, [providerId]: [...existing, ...fresh] };
-          });
+          batch.push([providerId, options]);
         },
         signal,
       ).finally(() => {
+        batch.flush();
         if (!signal.aborted) {
           setResolving((prev) => prev.filter((id) => id !== state.providerId));
         }

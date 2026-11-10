@@ -13,15 +13,8 @@ import { Ionicons } from "@expo/vector-icons";
 import Skeleton from "@/components/Skeleton";
 import { useLayoutStore } from "@/store/useLayoutStore";
 import { useTmdbWatchlistStore } from "@/store/useTmdbWatchlistStore";
-import { NO_LANGUAGE, languageName } from "@/lib/languages";
 import { useTmdbRow } from "@/hooks/useTmdb";
 import {
-  getDiscover,
-  getNowPlaying,
-  getOnTheAir,
-  getPopular,
-  getPopularInLanguage,
-  getTopRated,
   getTrending,
   tmdbConfigured,
   tmdbImage,
@@ -29,14 +22,12 @@ import {
 } from "@/lib/tmdbApi";
 import ContinueWatchingRow from "../components/ContinueWatchingRow";
 import { MissingKeyNotice, TmdbRow, useOpenTitle } from "../components/common";
+import { homeRows, isNewReleasesRow } from "../homeRows";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const HERO_WIDTH = SCREEN_WIDTH - 34;
 const HERO_HEIGHT = 420;
 const HERO_STEP = HERO_WIDTH + 16;
-
-// A different "Discover" page each time the app starts.
-const DISCOVER_PAGE = 1 + Math.floor(Math.random() * 10);
 
 function Hero() {
   const open = useOpenTitle();
@@ -149,8 +140,7 @@ function Hero() {
 
 export default function TmdbHomeScreen() {
   const preferred = useLayoutStore((s) => s.preferredLanguage);
-  const language = preferred !== NO_LANGUAGE ? preferred : null;
-  const langName = languageName(language);
+  const rows = useMemo(() => homeRows(preferred), [preferred]);
 
   if (!tmdbConfigured()) {
     return (
@@ -170,38 +160,23 @@ export default function TmdbHomeScreen() {
         renderItem={() => (
           <View>
             <Hero />
+            {rows.filter(isNewReleasesRow).map((row) => (
+              <TmdbRow
+                key={row.rowKey}
+                title={row.title}
+                rowKey={row.rowKey}
+                fetcher={row.fetcher}
+              />
+            ))}
             <ContinueWatchingRow />
-            {language ? (
-              <>
-                <TmdbRow
-                  title={`Popular ${langName} Movies`}
-                  rowKey={`lang-movie-${language}`}
-                  fetcher={(signal) => getPopularInLanguage("movie", language, signal)}
-                />
-                <TmdbRow
-                  title={`Popular ${langName} Series`}
-                  rowKey={`lang-tv-${language}`}
-                  fetcher={(signal) => getPopularInLanguage("tv", language, signal)}
-                />
-              </>
-            ) : null}
-            <TmdbRow title="Trending This Week" rowKey="trending" fetcher={getTrending} />
-            <TmdbRow title="Popular Movies" rowKey="popular-movie" fetcher={(s) => getPopular("movie", s)} />
-            <TmdbRow title="Popular Series" rowKey="popular-tv" fetcher={(s) => getPopular("tv", s)} />
-            <TmdbRow title="Now Playing" rowKey="now-playing" fetcher={getNowPlaying} />
-            <TmdbRow title="On The Air" rowKey="on-the-air" fetcher={getOnTheAir} />
-            <TmdbRow title="Top Rated Movies" rowKey="top-movie" fetcher={(s) => getTopRated("movie", s)} />
-            <TmdbRow title="Top Rated Series" rowKey="top-tv" fetcher={(s) => getTopRated("tv", s)} />
-            <TmdbRow
-              title="Discover Movies"
-              rowKey={`discover-movie-${DISCOVER_PAGE}`}
-              fetcher={(s) => getDiscover("movie", DISCOVER_PAGE, s)}
-            />
-            <TmdbRow
-              title="Discover Series"
-              rowKey={`discover-tv-${DISCOVER_PAGE}`}
-              fetcher={(s) => getDiscover("tv", DISCOVER_PAGE, s)}
-            />
+            {rows.filter((row) => !isNewReleasesRow(row)).map((row) => (
+              <TmdbRow
+                key={row.rowKey}
+                title={row.title}
+                rowKey={row.rowKey}
+                fetcher={row.fetcher}
+              />
+            ))}
           </View>
         )}
       />

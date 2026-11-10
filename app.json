@@ -45,6 +45,7 @@
       "expo-image",
       "expo-font",
       "./plugins/with-video-decoder",
+      "./plugins/with-android-tv",
       [
         "react-native-video",
         {

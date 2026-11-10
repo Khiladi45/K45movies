@@ -95,7 +95,7 @@ export default function YtSheet({ visible, onClose, title, heightRatio, children
 }
 
 const styles = StyleSheet.create({
-  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.6)" },
+  backdrop: { ...StyleSheet.absoluteFill, backgroundColor: "rgba(0,0,0,0.6)" },
   sheet: {
     position: "absolute",
     backgroundColor: "#212121",

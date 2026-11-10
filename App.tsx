@@ -10,6 +10,8 @@ import SandboxWebView from "./src/components/SandboxWebView";
 import PlayerOverlay from "./src/player/PlayerOverlay";
 import { usePlayerStore } from "./src/store/usePlayerStore";
 import { ProviderManager } from "./src/services/ProviderManager";
+import { IS_TV } from "./src/TV/isTV";
+import TvApp from "./src/TV/TvApp";
 
 export default function App() {
   const sessionId = usePlayerStore((s) => s.sessionId);
@@ -22,7 +24,8 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (Platform.OS === "web") return;
+    // TVs are always landscape; never lock them to portrait.
+    if (Platform.OS === "web" || IS_TV) return;
     // The app is portrait outside the player. The player unlocks rotation
     // itself; this also restores portrait after the player closes.
     ScreenOrientation.lockAsync(
@@ -34,7 +37,7 @@ export default function App() {
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
         <View style={{ flex: 1 }}>
-          <AppNavigator />
+          {IS_TV ? <TvApp /> : <AppNavigator />}
           <SandboxWebView />
           <PlayerOverlay key={sessionId} />
         </View>

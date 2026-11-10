@@ -6,16 +6,32 @@ import {
   DeviceEventEmitter,
   PanResponder,
   Platform,
+  TVFocusGuideView,
+  useTVEventHandler,
   Pressable,
   ScrollView,
   StatusBar,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
   findNodeHandle,
   useWindowDimensions,
 } from "react-native";
+import TouchableOpacity from "@/TV/components/FocusTouchable";
+import { IS_TV } from "@/TV/isTV";
+import StartupLoader from "./StartupLoader";
+import { usePlaybackStageStore } from "@/store/usePlaybackStageStore";
+import TvPlayerControls, {
+  type TvFocusZone,
+  type TvPanel,
+} from "@/TV/TvPlayerControls";
+import {
+  clampSeek,
+  nextScrubTarget,
+  remoteAction,
+  SCRUB_COMMIT_MS,
+  SCRUB_HOLD_INTERVAL_MS,
+} from "@/lib/tvScrub";
 import Video, {
   BufferingStrategyType,
   ResizeMode,
@@ -74,6 +90,8 @@ import {
   ensureHttpUrl,
   QualityPreference,
 } from "@/lib/streams";
+import { HD_TARGET_HEIGHT } from "@/lib/streamRanking";
+import { autoFit, HEIGHT_120, scaleYFor } from "@/lib/screenFit";
 
 const mmkv = createMMKV();
 import { orderEpisodes } from "@/lib/episodes";
@@ -104,10 +122,17 @@ const readGalaxyMarkup = (uri: string) => {
 const galaxyPage = (markup: string) =>
   `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0;padding:0;background:transparent;width:100%;height:100%;overflow:hidden}svg{width:100%;height:100%;display:block}</style></head><body>${markup}</body></html>`;
 const RATES = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+// "auto" is resolved per video: when the picture's shape is close to the
+// screen's it is stretched to fill (no thin bars); otherwise the whole picture
+// is fitted with black bars (e.g. 2.39:1 films on a 16:9 TV).
+const AUTO_ASPECT = "auto";
 const ASPECTS: { key: any; label: string }[] = [
+  { key: AUTO_ASPECT, label: "Auto (fill or fit with black bars)" },
   { key: ResizeMode.CONTAIN, label: "Fit" },
   { key: ResizeMode.COVER, label: "Cover" },
   { key: ResizeMode.STRETCH, label: "Stretch" },
+  // Fit, then 20% taller with the width unchanged (top/bottom edges cropped).
+  { key: HEIGHT_120, label: "Height 120%" },
   { key: ResizeMode.NONE, label: "100%" },
 ];
 
@@ -388,6 +413,8 @@ type PanelRowProps = {
   selected?: boolean;
   accent: string;
   onPress: () => void;
+  /** TV: this row takes remote focus when the menu opens. */
+  preferred?: boolean;
 };
 
 function PanelRow({
@@ -397,9 +424,11 @@ function PanelRow({
   selected,
   accent,
   onPress,
+  preferred,
 }: PanelRowProps) {
   return (
     <TouchableOpacity
+      hasTVPreferredFocus={preferred}
       style={[
         panelStyles.row,
         selected && { backgroundColor: "rgba(255,255,255,0.08)" },
@@ -505,6 +534,13 @@ const PANEL_TITLES: Record<string, string> = {
   aspect: "Screen Size",
 };
 
+// Bitrate ceiling for adaptive streams under the "HD" preference (bps):
+// comfortably above typical 1080p ladders, below 1440p/4K renditions.
+const HD_MAX_BITRATE = 12_000_000;
+
+// How long the first frame may wait for external subtitles.
+const INITIAL_SUBTITLE_WAIT_MS = 1500;
+
 const withTimeout = <T,>(promise: Promise<T>, ms: number, fallback: T) =>
   Promise.race([
     promise,
@@ -545,6 +581,10 @@ export default function PlayerOverlay() {
   );
   const currentStream: PlayableStream | undefined =
     normalizedStreams[streamIndex] || normalizedStreams[0];
+  // Link of the stream on screen, for async work that must not apply to a
+  // stream the user has already switched away from.
+  const liveLinkRef = useRef<string | undefined>(undefined);
+  liveLinkRef.current = currentStream?.link;
   const streamGroups = useMemo(
     () => groupStreams(normalizedStreams),
     [normalizedStreams],
@@ -579,7 +619,11 @@ export default function PlayerOverlay() {
   const [duration, setDuration] = useState(0);
   const [buffered, setBuffered] = useState(0);
   const [rate, setRate] = useState(1);
+  // Auto fit by default on phones and TV: fills the screen when the video's
+  // shape is close to it, otherwise fits the whole picture with black bars.
   const [aspectIdx, setAspectIdx] = useState(0);
+  // Width / height of the playing video, for the Auto screen fit.
+  const [videoAspect, setVideoAspect] = useState<number | null>(null);
   const [locked, setLocked] = useState(false);
   const [panel, setPanel] = useState<null | string>(null);
   const [showControls, setShowControls] = useState(true);
@@ -710,6 +754,15 @@ export default function PlayerOverlay() {
     currentStream,
     selectedVideo,
   };
+
+  // Loading screen steps: while the placeholder is up the playback helper sets
+  // source → servers → audio; once a real stream is mounted it is buffering
+  // until the first frame.
+  useEffect(() => {
+    const { stage, setStage } = usePlaybackStageStore.getState();
+    if (!pendingStream) setStage("buffering");
+    else if (stage === "buffering") setStage("source");
+  }, [pendingStream]);
 
   // Backstop for the placeholder player: if nothing resolves the stream (or
   // the screen that owns the fetch unmounts), do not strand the user on the
@@ -921,6 +974,8 @@ export default function PlayerOverlay() {
     const seconds = prefsRef.current.controlsTimeout || 5;
     hideTimer.current = setTimeout(() => {
       if (!mountedRef.current) return;
+      // TV: a paused video keeps its controls on screen.
+      if (IS_TV && pausedRef.current) return;
       setShowControls(false);
       setPanel(null);
     }, seconds * 1000);
@@ -995,25 +1050,53 @@ export default function PlayerOverlay() {
   }, [paused, saveProgress]);
 
   // Prepare the initial stream's external subtitles before mounting the
-  // native player so the tracks exist on the very first load.
+  // native player so the tracks exist on the very first load. The video only
+  // waits a short moment for them: slow subtitle hosts used to hold the first
+  // frame back for up to 6s. Tracks that arrive later are attached with one
+  // quick reload that keeps the playback position.
   useEffect(() => {
     if (pendingStream) return;
     let cancelled = false;
+    const startLink = currentStream?.link;
+    const sources = subtitleSources(currentStream);
     (async () => {
-      const result = await withTimeout(
-        prepareSubtitles(
-          subtitleSources(currentStream),
-          currentStream?.link || currentVideoUrl,
-          currentStream?.headers,
-        ).catch(() => ({ tracks: [], failed: 0 })),
-        6000,
-        { tracks: [], failed: 0 },
+      const preparing = prepareSubtitles(
+        sources,
+        currentStream?.link || currentVideoUrl,
+        currentStream?.headers,
+      ).catch(() => ({ tracks: [], failed: 0 }));
+      const settled = (result: { tracks: PreparedSubtitle[]; failed: number }) => {
+        if (result.failed > 0) {
+          showToast("Some subtitles could not be loaded");
+        }
+      };
+      const LATE = Symbol("late");
+      const first = await withTimeout<any>(
+        preparing,
+        INITIAL_SUBTITLE_WAIT_MS,
+        LATE,
       );
       if (cancelled || !mountedRef.current) return;
-      setPreparedSubs(result.tracks);
-      if (result.failed > 0) {
-        showToast("Some subtitles could not be loaded");
+      if (first !== LATE) {
+        setPreparedSubs(first.tracks);
+        settled(first);
+        return;
       }
+      setPreparedSubs([]);
+      const result = await withTimeout(preparing, 6000, {
+        tracks: [],
+        failed: 0,
+      });
+      if (cancelled || !mountedRef.current) return;
+      if (liveLinkRef.current !== startLink) return; // switched stream since
+      if (result.tracks.length > 0) {
+        pendingSeekRef.current =
+          currentTimeRef.current > 2
+            ? currentTimeRef.current
+            : pendingSeekRef.current;
+        setPreparedSubs(result.tracks);
+      }
+      settled(result);
     })();
     return () => {
       cancelled = true;
@@ -1114,7 +1197,7 @@ export default function PlayerOverlay() {
     const startedAt = currentTimeRef.current;
     // Before the first frame the server gets a shorter window; mid-playback a
     // stall is retried later so a short rebuffer is not treated as a failure.
-    const timeout = hasRenderedRef.current ? 30000 : 20000;
+    const timeout = hasRenderedRef.current ? 30000 : 12000;
     stallTimer.current = setTimeout(() => {
       if (!mountedRef.current || pausedRef.current) return;
       if (Math.abs(currentTimeRef.current - startedAt) > 1) return;
@@ -1153,7 +1236,7 @@ export default function PlayerOverlay() {
       setShowControls(false);
       setGesture(null);
       resetZoom(false);
-      if (ScreenOrientation?.lockAsync && ScreenOrientation?.OrientationLock) {
+      if (!IS_TV && ScreenOrientation?.lockAsync && ScreenOrientation?.OrientationLock) {
         ScreenOrientation.lockAsync(
           ScreenOrientation.OrientationLock.PORTRAIT_UP,
         ).catch(() => {});
@@ -1167,7 +1250,10 @@ export default function PlayerOverlay() {
     wake();
     // Fullscreen playback is landscape-first: lock it so opening the player
     // never briefly sits in portrait. The rotate button unlocks/toggles.
-    if (ScreenOrientation?.lockAsync && ScreenOrientation?.OrientationLock) {
+    // TVs are landscape already and have no rotation to manage.
+    if (IS_TV) {
+      // nothing to lock
+    } else if (ScreenOrientation?.lockAsync && ScreenOrientation?.OrientationLock) {
       ScreenOrientation.lockAsync(
         ScreenOrientation.OrientationLock.LANDSCAPE,
       ).catch(() => {});
@@ -1236,6 +1322,17 @@ export default function PlayerOverlay() {
 
   const onLoad = (data: any) => {
     const total = Number(data?.duration) || 0;
+    const natural = data?.naturalSize;
+    const naturalW = Number(natural?.width) || 0;
+    const naturalH = Number(natural?.height) || 0;
+    if (naturalW > 0 && naturalH > 0) {
+      // Portrait-tagged videos report width/height swapped.
+      setVideoAspect(
+        natural?.orientation === "portrait" && naturalW > naturalH
+          ? naturalH / naturalW
+          : naturalW / naturalH,
+      );
+    }
     const incomingAudio = Array.isArray(data?.audioTracks)
       ? data.audioTracks
       : [];
@@ -1389,15 +1486,24 @@ export default function PlayerOverlay() {
       }
     }
 
-    if (!qualityTouched.current && prefsRef.current.defaultQuality !== "auto") {
+    const quality = prefsRef.current.defaultQuality;
+    // "hd" on an adaptive stream stays on AUTO (capped by maxBitRate) so the
+    // player never re-buffers to switch rendition right after starting.
+    const hdAdaptive = quality === "hd" && !!currentStream?.adaptive;
+    if (!qualityTouched.current && quality !== "auto" && !hdAdaptive) {
       const heights = incomingVideo
         .filter((track: any) => Number(track?.height) > 0)
         .sort((a: any, b: any) => a.height - b.height);
       if (heights.length > 1) {
+        const atMostHd = heights.filter(
+          (track: any) => track.height <= HD_TARGET_HEIGHT,
+        );
         const target =
-          prefsRef.current.defaultQuality === "highest"
+          quality === "highest"
             ? heights[heights.length - 1]
-            : heights[0];
+            : quality === "hd"
+              ? atMostHd[atMostHd.length - 1] || heights[0]
+              : heights[0];
         setSelectedVideo({
           type: SelectedVideoTrackType.RESOLUTION,
           value: target.height,
@@ -1999,6 +2105,7 @@ export default function PlayerOverlay() {
     wake();
   };
 
+  const seekToRef = useRef<(time: number) => void>(() => {});
   const togglePlay = () => {
     if (ended) {
       playerRef.current?.seek(0);
@@ -2013,13 +2120,16 @@ export default function PlayerOverlay() {
   };
 
   const seekTo = (time: number) => {
-    const target = clamp(time, 0, durationRef.current || 0);
+    // An unknown duration (0) must not cap the target: that sent every seek
+    // to 0:00 until the length was known.
+    const target = clampSeek(time, durationRef.current || 0);
     playerRef.current?.seek(target);
     currentTimeRef.current = target;
     setCurrentTime(target);
     setEnded(false);
     wake();
   };
+  seekToRef.current = seekTo;
 
   const expandFromMini = () => {
     usePlayerStore.getState().expand();
@@ -2058,17 +2168,157 @@ export default function PlayerOverlay() {
   // button in the bottom bar is the way into mini-player mode.
   const stopPlaybackRef = useRef(stopPlayback);
   stopPlaybackRef.current = stopPlayback;
+  // Open player panel, read by the TV Back handling below.
+  const tvPanelRef = useRef<string | null>(null);
+  tvPanelRef.current = panel;
   useEffect(() => {
     if (!expanded) return;
     const subscription = BackHandler.addEventListener(
       "hardwareBackPress",
       () => {
+        // TV remote: Back closes an open panel first, then the player.
+        if (IS_TV && tvPanelRef.current) {
+          setPanel(null);
+          wake();
+          return true;
+        }
         stopPlaybackRef.current();
         return true;
       },
     );
     return () => subscription.remove();
   }, [expanded]);
+
+  // ---- Android TV remote ----------------------------------------------------
+  // react-native-tvos only reports key-UP events for normal presses on
+  // Android (eventKeyAction 1), and a held key as one "long*" down event plus
+  // one up event on release. The old handler only listened for key-down, so
+  // Left/Right and the media keys never did anything.
+  //  - Center zone (big Play/Pause focused, or controls hidden):
+  //    Left/Right seek with a timeline preview, applied once you stop;
+  //    holding seeks continuously (faster after 1.5s); holding OK plays 2x.
+  //  - OK itself is handled by the focused button (play/pause).
+  //  - Play / Pause / Play-Pause / FF / Rewind media keys always work.
+  const tvZoneRef = useRef<TvFocusZone>("center");
+  const onTvZoneChange = useCallback((zone: TvFocusZone) => {
+    tvZoneRef.current = zone;
+  }, []);
+  const [scrubTarget, setScrubTarget] = useState<number | null>(null);
+  const scrubPendingRef = useRef<number | null>(null);
+  const scrubCommitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scrubHoldTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const scrubHoldStart = useRef(0);
+  const [holdBoost, setHoldBoost] = useState(false);
+
+  const commitScrub = useCallback(() => {
+    if (scrubCommitTimer.current) clearTimeout(scrubCommitTimer.current);
+    scrubCommitTimer.current = null;
+    const target = scrubPendingRef.current;
+    scrubPendingRef.current = null;
+    setScrubTarget(null);
+    if (target != null) seekToRef.current(target);
+  }, []);
+  const scheduleScrubCommit = useCallback(
+    (delay = SCRUB_COMMIT_MS) => {
+      if (scrubCommitTimer.current) clearTimeout(scrubCommitTimer.current);
+      scrubCommitTimer.current = setTimeout(commitScrub, delay);
+    },
+    [commitScrub],
+  );
+  const scrubStep = useCallback((direction: 1 | -1, heldMs: number) => {
+    const next = nextScrubTarget(
+      scrubPendingRef.current,
+      currentTimeRef.current,
+      direction,
+      heldMs,
+      durationRef.current,
+    );
+    scrubPendingRef.current = next;
+    setScrubTarget(next);
+  }, []);
+  const stopScrubHold = useCallback(() => {
+    if (scrubHoldTimer.current) clearInterval(scrubHoldTimer.current);
+    scrubHoldTimer.current = null;
+  }, []);
+  useEffect(
+    () => () => {
+      stopScrubHold();
+      if (scrubCommitTimer.current) clearTimeout(scrubCommitTimer.current);
+    },
+    [stopScrubHold],
+  );
+
+  const tvKeyRef = useRef<(evt: any) => void>(() => {});
+  tvKeyRef.current = (evt: any) => {
+    if (!IS_TV || !expanded) return;
+    const type = String(evt?.eventType || "");
+    if (type === "focus" || type === "blur") return;
+    const panelOpen = !!tvPanelRef.current;
+    const hidden = !showControlsRef.current && !panelOpen;
+    const scrubZone = !panelOpen && (hidden || tvZoneRef.current === "center");
+    const action = remoteAction(type, evt?.eventKeyAction, scrubZone);
+    switch (action.kind) {
+      case "step":
+        stopScrubHold();
+        scrubStep(action.direction, 0);
+        wake();
+        scheduleScrubCommit();
+        return;
+      case "holdStart":
+        stopScrubHold();
+        scrubHoldStart.current = Date.now();
+        scrubStep(action.direction, 0);
+        wake(true);
+        scrubHoldTimer.current = setInterval(() => {
+          scrubStep(action.direction, Date.now() - scrubHoldStart.current);
+        }, SCRUB_HOLD_INTERVAL_MS);
+        return;
+      case "holdEnd":
+        if (scrubHoldTimer.current) {
+          stopScrubHold();
+          scheduleScrubCommit(250);
+          wake();
+        }
+        return;
+      case "boostStart":
+        setHoldBoost(true);
+        return;
+      case "boostEnd":
+        setHoldBoost(false);
+        return;
+      case "togglePlay":
+        togglePlay();
+        return;
+      case "play":
+        if (pausedRef.current) togglePlay();
+        else wake();
+        return;
+      case "pause":
+        if (!pausedRef.current) togglePlay();
+        else wake();
+        return;
+      case "wake":
+        // A panel stays open until Back closes it.
+        wake(panelOpen);
+        return;
+      default:
+        return;
+    }
+  };
+  const onTvKey = useCallback((evt: any) => tvKeyRef.current(evt), []);
+  useTVEventHandler(onTvKey);
+
+  // TV: when playback resumes, start the auto-hide countdown again.
+  useEffect(() => {
+    if (IS_TV && expanded && !paused && showControlsRef.current && !tvPanelRef.current) {
+      wake();
+    }
+  }, [paused, expanded, wake]);
+
+  // On TV there is no mini-player: leaving the player screen ends playback.
+  useEffect(() => {
+    if (IS_TV && !expanded && currentVideoUrl) closePlayer();
+  }, [expanded, currentVideoUrl, closePlayer]);
 
   const handleLock = () => {
     const next = !locked;
@@ -2244,6 +2494,56 @@ const renderSeekButton = (side: "left" | "right") => {
   // Single tap toggles controls; repeated taps on one side seek by an
   // increasing amount (10s, then +20s, then +30s…) without touching the
   // timeline or the control buttons.
+  // ---- press and hold for 2x (phones) --------------------------------------
+  // One finger held still for 450ms plays at 2x until it is lifted. Moving
+  // more than 12px first (a swipe) or a second finger (pinch) cancels it.
+  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const holdOriginRef = useRef<{ x: number; y: number } | null>(null);
+  const holdActiveRef = useRef(false);
+  const cancelHoldTimer = () => {
+    if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
+    holdTimerRef.current = null;
+  };
+  const startHoldBoost = (event: any) => {
+    cancelHoldTimer();
+    const touches = event?.nativeEvent?.touches;
+    if (Array.isArray(touches) && touches.length > 1) {
+      holdOriginRef.current = null;
+      return;
+    }
+    holdOriginRef.current = {
+      x: Number(event?.nativeEvent?.pageX) || 0,
+      y: Number(event?.nativeEvent?.pageY) || 0,
+    };
+    holdTimerRef.current = setTimeout(() => {
+      holdTimerRef.current = null;
+      if (!mountedRef.current || panState.current || pinchState.current.active) return;
+      if (pausedRef.current) return;
+      holdActiveRef.current = true;
+      setHoldBoost(true);
+    }, 450);
+  };
+  const moveHoldBoost = (event: any) => {
+    const origin = holdOriginRef.current;
+    const touches = event?.nativeEvent?.touches;
+    if (!origin || (Array.isArray(touches) && touches.length > 1)) {
+      cancelHoldTimer();
+      return;
+    }
+    const dx = (Number(event?.nativeEvent?.pageX) || 0) - origin.x;
+    const dy = (Number(event?.nativeEvent?.pageY) || 0) - origin.y;
+    if (Math.hypot(dx, dy) > 12) cancelHoldTimer();
+  };
+  /** Ends a hold; true when it was a 2x hold (so the touch is not a tap). */
+  const endHoldBoost = () => {
+    cancelHoldTimer();
+    holdOriginRef.current = null;
+    if (!holdActiveRef.current) return false;
+    holdActiveRef.current = false;
+    setHoldBoost(false);
+    return true;
+  };
+
   const handleTap = (event?: any) => {
     if (lockedRef.current || panel || !expandedRef.current) return;
     if (panState.current) return;
@@ -2614,6 +2914,16 @@ const renderSeekButton = (side: "left" | "right") => {
     };
   }, [selectedAudioIndex]);
 
+  const resolvedResizeMode = useMemo(() => {
+    const key = ASPECTS[aspectIdx]?.key ?? ResizeMode.CONTAIN;
+    if (key === HEIGHT_120) return ResizeMode.CONTAIN;
+    if (key !== AUTO_ASPECT) return key;
+    const screenAspect = screenHeight > 0 ? screenWidth / screenHeight : 16 / 9;
+    return autoFit(videoAspect, screenAspect) === "stretch"
+      ? ResizeMode.STRETCH
+      : ResizeMode.CONTAIN;
+  }, [aspectIdx, videoAspect, screenWidth, screenHeight]);
+
   const videoSource = useMemo(() => {
     // Last line of defence against scheme-less links (see ensureHttpUrl).
     const uri = ensureHttpUrl(currentStream?.link || currentVideoUrl);
@@ -2707,9 +3017,10 @@ const renderSeekButton = (side: "left" | "right") => {
       <View style={StyleSheet.absoluteFill}>
         {startupLoading ? (
           <View style={styles.loadingScreen}>
-            <LoadingIndicator
-              text={pendingStream ? "Starting stream" : "Preparing stream"}
-              size={expanded ? 116 : 56}
+            <StartupLoader
+              title={playerMeta?.title}
+              image={playerMeta?.image}
+              compact={!expanded}
             />
           </View>
         ) : (
@@ -2721,6 +3032,7 @@ const renderSeekButton = (side: "left" | "right") => {
                   { translateX: zoomTranslate.x },
                   { translateY: zoomTranslate.y },
                   { scale: zoomScale },
+                  { scaleY: expanded ? scaleYFor(ASPECTS[aspectIdx]?.key) : 1 },
                 ],
               },
             ]}
@@ -2741,10 +3053,10 @@ const renderSeekButton = (side: "left" | "right") => {
               }
               source={videoSource}
             resizeMode={
-              expanded ? ASPECTS[aspectIdx].key : ResizeMode.COVER
+              expanded ? resolvedResizeMode : ResizeMode.COVER
             }
             paused={paused}
-            rate={rate}
+            rate={holdBoost ? 2 : rate}
             onLoad={onLoad}
             onProgress={onProgress}
             onBuffer={(event) => setBuffering(event.isBuffering)}
@@ -2760,6 +3072,15 @@ const renderSeekButton = (side: "left" | "right") => {
             selectedAudioTrack={selectedAudioTrack}
             selectedTextTrack={selectedTextTrack}
             selectedVideoTrack={selectedVideo}
+            // "HD" preference: adaptive streams pick their own rendition but
+            // stop below 4K-class bitrates, so start-up stays quick. A
+            // resolution chosen by hand (including 4K) lifts the cap; 0 = none.
+            maxBitRate={
+              prefs.defaultQuality === "hd" &&
+              selectedVideo?.type === SelectedVideoTrackType.AUTO
+                ? HD_MAX_BITRATE
+                : 0
+            }
             subtitleStyle={{
               // Native rendering only covers size and position; external
               // tracks use the fully styled overlay below instead.
@@ -2771,9 +3092,9 @@ const renderSeekButton = (side: "left" | "right") => {
             }}
             bufferingStrategy={BufferingStrategyType.DEPENDING_ON_MEMORY}
             playWhenInactive
-            playInBackground={prefs.backgroundPlayback}
-            showNotificationControls={prefs.backgroundPlayback}
-            enterPictureInPictureOnLeave={prefs.backgroundPlayback && expanded}
+            playInBackground={!IS_TV && prefs.backgroundPlayback}
+            showNotificationControls={!IS_TV && prefs.backgroundPlayback}
+            enterPictureInPictureOnLeave={!IS_TV && prefs.backgroundPlayback && expanded}
             onPictureInPictureStatusChanged={(event: any) =>
               setInPip(!!event?.isActive)
             }
@@ -2793,6 +3114,7 @@ const renderSeekButton = (side: "left" | "right") => {
 
       {expanded ? (
         <>
+          {IS_TV ? null : (
           <View
             style={styles.gestureLayer}
             pointerEvents={locked ? "none" : "auto"}
@@ -2803,14 +3125,25 @@ const renderSeekButton = (side: "left" | "right") => {
                 : (e) => {
                     handleZoomTouches(e);
                     hideNavBarSoon();
+                    startHoldBoost(e);
                   }
             }
-            onTouchMove={locked ? undefined : handleZoomTouches}
+            onTouchMove={
+              locked
+                ? undefined
+                : (e) => {
+                    handleZoomTouches(e);
+                    moveHoldBoost(e);
+                  }
+            }
             onTouchEnd={(e) => {
               handleZoomTouches(e);
+              // A press-and-hold for 2x is not a tap.
+              if (endHoldBoost()) return;
               handleTap(e);
             }}
           />
+          )}
 
           {activeCue ? (
             <View
@@ -2868,14 +3201,19 @@ const renderSeekButton = (side: "left" | "right") => {
             !paused &&
             !ended &&
             !error &&
-            (buffering || !hasRendered) && (
+            (buffering || !hasRendered) &&
+            (!hasRendered && expanded ? (
+              // Until the first frame: the same step-by-step loader, drawn
+              // over the (still black) video.
+              <StartupLoader title={playerMeta?.title} overlay />
+            ) : (
               <View style={styles.centerOverlay} pointerEvents="none">
                 <LoadingIndicator
                   text={!hasRendered ? "Starting stream" : "Buffering"}
                   size={expanded ? 96 : 56}
                 />
               </View>
-            )}
+            ))}
 
           {ended && !switching && (
             <View style={styles.centerOverlay} pointerEvents="box-none">
@@ -2940,7 +3278,7 @@ const renderSeekButton = (side: "left" | "right") => {
             </View>
           )}
 
-          {showControls && !locked && (
+          {!IS_TV && showControls && !locked && (
             <View
               style={[
                 styles.topBar,
@@ -3052,7 +3390,7 @@ const renderSeekButton = (side: "left" | "right") => {
             </View>
           )}
 
-          {showControls && !locked && (
+          {!IS_TV && showControls && !locked && (
             <View
               style={[
                 styles.bottomBar,
@@ -3183,7 +3521,65 @@ const renderSeekButton = (side: "left" | "right") => {
 
           {/* Centered over the video area, independent of the bottom row's
               button widths, so the play button sits at true center. */}
-      {!locked && !startupLoading && hasRendered && (showControls || seekHint) ? (
+      {holdBoost && expanded ? (
+        <View pointerEvents="none" style={styles.boostBadge}>
+          <Text style={styles.boostText}>2x  ▶▶</Text>
+        </View>
+      ) : null}
+      {IS_TV &&
+      expanded &&
+      !panel &&
+      !(error && !switching) &&
+      !(ended && !switching) &&
+      !(showControls && !locked && !startupLoading && hasRendered) ? (
+        // Remote catcher. Android only sends remote keys to the app while
+        // something in it has focus; with the controls hidden nothing else is
+        // focusable, so OK / arrows / Play-Pause would be lost (only Back,
+        // handled by the system, still worked). This invisible full-screen
+        // target holds focus; the key handler above does the seeking, and OK
+        // brings the controls back.
+        <Pressable
+          focusable
+          hasTVPreferredFocus
+          style={StyleSheet.absoluteFill}
+          onFocus={() => onTvZoneChange("center")}
+          // OK with the controls hidden: play/pause (and show the controls).
+          onPress={() => togglePlay()}
+          // Holding OK is 2x (remote listener); don't toggle on release.
+          onLongPress={() => {}}
+          accessibilityLabel="Show player controls"
+        />
+      ) : null}
+      {IS_TV && showControls && !panel && !locked && !startupLoading && hasRendered ? (
+        <TvPlayerControls
+          title={playerMeta?.title || "Playing"}
+          subtitle={playerMeta?.episode || undefined}
+          paused={paused}
+          currentTime={currentTime}
+          duration={duration}
+          buffered={buffered}
+          qualityLabel={qualityLabel}
+          serverLabel={serverLabel}
+          fitLabel={
+            ASPECTS[aspectIdx]?.key === AUTO_ASPECT
+              ? `Auto (${resolvedResizeMode === ResizeMode.STRETCH ? "fill" : "fit"})`
+              : ASPECTS[aspectIdx]?.label
+          }
+          onTogglePlay={togglePlay}
+          onSeekBy={(delta) => seekTo(currentTimeRef.current + delta)}
+          onRestart={() => seekTo(0)}
+          onZoneChange={onTvZoneChange}
+          scrubTarget={scrubTarget}
+          onOpenPanel={(next: TvPanel) => {
+            setPanel(next);
+            wake(true);
+          }}
+          hasSources={!!playerMeta?.tmdb && queueOptions.length > 1}
+          hasEpisodes={sideEpisodes.length > 1}
+          onNextEpisode={nextEpisode ? () => void playNextEpisode() : undefined}
+        />
+      ) : null}
+      {!IS_TV && !locked && !startupLoading && hasRendered && (showControls || seekHint) ? (
        <View style={styles.centerPlayback} pointerEvents="box-none">
           {renderSeekButton("left")}
          <TouchableOpacity
@@ -3290,13 +3686,23 @@ const renderSeekButton = (side: "left" | "right") => {
           {panel && !SIDE_PANELS.includes(panel) && (
             <View style={styles.panelBackdrop}>
               <Pressable
+                focusable={!IS_TV}
                 style={StyleSheet.absoluteFill}
                 onPress={() => {
                   setPanel(null);
                   wake();
                 }}
               />
-              <View style={styles.panel}>
+              {/* TV: focus starts on the current option and cannot leave the
+                  menu (it used to fall onto controls behind it). */}
+              <TVFocusGuideView
+                autoFocus={IS_TV}
+                trapFocusUp={IS_TV}
+                trapFocusDown={IS_TV}
+                trapFocusLeft={IS_TV}
+                trapFocusRight={IS_TV}
+                style={styles.panel}
+              >
                 <Text style={styles.panelTitle}>{PANEL_TITLES[panel]}</Text>
                 <ScrollView showsHorizontalScrollIndicator={false}
                   showsVerticalScrollIndicator={false}
@@ -3313,12 +3719,23 @@ const renderSeekButton = (side: "left" | "right") => {
                             : "No options available."}
                     </Text>
                   ) : (
-                    panelRows().map((row, index) => (
-                      <PanelRow key={`${panel}-${index}`} {...row} />
-                    ))
+                    (() => {
+                      const rows = panelRows();
+                      const focusIndex = Math.max(
+                        0,
+                        rows.findIndex((row) => row.selected),
+                      );
+                      return rows.map((row, index) => (
+                        <PanelRow
+                          key={`${panel}-${index}`}
+                          {...row}
+                          preferred={IS_TV && index === focusIndex}
+                        />
+                      ));
+                    })()
                   )}
                 </ScrollView>
-              </View>
+              </TVFocusGuideView>
             </View>
           )}
         </>
@@ -3413,9 +3830,23 @@ const absoluteFillStyle = {
 };
 
 const styles = StyleSheet.create({
+  boostBadge: {
+    position: "absolute",
+    top: 28,
+    alignSelf: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 18,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.25)",
+  },
+  boostText: { color: "#fff", fontSize: 15, fontWeight: "800", letterSpacing: 1 },
   fullscreen: {
     ...absoluteFillStyle,
     backgroundColor: "#000",
+    // Keeps zoomed / "Height 120%" video inside the screen.
+    overflow: "hidden",
     zIndex: 1000,
     elevation: 1000,
   },
