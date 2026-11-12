@@ -56,3 +56,41 @@ export function stepShort(index: number, delta: number, length: number): number 
 export function isNearActive(index: number, active: number): boolean {
   return Math.abs(index - active) <= 1;
 }
+
+/** Splits a list into rows of `size` (grids built from plain Views). */
+export function chunk<T>(items: T[], size: number): T[][] {
+  const rows: T[][] = [];
+  const n = Math.max(1, Math.floor(size));
+  for (let i = 0; i < items.length; i += n) rows.push(items.slice(i, i + n));
+  return rows;
+}
+
+/** Appends items whose id is not in the list yet (more Shorts as you scroll). */
+export function appendNew<V extends { id: string }>(list: V[], more: V[] | undefined): V[] {
+  if (!more?.length) return list;
+  const seen = new Set(list.map((v) => v.id));
+  const added = more.filter((v) => !seen.has(v.id));
+  return added.length ? [...list, ...added] : list;
+}
+
+/** Remote key → Shorts action (key-UP only; held keys are ignored). */
+export function shortsKey(eventType: string, eventKeyAction: number | null | undefined):
+  | "prev"
+  | "next"
+  | "comments"
+  | "toggle"
+  | "none" {
+  if (eventKeyAction === 0) return "none";
+  switch (eventType) {
+    case "up":
+      return "prev";
+    case "down":
+      return "next";
+    case "right":
+      return "comments";
+    case "playPause":
+      return "toggle";
+    default:
+      return "none";
+  }
+}

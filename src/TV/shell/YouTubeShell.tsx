@@ -1,7 +1,9 @@
 import React from "react";
 import TvShell from "./TvShell";
-import TvComingSoon from "./TvComingSoon";
 import TvYtHomeScreen from "../youtube/TvYtHomeScreen";
+import TvYtSearchScreen from "../youtube/TvYtSearchScreen";
+import TvYtShortsSection from "../youtube/TvYtShortsSection";
+import TvYtWatchlistScreen from "../youtube/TvYtWatchlistScreen";
 import type { TvRailItem } from "./TvSideRail";
 import TvSettingsScreen from "../screens/TvSettingsScreen";
 
@@ -15,7 +17,7 @@ export const YOUTUBE_RAIL: TvRailItem<YouTubeSection>[] = [
   { key: "settings", label: "Settings", icon: "settings" },
 ];
 
-/** YouTube layout on TV (Phase 1: shell; screens arrive in Phase 3). */
+/** YouTube layout on TV: Home, Search, Shorts, Watchlist, Settings. */
 export default function YouTubeShell() {
   return (
     <TvShell<YouTubeSection>
@@ -26,11 +28,11 @@ export default function YouTubeShell() {
           case "home":
             return <TvYtHomeScreen />;
           case "search":
-            return <TvComingSoon title="Search" icon="search" />;
+            return <TvYtSearchScreen />;
           case "shorts":
-            return <TvComingSoon title="Shorts" icon="flash" />;
+            return <TvYtShortsSection />;
           case "watchlist":
-            return <TvComingSoon title="Watchlist" icon="bookmark" />;
+            return <TvYtWatchlistScreen />;
           case "settings":
             return <TvSettingsScreen />;
         }
