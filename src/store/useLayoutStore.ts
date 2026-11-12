@@ -2,6 +2,12 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { createMMKV } from "react-native-mmkv";
 import { NO_LANGUAGE } from "@/lib/languages";
+import {
+  PHONE_DEFAULT_LAYOUT,
+  TV_DEFAULT_LAYOUT,
+  resolveLayout,
+} from "@/lib/tvLayout";
+import { IS_TV } from "@/TV/isTV";
 
 const mmkv = createMMKV();
 
@@ -31,6 +37,9 @@ type LayoutState = {
   // Language code → provider id searched first and listed first (highest
   // quality first) when that language is the preferred one.
   priorityProviders: Record<string, string>;
+  // Android TV only: true once a layout was picked on the TV. Until then the
+  // TV shows the Movie Based layout (see src/lib/tvLayout.ts). Unused on phones.
+  tvLayoutChosen?: boolean;
   setLayout: (layout: AppLayout) => void;
   setPreferredLanguage: (code: string) => void;
   setPriorityProvider: (language: string, providerId: string | null) => void;
@@ -39,10 +48,11 @@ type LayoutState = {
 export const useLayoutStore = create<LayoutState>()(
   persist(
     (set) => ({
-      layout: "provider",
+      layout: IS_TV ? TV_DEFAULT_LAYOUT : PHONE_DEFAULT_LAYOUT,
       preferredLanguage: NO_LANGUAGE,
       priorityProviders: {},
-      setLayout: (layout) => set({ layout }),
+      setLayout: (layout) =>
+        set(IS_TV ? { layout, tvLayoutChosen: true } : { layout }),
       setPreferredLanguage: (preferredLanguage) => set({ preferredLanguage }),
       setPriorityProvider: (language, providerId) =>
         set((state) => {
@@ -59,10 +69,8 @@ export const useLayoutStore = create<LayoutState>()(
         const saved = (persisted as Partial<LayoutState>) || {};
         return {
           ...current,
-          layout:
-            saved.layout === "movie" || saved.layout === "youtube"
-              ? saved.layout
-              : "provider",
+          layout: resolveLayout(saved, IS_TV),
+          ...(IS_TV ? { tvLayoutChosen: saved.tvLayoutChosen === true } : {}),
           preferredLanguage:
             typeof saved.preferredLanguage === "string" &&
             saved.preferredLanguage

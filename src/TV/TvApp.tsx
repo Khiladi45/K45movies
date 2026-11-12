@@ -19,6 +19,7 @@ import TvSettingsScreen from "./screens/TvSettingsScreen";
 import TvDetailScreen from "./screens/TvDetailScreen";
 import { TV } from "./theme";
 import { useRestoreTvFocus } from "./useRestoreTvFocus";
+import TvLayoutShell from "./shell/TvLayoutShell";
 
 const Stack = createNativeStackNavigator();
 
@@ -59,6 +60,14 @@ function TvMain() {
   );
 }
 
+/**
+ * TvMain route: the layout chosen in Settings. Movie Based is the TvMain above,
+ * unchanged; Provider Based and YouTube have their own shells.
+ */
+function TvLayoutRoot() {
+  return <TvLayoutShell MovieShell={TvMain} />;
+}
+
 export default function TvApp() {
   return (
     <NavigationContainer
@@ -72,7 +81,7 @@ export default function TvApp() {
           animation: "fade",
         }}
       >
-        <Stack.Screen name="TvMain" component={TvMain} />
+        <Stack.Screen name="TvMain" component={TvLayoutRoot} />
         <Stack.Screen name="TmdbDetail" component={TvDetailScreen} />
         <Stack.Screen name="Player" component={PlayerScreen} />
       </Stack.Navigator>
