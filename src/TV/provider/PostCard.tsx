@@ -13,13 +13,15 @@ type Props = {
   catalogTitle?: string;
   reportFocus?: boolean;
   onFocus?: () => void;
+  /** Long-press OK (e.g. remove from Watchlist). */
+  onLongPress?: (post: ProviderPost) => void;
   hasTVPreferredFocus?: boolean;
 };
 
 /** A provider post poster (2:3) for TV rows and grids. */
 export const PostCard = memo(
   forwardRef<View, Props>(function PostCard(
-    { post, onPress, catalogTitle, reportFocus = true, onFocus, hasTVPreferredFocus },
+    { post, onPress, catalogTitle, reportFocus = true, onFocus, onLongPress, hasTVPreferredFocus },
     ref,
   ) {
     return (
@@ -29,6 +31,7 @@ export const PostCard = memo(
         hasTVPreferredFocus={hasTVPreferredFocus}
         style={styles.card}
         onPress={() => onPress(post)}
+        onLongPress={onLongPress ? () => onLongPress(post) : undefined}
         onFocus={() => {
           if (reportFocus) usePostFocusStore.getState().setFocused({ ...post, catalogTitle });
           onFocus?.();
