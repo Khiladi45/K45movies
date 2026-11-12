@@ -19,6 +19,10 @@ export const TV = {
   // Provider Based layout (Phase 2): provider chips, row/page caps.
   providerChip: { width: 132, height: 44 },
   rowLimit: 20, // posters per home row before the "See all" card
+  // YouTube layout (Phase 3): 3 columns of 16:9 cards, 9:16 Shorts.
+  ytCard: { width: 264, height: 149 },
+  ytShort: { width: 104, height: 185 },
+  ytColumns: 3,
   bg: "#0b0b0b",
   surface: "#1a1a1a",
   muted: "rgba(255,255,255,0.6)",

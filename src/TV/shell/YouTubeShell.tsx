@@ -1,6 +1,7 @@
 import React from "react";
 import TvShell from "./TvShell";
 import TvComingSoon from "./TvComingSoon";
+import TvYtHomeScreen from "../youtube/TvYtHomeScreen";
 import type { TvRailItem } from "./TvSideRail";
 import TvSettingsScreen from "../screens/TvSettingsScreen";
 
@@ -23,7 +24,7 @@ export default function YouTubeShell() {
       renderSection={(section) => {
         switch (section) {
           case "home":
-            return <TvComingSoon title="YouTube Home" icon="logo-youtube" />;
+            return <TvYtHomeScreen />;
           case "search":
             return <TvComingSoon title="Search" icon="search" />;
           case "shorts":

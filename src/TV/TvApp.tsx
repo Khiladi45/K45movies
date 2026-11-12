@@ -22,6 +22,7 @@ import { useRestoreTvFocus } from "./useRestoreTvFocus";
 import TvLayoutShell from "./shell/TvLayoutShell";
 import TvCategoryScreen from "./provider/TvCategoryScreen";
 import TvProviderDetailScreen from "./provider/TvProviderDetailScreen";
+import TvYtPlaceholder from "./youtube/TvYtPlaceholder";
 
 const Stack = createNativeStackNavigator();
 
@@ -89,6 +90,9 @@ export default function TvApp() {
         {/* Provider Based layout (TV-only routes). */}
         <Stack.Screen name="TvCategory" component={TvCategoryScreen} />
         <Stack.Screen name="TvProviderDetail" component={TvProviderDetailScreen} />
+        {/* YouTube layout (TV-only routes). */}
+        <Stack.Screen name="TvYtVideo" component={TvYtPlaceholder} />
+        <Stack.Screen name="TvYtShorts" component={TvYtPlaceholder} />
       </Stack.Navigator>
     </NavigationContainer>
   );

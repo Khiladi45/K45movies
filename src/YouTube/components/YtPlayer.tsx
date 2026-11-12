@@ -34,6 +34,30 @@ import { useYtPlayerStore } from "../playerStore";
 
 export type YtPlayerHandle = {
   position: () => number;
+  // Optional remote-control API for the Android TV layout (src/TV/youtube).
+  // The phone screens never call these; behaviour there is unchanged.
+  seekTo?: (seconds: number) => void;
+  setQuality?: (height: number) => void; // 0 = Auto
+  setCaption?: (index: number) => void; // -1 = off
+  setSpeed?: (rate: number) => void;
+  setUserPaused?: (paused: boolean) => void;
+};
+
+/** Snapshot for an external (TV) control layer; see the onStateChange prop. */
+export type YtPlayerState = {
+  position: number;
+  duration: number;
+  paused: boolean;
+  buffering: boolean;
+  loaded: boolean;
+  failed: boolean;
+  qualities: { height: number; label: string; muxed: boolean }[];
+  height: number;
+  playingHeight: number;
+  canPickQuality: boolean;
+  captions: Caption[];
+  caption: number;
+  speed: number;
 };
 
 type Props = {
@@ -67,6 +91,10 @@ type Props = {
   onToggleFullscreen?: () => void;
   onMinimize?: () => void;
   onProgress?: (position: number, duration: number) => void;
+  /** TV only: also load the quality list without the touch controls. */
+  streamInfo?: boolean;
+  /** TV only: player state for an external D-pad control layer. */
+  onStateChange?: (state: YtPlayerState) => void;
 };
 
 const MIN_ZOOM = 0.25;
@@ -101,12 +129,14 @@ const YtPlayer = forwardRef<YtPlayerHandle, Props>(function YtPlayer(
     onToggleFullscreen,
     onMinimize,
     onProgress,
+    streamInfo = false,
+    onStateChange,
   },
   ref,
 ) {
   const videoRef = useRef<any>(null);
   const playback = useYtPlayback(link, active && !localUri);
-  const info = useYtStreamInfo(link, active && !localUri && controls === "full");
+  const info = useYtStreamInfo(link, active && !localUri && (controls === "full" || streamInfo));
   const [index, setIndex] = useState(0);
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -143,7 +173,6 @@ const YtPlayer = forwardRef<YtPlayerHandle, Props>(function YtPlayer(
     posRef.current = 0;
   }, [link, localUri, playback.data, start]);
 
-  useImperativeHandle(ref, () => ({ position: () => posRef.current }));
 
   const stream = streams[index];
 
@@ -216,6 +245,16 @@ const YtPlayer = forwardRef<YtPlayerHandle, Props>(function YtPlayer(
 
   const isPlaying = !paused && !userPaused;
 
+  // Optional remote-control API (TV). Phones only ever call position().
+  useImperativeHandle(ref, () => ({
+    position: () => posRef.current,
+    seekTo: seek,
+    setQuality: setHeight,
+    setCaption,
+    setSpeed,
+    setUserPaused,
+  }));
+
   // ---- pinch to scale (two fingers, scale only) ----
   const scale = useRef(new Animated.Value(1)).current;
   const baseScale = useRef(1);
@@ -276,6 +315,27 @@ const YtPlayer = forwardRef<YtPlayerHandle, Props>(function YtPlayer(
     for (const h of trackHeights) if (!byHeight.has(h)) byHeight.set(h, { height: h, label: `${h}p`, muxed: true });
     return [...byHeight.values()].sort((a, b) => b.height - a.height);
   }, [info.data, trackHeights]);
+
+  // TV control layer: report state changes (no-op when the prop is absent).
+  const onStateChangeRef = useRef(onStateChange);
+  onStateChangeRef.current = onStateChange;
+  useEffect(() => {
+    onStateChangeRef.current?.({
+      position,
+      duration,
+      paused: !isPlaying,
+      buffering,
+      loaded,
+      failed,
+      qualities: mergedQualities,
+      height,
+      playingHeight,
+      canPickQuality: adaptive,
+      captions,
+      caption,
+      speed,
+    });
+  }, [position, duration, isPlaying, buffering, loaded, failed, mergedQualities, height, playingHeight, adaptive, captions, caption, speed]);
 
   return (
     <View style={[styles.box, style]} {...(zoomable ? pinch.panHandlers : {})}>
