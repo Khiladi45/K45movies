@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useThemeStore } from "@/store/useThemeStore";
-import { useLayoutStore } from "@/store/useLayoutStore";
+import { useLayoutStore, type AppLayout } from "@/store/useLayoutStore";
 import {
   usePreferencesStore,
   type DefaultQuality,
@@ -52,7 +52,7 @@ function ChoiceRow<T extends string>({
   );
 }
 
-function ProvidersBlock() {
+export function ProvidersBlock() {
   const { data: providers, isLoading, refetch } = useProviders();
   const { installedProviders, activeProvider, toggleInstall, setActiveProvider } =
     useProviderStore();
@@ -156,10 +156,27 @@ export default function TvSettingsScreen() {
   const setPriorityProvider = useLayoutStore((s) => s.setPriorityProvider);
   const installedNames = useInstalledProviderNames();
   const prefs = usePreferencesStore();
+  const layout = useLayoutStore((s) => s.layout);
+  const setLayout = useLayoutStore((s) => s.setLayout);
+  const isMovie = layout === "movie";
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <Text style={styles.title}>Settings</Text>
+      <ChoiceRow<AppLayout>
+        title="Layout"
+        subtitle="How Home, Search and your lists are organised on this TV."
+        options={[
+          { label: "Movie Based", value: "movie" },
+          { label: "Provider Based", value: "provider" },
+          { label: "YouTube", value: "youtube" },
+        ]}
+        value={layout}
+        onChange={setLayout}
+      />
+      {/* Language rows apply to the Movie Based layout only. */}
+      {isMovie ? (
+        <>
       <ChoiceRow
         title="Preferred audio language"
         subtitle="Sources in this language are played first."
@@ -178,6 +195,8 @@ export default function TvSettingsScreen() {
           value={priorityProviders[preferredLanguage] || ""}
           onChange={(value) => setPriorityProvider(preferredLanguage, value || null)}
         />
+      ) : null}
+        </>
       ) : null}
       <ChoiceRow<DefaultQuality>
         title="Default quality"

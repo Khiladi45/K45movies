@@ -775,7 +775,7 @@ export default function PlayerOverlay() {
       if (!store.currentVideoUrl.startsWith("pending://")) return;
       store.close();
       if (currentRouteName() === "Player" && !goBack()) {
-        navigate("Home");
+        navigate(IS_TV ? "TvMain" : "Home");
       }
       // Longer than the provider's own 30s limit, so a slow provider reports
       // its real error on the detail screen instead of the player vanishing.
@@ -2142,7 +2142,7 @@ export default function PlayerOverlay() {
     saveProgress();
     closePlayer();
     if (currentRouteName() !== "Player" || !goBack()) {
-      navigate("Home");
+      navigate(IS_TV ? "TvMain" : "Home");
     }
   };
 
@@ -2151,7 +2151,7 @@ export default function PlayerOverlay() {
     saveProgress();
     minimize();
     if (currentRouteName() === "Player" && !goBack()) {
-      navigate("Home");
+      navigate(IS_TV ? "TvMain" : "Home");
     }
   };
 

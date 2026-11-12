@@ -19,6 +19,11 @@ import TvSettingsScreen from "./screens/TvSettingsScreen";
 import TvDetailScreen from "./screens/TvDetailScreen";
 import { TV } from "./theme";
 import { useRestoreTvFocus } from "./useRestoreTvFocus";
+import TvLayoutShell from "./shell/TvLayoutShell";
+import TvCategoryScreen from "./provider/TvCategoryScreen";
+import TvProviderDetailScreen from "./provider/TvProviderDetailScreen";
+import TvYtVideoScreen from "./youtube/TvYtVideoScreen";
+import TvYtShortsScreen from "./youtube/TvYtShortsScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -59,6 +64,14 @@ function TvMain() {
   );
 }
 
+/**
+ * TvMain route: the layout chosen in Settings. Movie Based is the TvMain above,
+ * unchanged; Provider Based and YouTube have their own shells.
+ */
+function TvLayoutRoot() {
+  return <TvLayoutShell MovieShell={TvMain} />;
+}
+
 export default function TvApp() {
   return (
     <NavigationContainer
@@ -72,9 +85,15 @@ export default function TvApp() {
           animation: "fade",
         }}
       >
-        <Stack.Screen name="TvMain" component={TvMain} />
+        <Stack.Screen name="TvMain" component={TvLayoutRoot} />
         <Stack.Screen name="TmdbDetail" component={TvDetailScreen} />
         <Stack.Screen name="Player" component={PlayerScreen} />
+        {/* Provider Based layout (TV-only routes). */}
+        <Stack.Screen name="TvCategory" component={TvCategoryScreen} />
+        <Stack.Screen name="TvProviderDetail" component={TvProviderDetailScreen} />
+        {/* YouTube layout (TV-only routes). */}
+        <Stack.Screen name="TvYtVideo" component={TvYtVideoScreen} />
+        <Stack.Screen name="TvYtShorts" component={TvYtShortsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
