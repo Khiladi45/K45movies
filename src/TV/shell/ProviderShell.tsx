@@ -2,6 +2,7 @@ import React from "react";
 import { ScrollView, StyleSheet, Text } from "react-native";
 import TvShell from "./TvShell";
 import TvComingSoon from "./TvComingSoon";
+import TvProviderHomeScreen from "../provider/TvProviderHomeScreen";
 import type { TvRailItem } from "./TvSideRail";
 import TvSettingsScreen, { ProvidersBlock } from "../screens/TvSettingsScreen";
 import { TV } from "../theme";
@@ -26,7 +27,7 @@ function ProvidersSection() {
   );
 }
 
-/** Provider Based layout on TV (Phase 1: shell; screens arrive in Phase 2). */
+/** Provider Based layout on TV (Home since Phase 2a; other screens follow). */
 export default function ProviderShell() {
   return (
     <TvShell<ProviderSection>
@@ -35,7 +36,7 @@ export default function ProviderShell() {
       renderSection={(section) => {
         switch (section) {
           case "home":
-            return <TvComingSoon title="Provider Based Home" icon="home" />;
+            return <TvProviderHomeScreen />;
           case "search":
             return <TvComingSoon title="Search" icon="search" />;
           case "watchlist":

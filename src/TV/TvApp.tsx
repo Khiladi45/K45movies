@@ -20,6 +20,8 @@ import TvDetailScreen from "./screens/TvDetailScreen";
 import { TV } from "./theme";
 import { useRestoreTvFocus } from "./useRestoreTvFocus";
 import TvLayoutShell from "./shell/TvLayoutShell";
+import TvCategoryScreen from "./provider/TvCategoryScreen";
+import TvProviderDetailPlaceholder from "./provider/TvProviderDetailPlaceholder";
 
 const Stack = createNativeStackNavigator();
 
@@ -84,6 +86,9 @@ export default function TvApp() {
         <Stack.Screen name="TvMain" component={TvLayoutRoot} />
         <Stack.Screen name="TmdbDetail" component={TvDetailScreen} />
         <Stack.Screen name="Player" component={PlayerScreen} />
+        {/* Provider Based layout (TV-only routes). */}
+        <Stack.Screen name="TvCategory" component={TvCategoryScreen} />
+        <Stack.Screen name="TvProviderDetail" component={TvProviderDetailPlaceholder} />
       </Stack.Navigator>
     </NavigationContainer>
   );

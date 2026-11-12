@@ -16,6 +16,9 @@ export const TV = {
     body: 13,
     small: 11,
   },
+  // Provider Based layout (Phase 2): provider chips, row/page caps.
+  providerChip: { width: 132, height: 44 },
+  rowLimit: 20, // posters per home row before the "See all" card
   bg: "#0b0b0b",
   surface: "#1a1a1a",
   muted: "rgba(255,255,255,0.6)",
