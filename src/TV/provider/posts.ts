@@ -46,3 +46,30 @@ export const validCatalogs = (catalogs: any): any[] =>
 
 /** How many home rows may load at once: the first 3, then 2 past the focus. */
 export const rowsToLoad = (focusedRow: number) => Math.max(3, focusedRow + 3);
+
+/** Same trending chips as the phone search screen. */
+export const PROVIDER_TRENDING = ["Avatar", "Avengers", "Action", "Sci-Fi", "Comedy", "Horror", "Thriller"];
+
+/**
+ * Search results (a flat list tagged with providerId) grouped into one row
+ * per provider, in installed-provider order; empty providers are left out.
+ */
+export function groupByProvider(
+  results: any,
+  providerOrder: string[],
+  limit = 20,
+): { providerId: string; posts: ProviderPost[] }[] {
+  const list: ProviderPost[] = Array.isArray(results) ? results : [];
+  const groups = new Map<string, ProviderPost[]>();
+  for (const item of list) {
+    if (!item || !postKey(item)) continue;
+    const id = item.providerId || "";
+    const bucket = groups.get(id) || [];
+    if (bucket.length < limit && !bucket.some((p) => postKey(p) === postKey(item))) bucket.push(item);
+    groups.set(id, bucket);
+  }
+  const order = [...providerOrder, ...[...groups.keys()].filter((id) => !providerOrder.includes(id))];
+  return order
+    .filter((id) => (groups.get(id) || []).length > 0)
+    .map((id) => ({ providerId: id, posts: groups.get(id) as ProviderPost[] }));
+}

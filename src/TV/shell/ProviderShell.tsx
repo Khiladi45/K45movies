@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text } from "react-native";
 import TvShell from "./TvShell";
 import TvComingSoon from "./TvComingSoon";
 import TvProviderHomeScreen from "../provider/TvProviderHomeScreen";
+import TvProviderSearchScreen from "../provider/TvProviderSearchScreen";
 import type { TvRailItem } from "./TvSideRail";
 import TvSettingsScreen, { ProvidersBlock } from "../screens/TvSettingsScreen";
 import { TV } from "../theme";
@@ -38,7 +39,7 @@ export default function ProviderShell() {
           case "home":
             return <TvProviderHomeScreen />;
           case "search":
-            return <TvComingSoon title="Search" icon="search" />;
+            return <TvProviderSearchScreen />;
           case "watchlist":
             return <TvComingSoon title="Watchlist" icon="bookmark" />;
           case "providers":
