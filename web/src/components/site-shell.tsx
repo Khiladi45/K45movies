@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode } from "react";
+import { type CSSProperties, type ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -22,11 +22,12 @@ export function SiteShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const modal = usePlayback((state) => !!state.session && !state.minimized);
   const profile = useLibrary((state) => state.profiles.find(({ id }) => id === state.activeProfile));
+  const accent = useAppearance((state) => state.accent);
   const collapsed = useAppearance((state) => state.sidebarCollapsed);
   const toggleSidebar = useAppearance((state) => state.toggleSidebar);
 
   return (
-    <div className="site-shell" data-collapsed={collapsed}>
+    <div className="site-shell" data-collapsed={collapsed} style={{ "--theme-accent": accent } as CSSProperties}>
       <a inert={modal} className="skip-link" href="#main">Skip to content</a>
       <header className="site-header" inert={modal}>
         <button type="button" className="icon-button sidebar-toggle" onClick={toggleSidebar}

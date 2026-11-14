@@ -1,13 +1,13 @@
 "use client";
 
-import { usePlayerPreferences, type CaptionStyle } from "@/lib/playback";
+import { usePlayerPreferences, type CaptionStyle } from "@/lib/player-preferences";
 import type { CSSProperties } from "react";
 
 export function textStyle(style: CaptionStyle): CSSProperties {
   return {
     color: style.color, backgroundColor: style.background + Math.round(style.opacity * 2.55).toString(16).padStart(2, "0"),
     fontSize: style.size, fontWeight: style.weight, fontFamily: style.font,
-    textShadow: style.shadow ? "0 1px 3px #000, 0 0 3px #000" : undefined,
+    textShadow: style.shadow ? ("0 1px " + style.shadow + "px #000, 0 0 " + style.shadow + "px #000") : undefined,
   };
 }
 
@@ -17,7 +17,7 @@ export function CaptionSettings() {
   const reset = usePlayerPreferences((state) => state.reset);
   function range(label: string, key: "size" | "opacity" | "bottom" | "delay", min: number, max: number, step = 1) {
     return <label className="grid gap-1 text-sm">{label} <output>{style[key]}</output>
-      <input type="range" className="accent-accent" min={min} max={max} step={step} value={style[key]}
+      <input type="range" aria-label={label} className="accent-accent" min={min} max={max} step={step} value={style[key]}
         onChange={(event) => patch({ [key]: Number(event.target.value) })} />
     </label>;
   }
@@ -48,7 +48,11 @@ export function CaptionSettings() {
         <option value="left">Left</option><option value="center">Center</option><option value="right">Right</option>
       </select>
     </label>
-    <label className="flex gap-2 text-sm"><input type="checkbox" checked={style.shadow} onChange={(event) => patch({ shadow: event.target.checked })} /> Text shadow</label>
+    <label className="grid gap-1 text-sm">Outline and shadow
+      <select className="field" value={style.shadow} onChange={(event) => patch({ shadow: Number(event.target.value) as CaptionStyle["shadow"] })}>
+        <option value={0}>Off</option><option value={2}>Soft</option><option value={4}>Strong</option>
+      </select>
+    </label>
     <button className="secondary-button justify-self-start" type="button" onClick={reset}>Reset subtitle style</button>
   </div>;
 }

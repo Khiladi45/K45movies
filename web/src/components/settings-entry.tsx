@@ -22,6 +22,9 @@ export function SettingsEntry() {
     <section className="max-w-2xl">
       <h2 className="mb-3 text-xl font-semibold">Catalog and library</h2>
       <div className="flex flex-wrap gap-2">
+        <Link className="secondary-button" href="/settings/appearance">Appearance</Link>
+        <Link className="secondary-button" href="/settings/preferences">Playback preferences</Link>
+        <Link className="secondary-button" href="/settings/providers/diagnostics">Provider diagnostics</Link>
         <Link className="secondary-button" href="/providers">Manage providers</Link>
         <Link className="secondary-button" href="/watchlist">Watchlist</Link>
       </div>

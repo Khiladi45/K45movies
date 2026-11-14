@@ -7,6 +7,7 @@ import { ArrowUpDown, ExternalLink, Play } from "lucide-react";
 import { providers, tmdb } from "@/lib/catalog-api";
 import { providerLink, titleLink } from "@/lib/catalog-links";
 import type { Episode, MediaType, ProviderDetail, TitleDetail } from "@/lib/catalog-types";
+import { usePlayerPreferences } from "@/lib/player-preferences";
 import { usePlayback, type PlaybackTarget } from "@/lib/playback";
 import { useLibrary } from "@/lib/library";
 import { choicesFor, episodeNumber, groupEpisodes, matchProvider, streamLanguages, type Choice } from "@/lib/title-bridge";
@@ -48,7 +49,7 @@ function SourceList({ choice, series, language, target }: { choice: Choice; seri
       {list.map((entry,i) => <li className="list-row" key={entry.server + i}>
         <button type="button" className="primary-button" onClick={() => {
           const resume = useLibrary.getState().progress.find((item) => item.href === target.title.href && item.playback?.item.ref === target.item.ref);
-          usePlayback.getState().open({ target, sources: list, index: i, position: resume?.position ?? 0 });
+          usePlayback.getState().open({ target, sources: list, index: i, position: usePlayerPreferences.getState().resume ? resume?.position ?? 0 : 0 });
         }}><Play size={16} aria-hidden="true" /> Play {entry.server}</button>
         {(entry.quality || entry.type) && <span className="text-sm text-muted">{[entry.quality, entry.type].filter(Boolean).join(" · ")}</span>}
         {entry.languages.length > 0 && <span className="text-sm text-muted">{streamLanguages(entry.languages).map(languageName).join(", ")}</span>}

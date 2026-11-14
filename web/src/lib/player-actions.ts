@@ -1,6 +1,7 @@
 import { providers } from "./catalog-api";
 import type { Source } from "./catalog-types";
 import type { Progress } from "./library";
+import { usePlayerPreferences } from "./player-preferences";
 import { usePlayback } from "./playback";
 
 export async function checkSource(source: Source, signal: AbortSignal) {
@@ -19,6 +20,6 @@ export async function resumePlayback(entry: Progress, signal: AbortSignal) {
   const sources = await providers.sources(item.provider, item.ref, item.series ? "series" : "movie", signal);
   if (!sources.length || signal.aborted) return false;
   const index = sources.findIndex(({ server, quality }) => server === entry.source?.server && quality === entry.source?.quality);
-  usePlayback.getState().open({ target: entry.playback, sources, index: Math.max(0, index), position: entry.position });
+  usePlayback.getState().open({ target: entry.playback, sources, index: Math.max(0, index), position: usePlayerPreferences.getState().resume ? entry.position : 0 });
   return true;
 }

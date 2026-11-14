@@ -3,6 +3,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { type ReactNode, useEffect, useState, useSyncExternalStore } from "react";
 import { useAppearance } from "@/lib/appearance";
+import { usePlayerPreferences } from "@/lib/player-preferences";
 import { useLibrary } from "@/lib/library";
 import { CatalogError } from "@/lib/catalog-api";
 
@@ -29,6 +30,7 @@ export function CatalogContext({ children }: { children: ReactNode }) {
   useEffect(() => {
     void useAppearance.persist.rehydrate();
     void useLibrary.persist.rehydrate();
+    void usePlayerPreferences.persist.rehydrate();
   }, []);
 
   return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;

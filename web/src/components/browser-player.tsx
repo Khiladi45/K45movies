@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Captions, ChevronDown, Expand, ListVideo, Lock, Maximize, Minimize2, Pause, PictureInPicture2, Play, Settings2, SkipForward, Unlock, Volume2, VolumeX, X } from "lucide-react";
 import { providers } from "@/lib/catalog-api";
-import { usePlayback, usePlayerPreferences, type PlaybackItem } from "@/lib/playback";
+import { usePlayback, type PlaybackItem } from "@/lib/playback";
+import { usePlayerPreferences } from "@/lib/player-preferences";
 import { useLibrary } from "@/lib/library";
 import { attachMedia, emptyTracks, type MediaTracks } from "@/lib/media-engine";
 import { checkSource } from "@/lib/player-actions";
@@ -20,11 +21,14 @@ export function BrowserPlayer({ session }: { session: Session }) {
   const { target, sources } = session;
   const minimized = usePlayback((state) => state.minimized);
   const captionStyle = usePlayerPreferences((state) => state.captions);
-  const autoplay = usePlayerPreferences((state) => state.autoplay);
+  const preferences = usePlayerPreferences();
+  const { autoplay, defaultQuality, controlsTimeout, showRemaining, background, autoSubtitles, subtitleLanguage } = preferences;
   const videoRef = useRef<HTMLVideoElement>(null);
   const frame = useRef<HTMLElement>(null);
   const captionsRef = useRef<HTMLSpanElement>(null);
   const preferredApplied = useRef(false);
+  const qualityChosen = useRef(false);
+  const captionChosen = useRef(false);
   const engine = useRef<ReturnType<typeof attachMedia>>(undefined);
   const positionRef = useRef(session.position);
   const savedAt = useRef(0);
@@ -71,7 +75,6 @@ export function BrowserPlayer({ session }: { session: Session }) {
   const video = () => videoRef.current;
 
   useEffect(() => {
-    void usePlayerPreferences.persist.rehydrate();
     launchFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     frame.current?.focus();
     return () => { launchFocus.current?.focus(); };
@@ -98,6 +101,8 @@ export function BrowserPlayer({ session }: { session: Session }) {
     if (!element || !source) return;
     const preferred = target.preferredLanguage;
     preferredApplied.current = false;
+    qualityChosen.current = false;
+    captionChosen.current = false;
     changingMedia.current = true;
     clearTimeout(stalled.current);
     const current = attachMedia(element, source, {
@@ -142,10 +147,48 @@ export function BrowserPlayer({ session }: { session: Session }) {
     return () => abort.abort();
   }, [externalTrack]);
 
+  useEffect(() => {
+    if (background) return;
+    function pauseHidden() {
+      if (document.hidden && !document.pictureInPictureElement) videoRef.current?.pause();
+    }
+    document.addEventListener("visibilitychange", pauseHidden);
+    return () => document.removeEventListener("visibilitychange", pauseHidden);
+  }, [background]);
+
+  useEffect(() => {
+    if (defaultQuality === "auto" || qualityChosen.current || !tracks.levels.length) return;
+    const index = tracks.levels.reduce((best, candidate, i) => {
+      const height = Number.parseInt(candidate.label);
+      const current = Number.parseInt(tracks.levels[best].label);
+      return (defaultQuality === "highest" ? height > current : height < current) ? i : best;
+    }, 0);
+    engine.current?.quality(index);
+    const update = setTimeout(() => setQuality(index), 0);
+    return () => clearTimeout(update);
+  }, [defaultQuality, tracks.levels]);
+
+  useEffect(() => {
+    if (!autoSubtitles || captionChosen.current) return;
+    const options = [
+      ...source.subtitles.map((track, i) => ({ ...track, value: "file:" + i })),
+      ...tracks.captions.map((track, i) => ({ ...track, value: "hls:" + i })),
+    ];
+    const preferred = options.find((track) => normalizeLangCode(track.language || track.label) === subtitleLanguage);
+    const selected = preferred ?? options[0];
+    if (!selected) return;
+    const update = setTimeout(() => {
+      if (captionChosen.current) return;
+      setCaptions(selected.value);
+      if (selected.value.startsWith("hls:")) engine.current?.captions(Number(selected.value.slice(4)));
+    }, 0);
+    return () => clearTimeout(update);
+  }, [autoSubtitles, source.subtitles, subtitleLanguage, tracks.captions]);
+
   function wake() {
     setAwake(true);
     clearTimeout(hideTimer.current);
-    hideTimer.current = setTimeout(() => setAwake(false), 5000);
+    hideTimer.current = setTimeout(() => setAwake(false), controlsTimeout * 1000);
   }
 
   function save() {
@@ -210,7 +253,8 @@ export function BrowserPlayer({ session }: { session: Session }) {
     tick(true);
   }
 
-  function setCaption(value: string) {
+  function setCaption(value: string, manual = false) {
+    captionChosen.current = manual;
     setCaptions(value);
     setCueList([]);
     lastCue.current = "";
@@ -219,9 +263,9 @@ export function BrowserPlayer({ session }: { session: Session }) {
   }
 
   function toggleCaptions() {
-    if (captions !== "off") setCaption("off");
-    else if (source.subtitles.length) setCaption("file:0");
-    else if (tracks.captions.length) setCaption("hls:0");
+    if (captions !== "off") setCaption("off", true);
+    else if (source.subtitles.length) setCaption("file:0", true);
+    else if (tracks.captions.length) setCaption("hls:0", true);
     else setNote("No subtitle tracks are available.");
   }
 
@@ -418,7 +462,7 @@ export function BrowserPlayer({ session }: { session: Session }) {
               {!minimized && <div className="mb-2 flex items-center gap-3">
                 <SeekControl position={position} duration={duration} buffered={buffered} seek={seek} locked={locked}
                   source={!source.hls ? source.url : undefined} />
-                <span className="shrink-0 text-xs tabular-nums">{formatTime(position)} / {formatTime(duration)}</span>
+                <span className="shrink-0 text-xs tabular-nums">{formatTime(position)} / {showRemaining && duration ? "−" + formatTime(duration - position) : formatTime(duration)}</span>
               </div>}
               <div className="flex flex-wrap items-center gap-1">
                 <PlayerButton title={play ? "Pause" : "Play"} click={toggle}>{play ? <Pause size={21} /> : <Play size={21} />}</PlayerButton>
@@ -454,12 +498,12 @@ export function BrowserPlayer({ session }: { session: Session }) {
             options={[.25,.5,.75,1,1.25,1.5,1.75,2].map((rate) => ({ value: rate, label: rate + "×" }))} />
           <Picker label="Server" value={i} change={changeSource}
             options={sources.map((item,index) => ({ value:index, label:[item.server,item.quality].filter(Boolean).join(" · ") }))} />
-          {!!tracks.levels.length && <Picker label="Quality" value={quality} change={(value) => { setQuality(value); engine.current?.quality(value); }}
+          {!!tracks.levels.length && <Picker label="Quality" value={quality} change={(value) => { qualityChosen.current = true; setQuality(value); engine.current?.quality(value); }}
             options={[{value:-1,label:"Auto"}, ...tracks.levels.map((track,index) => ({ value:index,label:track.label }))]} />}
           {!!tracks.audio.length && <Picker label="Audio track" value={audio} change={(value) => { setAudio(value); engine.current?.audio(value); }}
             options={[{value:-1,label:"Default"}, ...tracks.audio.map((track,index) => ({ value:index,label:track.label }))]} />}
           <label className="grid gap-1 text-sm">Subtitle track
-            <select className="field" value={captions} onChange={(event) => setCaption(event.target.value)}>
+            <select className="field" value={captions} onChange={(event) => setCaption(event.target.value, true)}>
               <option value="off">Off</option>
               {source.subtitles.map((track,index) => <option key={index} value={"file:" + index}>{track.label}</option>)}
               {tracks.captions.map((track,index) => <option key={index} value={"hls:" + index}>{track.label}</option>)}
@@ -475,7 +519,7 @@ export function BrowserPlayer({ session }: { session: Session }) {
             <input type="range" className="accent-accent" min={1} max={3} step={0.05} value={scale} onChange={(event) => setScale(Number(event.target.value))} />
           </label>
           {target.episodes.length > 1 && <label className="flex gap-2 text-sm"><input type="checkbox" checked={autoplay}
-            onChange={() => usePlayerPreferences.getState().toggleAutoplay()} /> Autoplay next episode</label>}
+            onChange={() => preferences.set("autoplay", !autoplay)} /> Autoplay next episode</label>}
           <CaptionSettings />
         </div>}
       </aside>}
