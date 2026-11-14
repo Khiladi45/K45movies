@@ -1,0 +1,254 @@
+import { provider } from "./live-api.js";
+
+function element(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text) node.textContent = text;
+  return node;
+}
+
+const clock = (seconds) => Number.isFinite(seconds)
+  ? Math.floor(seconds / 60) + ":" + String(Math.floor(seconds % 60)).padStart(2, "0") : "–:––";
+
+function bridgeLoader(ticket) {
+  return class {
+    constructor(config) { this.stats = new globalThis.Hls.DefaultConfig.loader(config).stats; }
+    abort() { this.stats.aborted = true; }
+    destroy() { this.abort(); }
+    load(context, configuration, callbacks) {
+      this.context = context;
+      const stats = this.stats;
+      stats.loading.start = performance.now();
+      const range = Number.isFinite(context.rangeStart) && Number.isFinite(context.rangeEnd) && context.rangeEnd > context.rangeStart ? { start: context.rangeStart, end: context.rangeEnd } : {};
+      void provider("media", { ticket, url: context.url, ...range }).then((result) => {
+        if (stats.aborted) return;
+        const data = result.playlist ?? Uint8Array.from(atob(result.encoded), (char) => char.charCodeAt(0)).buffer;
+        stats.loading.first = stats.loading.end = performance.now();
+        stats.loaded = stats.total = result.bytes;
+        callbacks.onSuccess({ url: context.url, data, code: 200 }, stats, context, null);
+      }).catch((error) => {
+        if (!stats.aborted) callbacks.onError({ code: 0, text: error.message }, context, null, stats);
+      });
+    }
+  };
+}
+
+let close;
+export function closePlayer() { close?.(); }
+
+export function openPlayer(title, sources, selected = 0) {
+  closePlayer();
+  const opener = document.activeElement;
+  const dialog = element("dialog", "player-shell");
+  dialog.setAttribute("aria-label", "Player: " + title);
+  const video = element("video");
+  video.playsInline = true;
+  video.preload = "metadata";
+  const stage = element("div", "player-stage");
+  const status = element("p", "player-status");
+  status.setAttribute("role", "status");
+  let engine, index = selected, generation = 0, resume = 0, lastPaint = 0, timer;
+  let tried = new Set();
+  const announce = (message) => { status.textContent = message; };
+  function button(label, action, accessibleLabel = label) {
+    const node = element("button", "", label);
+    node.type = "button";
+    node.setAttribute("aria-label", accessibleLabel);
+    node.onclick = action;
+    return node;
+  }
+  function range(label, max, step, className) {
+    const input = element("input", className);
+    Object.assign(input, { type: "range", min: 0, max, step, value: 0 });
+    input.setAttribute("aria-label", label);
+    return input;
+  }
+  const heading = element("div");
+  const server = element("small");
+  heading.append(element("strong", "", title), server);
+  const head = element("div", "bar player-head");
+  head.append(heading, button("Close", () => dialog.close(), "Close player"));
+  const toggle = () => {
+    if (video.paused) void video.play().catch(() => announce("Press Play to start playback."));
+    else video.pause();
+  };
+  const center = button("▶", toggle, "Play video");
+  center.className = "player-center";
+  stage.append(video, center);
+  video.onclick = toggle;
+  const seek = range("Seek", 1, .1, "player-seek");
+  seek.disabled = true;
+  seek.oninput = () => { video.currentTime = Number(seek.value); };
+  const time = element("span", "player-time", "0:00 / –:––");
+  const play = button("Play", toggle);
+  const volume = range("Volume", 1, .02, "player-volume");
+  volume.value = 1;
+  volume.oninput = () => { video.volume = Number(volume.value); video.muted = false; };
+  const mute = button("Mute", () => { video.muted = !video.muted; });
+  const theater = button("Theater", () => {
+    theater.setAttribute("aria-pressed", String(dialog.classList.toggle("theater")));
+  });
+  const fullscreen = async () => {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else await dialog.requestFullscreen();
+    } catch { announce("Fullscreen is unavailable."); }
+  };
+  const panel = element("div", "actions player-panel");
+  panel.hidden = true;
+  const settings = button("Settings", () => {
+    panel.hidden = !panel.hidden;
+    settings.setAttribute("aria-expanded", String(!panel.hidden));
+  });
+  function select(label, options, change) {
+    const group = element("label", "", label);
+    const field = element("select");
+    for (const [value, name] of options) field.add(new Option(name, value));
+    field.onchange = () => change(Number(field.value));
+    group.append(field);
+    panel.append(group);
+    return { group, field };
+  }
+  const source = select("Source", sources.map((item, i) => [i, [item.server, item.quality].filter(Boolean).join(" · ")]), (value) => {
+    tried = new Set();
+    resume = video.currentTime || 0;
+    load(value);
+  });
+  const speed = select("Speed", [.5, .75, 1, 1.25, 1.5, 2].map((rate) => [rate, rate + "×"]), (value) => { video.playbackRate = value; });
+  speed.field.value = 1;
+  const quality = select("Quality", [[-1, "Auto"]], (value) => { if (engine) engine.currentLevel = value; });
+  const audio = select("Audio", [], (value) => { if (engine) engine.audioTrack = value; });
+  const captions = select("Captions", [[-1, "Off"]], (value) => {
+    if (engine) { engine.subtitleTrack = value; engine.subtitleDisplay = value >= 0; }
+  });
+  const skip = (offset) => {
+    if (Number.isFinite(video.duration)) video.currentTime = Math.max(0, Math.min(video.duration, video.currentTime + offset));
+  };
+  const controls = element("div", "player-controls");
+  const row = element("div", "actions");
+  row.append(play, button("−10s", () => skip(-10)), button("+10s", () => skip(10)), mute, volume, time, settings,
+    theater, button("Fullscreen", fullscreen));
+  if (document.pictureInPictureEnabled) row.append(button("PiP", async () => {
+    try { await (document.pictureInPictureElement ? document.exitPictureInPicture() : video.requestPictureInPicture()); }
+    catch { announce("Picture-in-picture is unavailable."); }
+  }, "Picture-in-picture"));
+  controls.append(seek, row, status);
+  dialog.append(head, stage, controls, panel);
+  document.body.append(dialog);
+  function sync() {
+    seek.disabled = !Number.isFinite(video.duration);
+    seek.max = seek.disabled ? 1 : video.duration;
+    seek.value = video.currentTime;
+    time.textContent = clock(video.currentTime) + " / " + clock(video.duration);
+    play.textContent = video.paused ? "Play" : "Pause";
+    play.setAttribute("aria-label", play.textContent);
+    center.hidden = !video.paused;
+    mute.textContent = video.muted ? "Unmute" : "Mute";
+    mute.setAttribute("aria-label", mute.textContent);
+  }
+  video.ontimeupdate = () => { if (performance.now() - lastPaint >= 175) { lastPaint = performance.now(); sync(); } };
+  video.onplay = video.onpause = video.onvolumechange = sync;
+  video.onplaying = () => announce("");
+  video.onwaiting = () => announce("Buffering…");
+  video.onloadedmetadata = () => {
+    if (resume && Number.isFinite(video.duration)) video.currentTime = Math.min(resume, video.duration);
+    video.playbackRate = Number(speed.field.value);
+    sync();
+  };
+  function load(next, viaBridge = false) {
+    clearTimeout(timer);
+    index = next;
+    const token = ++generation;
+    const item = sources[index];
+    const hls = /hls|m3u8/i.test(item.type ?? "") || /\.m3u8(?:[?#]|$)/i.test(item.url);
+    video.onerror = null;
+    video.oncanplay = null;
+    engine?.destroy();
+    engine = undefined;
+    video.removeAttribute("src");
+    video.load();
+    server.textContent = [item.server, item.quality].filter(Boolean).join(" · ");
+    source.field.value = index;
+    quality.group.hidden = audio.group.hidden = captions.group.hidden = true;
+    announce("Connecting to source…");
+    function failed(reason) {
+      clearTimeout(timer);
+      if (token !== generation) return;
+      if (video.currentTime > 0) resume = video.currentTime;
+      if (hls && !viaBridge && item.ticket && globalThis.Hls?.isSupported()) {
+        load(index, true);
+        return;
+      }
+      tried.add(index);
+      const replacement = sources.findIndex((_, i) => !tried.has(i));
+      if (replacement >= 0) load(replacement);
+      else {
+        generation++;
+        announce(typeof reason === "string" && reason ? reason : /mkv|matroska/i.test(item.type ?? "")
+          ? "This Matroska source did not play. Try another quality or provider."
+          : "This source did not play. Try another quality or provider.");
+      }
+    }
+    timer = setTimeout(failed, 18000);
+    video.onerror = () => failed();
+    video.oncanplay = () => {
+      video.oncanplay = null;
+      clearTimeout(timer);
+      if (token !== generation) return;
+      void video.play().catch((error) => {
+        if (error.name === "NotAllowedError") announce("Press Play to start.");
+        else if (error.name !== "AbortError") failed();
+      });
+    };
+    if (hls && globalThis.Hls?.isSupported()) {
+      engine = new globalThis.Hls({ enableWorker: true, maxBufferLength: 24,
+        ...(viaBridge ? { loader: bridgeLoader(item.ticket) } : {}) });
+      const update = () => {
+        if (!engine || token !== generation) return;
+        quality.field.replaceChildren(new Option("Auto", -1), ...engine.levels.map((level, i) => new Option(level.height + "p", i)));
+        audio.field.replaceChildren(...engine.audioTracks.map((track, i) => new Option(track.name, i)));
+        captions.field.replaceChildren(new Option("Off", -1), ...engine.subtitleTracks.map((track, i) => new Option(track.name, i)));
+        quality.group.hidden = !engine.levels.length;
+        audio.group.hidden = !engine.audioTracks.length;
+        captions.group.hidden = !engine.subtitleTracks.length;
+      };
+      const events = globalThis.Hls.Events;
+      for (const type of [events.MANIFEST_PARSED, events.AUDIO_TRACKS_UPDATED, events.SUBTITLE_TRACKS_UPDATED]) engine.on(type, update);
+      engine.on(events.ERROR, (_, data) => {
+        if (data.fatal || (!viaBridge && item.ticket && data.type === globalThis.Hls.ErrorTypes.NETWORK_ERROR)) {
+          const reason = data.response?.text ?? data.error?.message;
+          queueMicrotask(() => { if (token === generation) failed(reason); });
+        }
+      });
+      engine.loadSource(item.url);
+      engine.attachMedia(video);
+    } else video.src = item.url;
+  }
+  dialog.onkeydown = (event) => {
+    if (event.target.matches("input,select") || event.metaKey || event.ctrlKey) return;
+    const key = event.key.toLowerCase();
+    if (key === " " && event.target.matches("button")) return;
+    if (key === " " || key === "k") toggle();
+    else if (key === "f") void fullscreen();
+    else if (key === "m") video.muted = !video.muted;
+    else if (key === "j" || key === "arrowleft") skip(-10);
+    else if (key === "l" || key === "arrowright") skip(10);
+    else return;
+    event.preventDefault();
+  };
+  close = () => {
+    generation++;
+    clearTimeout(timer);
+    video.onerror = video.oncanplay = null;
+    engine?.destroy();
+    video.pause();
+    video.removeAttribute("src");
+    video.load();
+    dialog.remove();
+    opener?.focus();
+    close = undefined;
+  };
+  dialog.onclose = close;
+  dialog.showModal();
+  load(index);
+}

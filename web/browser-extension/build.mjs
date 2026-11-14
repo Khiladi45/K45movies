@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 const directory = new URL("./", import.meta.url);
 const out = new URL("../out-extension/", directory);
-const root = "https://raw.githubusercontent.com/Khiladi45/K45movies-api/fce60ad0758822f734f505ef08661f837a450cbb/";
+const root = "https://raw.githubusercontent.com/Khiladi45/K45movies-api/7fb870dd9d602c9bda3e31b736542be7d28ca76a/";
 async function get(path) {
   const response = await fetch(root + path, { signal: AbortSignal.timeout(15000) });
   if (!response.ok) throw new Error("Provider artifact request failed: " + path + " " + response.status);
@@ -14,7 +14,7 @@ async function get(path) {
 
 const manifestData = JSON.parse(await get("manifest.json"));
 const available = manifestData.providers.filter(({ id, bundleUrl }) =>
-  /^[a-zA-Z0-9_-]{1,65}$/.test(id) && !["youtube", "moviesApi"].includes(id) && bundleUrl === "bundled/" + id + ".js");
+  /^[a-zA-Z0-9_-]{1,65}$/.test(id) && !["vega", "youtube", "moviesApi"].includes(id) && bundleUrl === "bundled/" + id + ".js");
 const results = await Promise.all(available.map(async ({ id, bundleUrl }) => [id, await get(bundleUrl)]));
 const modules = new Map(results);
 

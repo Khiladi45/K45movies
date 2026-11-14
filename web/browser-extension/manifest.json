@@ -2,15 +2,14 @@
   "manifest_version": 3,
   "name": "K45movies Browser Bridge",
   "description": "Connect K45movies Pages to its live provider using browser-local requests.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "minimum_chrome_version": "120",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA2D8SXneM0lLSJtYO6KuGkBkFAkstGPVuMJx/WKgma89Bo5ayumPUlW0QoBhVPWSJRBpZiJz/r37UhWIU8NbT8RpD3t9qlBP+szTdf8RBSqGw2Gs+HkjqbjdwGF/FvItIER+hEDB+kXztj2iN+cHppV3wpNNOzQnIJWloXzZ17IVwYLvCk+J2AZUQ9+o0mHsq080xFryUKD0R46ySToCPYG72Jisk+AZUuu717om5vh+CO63Tdz5u1Qhx1Ocd6hr9EQanfxIDqUfZMXxOquNZdB3ZAjJFJBSB0Bhr2fCBqqoAXwMPYzEGS9S88kQaAbn4K75jmDpIsiQOtaSLNAJPQQIDAQAB",
   "permissions": [
     "storage"
   ],
   "host_permissions": [
-    "https://raw.githubusercontent.com/*",
-    "https://vegamovies.lease/*"
+    "https://raw.githubusercontent.com/*"
   ],
   "optional_host_permissions": [
     "https://*/*"

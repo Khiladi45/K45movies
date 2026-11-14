@@ -1,7 +1,7 @@
 import axios, { AxiosError, AxiosHeaders } from "axios";
 
 export class HostAccess extends Error {
-  constructor(public origin: string) { super("Allow access to " + new URL(origin).hostname + " from the extension icon, then retry."); }
+  constructor(public origin: string) { super("Open the Browser Bridge icon, select Allow provider access, then retry."); }
 }
 
 export function httpsUrl(value: string, base?: string) {
@@ -16,8 +16,6 @@ export function httpsUrl(value: string, base?: string) {
 
 export async function providerFetch(input: string | URL, options?: RequestInit) {
   const url = httpsUrl(String(input));
-  // Vega redirects its first unfiltered page to the catalog root.
-  if (url.hostname === "vegamovies.lease" && url.pathname === "/page/1/") url.pathname = "/";
   const origin = url.origin + "/*";
   if (!await chrome.permissions.contains({ origins: [origin] })) throw new HostAccess(origin);
   const headers = new Headers(options?.headers);
