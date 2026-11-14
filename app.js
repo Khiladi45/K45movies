@@ -62,7 +62,12 @@ function grid(items) {
   }
   return list;
 }
-function heading(root, title) { root.append(element("h1", title)); }
+function heading(root, title, description) {
+  const block = element("div", "", "page-heading");
+  block.append(element("p", "K45movies", "eyebrow"), element("h1", title));
+  if (description) note(block, description);
+  root.append(block);
+}
 function note(root, message) { root.append(element("p", message)); }
 function setup(root) {
   const box = element("section", "", "panel");
@@ -72,7 +77,7 @@ function setup(root) {
   root.append(box);
 }
 function busy(root, label = "Loading…") {
-  const node = element("p", label);
+  const node = element("p", label, "loading");
   node.setAttribute("role", "status");
   root.replaceChildren(node);
 }
@@ -81,7 +86,7 @@ async function run(root, work) {
   catch (error) { root.replaceChildren(element("p", error instanceof Error ? error.message : "Request failed.", "notice"), action("Retry", () => void run(root, work))); }
 }
 function select(root, label, items, onChange, current) {
-  const caption = element("label", label + " ");
+  const caption = element("label", "", "filter");
   const input = element("select");
   for (const item of items) {
     const option = element("option", item.label);
@@ -90,38 +95,110 @@ function select(root, label, items, onChange, current) {
     input.append(option);
   }
   input.onchange = () => onChange(input.value);
-  caption.append(input);
+  caption.append(element("span", label), input);
   root.append(caption);
   return input;
 }
 
-function feature(entry, title, cta = "View details") {
-  const hero = element("section", "", "hero");
-  const art = element("img");
-  art.src = asset(entry.image);
+function artwork(hero, entry) {
+  if (entry.backdrop) setBackdrop(hero, entry.backdrop);
+  else if (entry.kind === "provider" && tmdbKey()) void providerBackdrop(entry).then((url) => {
+    if (url && hero.isConnected) setBackdrop(hero, url);
+  }).catch(() => {});
+  const art = element("img", "", "hero-poster");
+  art.src = asset(entry.poster ?? entry.image);
   art.alt = "";
-  art.fetchPriority = "high";
-  const content = element("div");
-  content.append(element("span", title, "tag"), element("h2", entry.name), link(cta, titleUrl(entry), "button primary"));
-  hero.append(art, content);
+  art.onerror = () => { if (!art.src.endsWith("/brand.png")) art.src = "./brand.png"; };
+  hero.append(art);
+}
+
+function setBackdrop(hero, url) {
+  const backdrop = element("img", "", "hero-backdrop");
+  backdrop.alt = "";
+  backdrop.src = asset(url);
+  backdrop.onload = () => hero.classList.add("has-backdrop");
+  backdrop.onerror = () => backdrop.remove();
+  hero.prepend(backdrop);
+}
+
+const backdropCache = new Map();
+function providerBackdrop(entry) {
+  const year = entry.name.match(/\b(?:19|20)\d{2}\b/)?.[0];
+  const query = entry.name.split(/\s*\((?:19|20)\d{2}\)/)[0].trim();
+  if (!year || query.length < 2) return Promise.resolve();
+  const key = query + " " + year;
+  if (!backdropCache.has(key)) {
+    if (backdropCache.size >= 30) backdropCache.delete(backdropCache.keys().next().value);
+    const exact = (value) => typeof value === "string" && value.toLowerCase().trim() === query.toLowerCase();
+    const request = tmdb("search/multi", { query }).then(({ results }) => {
+      const match = results.find((item) => (item.media_type === "movie" || item.media_type === "tv") && item.backdrop_path &&
+        (item.release_date ?? item.first_air_date ?? "").startsWith(year) && [item.title, item.original_title, item.name, item.original_name].some(exact));
+      return match ? tmdbTitle(match)?.backdrop : undefined;
+    }).catch(() => { backdropCache.delete(key); });
+    backdropCache.set(key, request);
+  }
+  return backdropCache.get(key);
+}
+
+function feature(entry, title) {
+  const hero = element("section", "", "hero");
+  artwork(hero, entry);
+  const content = element("div", "", "hero-copy");
+  const actions = element("div", "", "actions");
+  actions.append(link("▶  Explore title", titleUrl(entry), "button primary"), saveButton(entry));
+  content.append(element("p", "In the spotlight", "eyebrow"),
+    element("h2", entry.name), element("p", [entry.year, title].filter(Boolean).join("  •  "), "hero-meta"));
+  if (entry.synopsis) content.append(element("p", entry.synopsis, "hero-synopsis"));
+  content.append(actions);
+  hero.append(content);
   return hero;
 }
 
-function detailHeader(entry, subtitle) {
+function shelfHeading(title, count) {
+  const group = element("div", "", "shelf-heading");
+  group.append(element("h2", title), element("small", count + (count === 1 ? " title" : " titles")));
+  return group;
+}
+
+function featureRail(items, label) {
+  const rail = element("div", "", "feature-rail");
+  const stage = element("div");
+  const bar = element("div", "", "feature-picker");
+  const candidates = items.slice(0, 5);
+  function show(index) {
+    stage.replaceChildren(feature(candidates[index], label));
+    for (const [i, button] of [...bar.children].entries()) button.setAttribute("aria-pressed", String(i === index));
+  }
+  for (const [index, item] of candidates.entries()) {
+    const button = action("", () => show(index), "poster-picker");
+    button.setAttribute("aria-label", "Feature " + item.name);
+    const img = element("img");
+    img.src = asset(item.image);
+    img.alt = "";
+    button.append(img);
+    bar.append(button);
+  }
+  rail.append(stage);
+  if (candidates.length > 1) rail.append(bar);
+  show(0);
+  return rail;
+}
+
+function detailHeader(entry, subtitle, play) {
   const hero = element("section", "", "detail-hero");
-  const art = element("img");
-  art.src = asset(entry.image);
-  art.alt = "";
-  const content = element("div");
-  content.append(element("span", subtitle, "tag"), element("h1", entry.name));
-  if (entry.synopsis) content.append(element("p", entry.synopsis));
-  content.append(saveButton(entry));
-  hero.append(art, content);
+  artwork(hero, entry);
+  const content = element("div", "", "hero-copy");
+  const actions = element("div", "", "actions");
+  if (play) actions.append(action("▶  Play", play, "primary"));
+  actions.append(saveButton(entry));
+  content.append(element("p", "Title details", "eyebrow"), element("h1", entry.name), element("p", subtitle, "hero-meta"));
+  if (entry.synopsis) content.append(element("p", entry.synopsis, "hero-synopsis"));
+  content.append(actions);
+  hero.append(content);
   return hero;
 }
 
 async function browse(root) {
-  heading(root, "Browse");
   const content = element("section");
   root.append(content);
   busy(content);
@@ -129,11 +206,14 @@ async function browse(root) {
     if (state.layout === "movie") {
       const data = await tmdb("trending/all/week");
       const items = data.results.map((item) => tmdbTitle(item)).filter(Boolean);
-      content.replaceChildren(...(items.length ? [feature(items[0], "Trending"), element("h2", "Trending this week"), grid(items)] : [element("p", "No trending titles.")]));
+      content.replaceChildren(...(items.length ? [featureRail(items, "TMDB Trending"), shelfHeading("Trending this week", items.length), grid(items)] : [element("p", "No trending titles.")]));
       return;
     }
     if (!state.active) {
       content.replaceChildren(link("Choose a provider", "#providers", "button primary"));
+      const intro = element("div");
+      heading(intro, "Find your next watch", "Choose a provider to browse its live catalog.");
+      content.prepend(intro);
       setup(content);
       return;
     }
@@ -153,8 +233,8 @@ async function browse(root) {
         const items = await provider("posts", { id, filter, page });
         if (request !== call) return;
         const cards = items.map((item) => post(id, item));
-        const featured = cards.find((item) => item.image) ?? cards[0];
-        results.replaceChildren(...(featured ? [feature(featured, id), element("h2", "Catalog"), grid(cards)] : [element("p", "No titles returned.")]));
+        const featured = cards.filter((item) => item.image);
+        results.replaceChildren(...(cards.length ? [featureRail(featured.length ? featured : cards, id), shelfHeading(categories.find((item) => item.filter === filter)?.title ?? "Catalog", cards.length), grid(cards)] : [element("p", "No titles returned.")]));
         if (!items.length) return;
         const more = action("Load more", async () => {
           more.disabled = true;
@@ -170,7 +250,8 @@ async function browse(root) {
         results.append(more);
       });
     }
-    const bar = element("div", "", "actions");
+    const bar = element("div", "", "actions catalog-filters");
+    bar.append(element("h1", "Discover"));
     select(bar, "Provider", state.installed.map((id) => ({ label: id, value: id })), (value) => {
       state.active = value; persist(); render();
     }, id);
@@ -181,7 +262,7 @@ async function browse(root) {
 }
 
 async function providersPage(root) {
-  heading(root, "Providers");
+  heading(root, "Providers", "Choose the catalogs you want to browse.");
   const body = element("section");
   root.append(body);
   busy(body);
@@ -195,6 +276,7 @@ async function providersPage(root) {
     filter.placeholder = "Filter providers";
     filter.setAttribute("aria-label", "Filter providers");
     const list = element("div", "", "provider-list");
+    filter.className = "provider-filter";
     body.append(filter, list);
     function draw() {
       list.replaceChildren();
@@ -239,7 +321,8 @@ function saveButton(entry) {
   });
   function update() {
     const saved = state.saved.some((item) => titleUrl(item) === href);
-    button.textContent = saved ? "Remove from watchlist" : "Add to watchlist";
+    button.textContent = saved ? "✓  Watchlist" : "+  Watchlist";
+    button.setAttribute("aria-label", saved ? "Remove from watchlist" : "Add to watchlist");
     button.setAttribute("aria-pressed", String(saved));
   }
   update();
@@ -251,45 +334,84 @@ async function providerDetails(root, id, ref, metadata) {
   if (!detail) detail = await provider("title", { id, link: ref });
   if (!detail.title) throw new Error("Provider returned no title details.");
   const entry = { id, link: ref, kind: "provider", name: detail.title, image: detail.image, synopsis: detail.synopsis };
-  root.replaceChildren(detailHeader(entry, id));
-  if (!detail.groups.length) { note(root, "No source groups returned."); return; }
-  const actions = element("div", "", "actions");
-  const groupButtons = element("div", "", "actions");
-  const output = element("section");
-  root.append(element("h2", "Watch"), actions, groupButtons, output);
+  const isSeries = /series|tv/i.test(detail.type ?? "");
+  const watch = element("section", "", "watch-panel");
+  const output = element("div", "", "play-result");
+  output.setAttribute("aria-live", "polite");
+  const groups = detail.groups.filter((group) => group.entries.length || group.episodesLink);
+  let firstPlay, firstOnline;
+  const watchButton = groups.length ? () => {
+    if (firstPlay && !isSeries) firstPlay.click();
+    else watch.querySelector("button")?.focus();
+  } : null;
+  root.replaceChildren(detailHeader(entry, [isSeries ? "Series" : "Movie", id].join("  •  "), watchButton), watch);
+  watch.append(element("p", "Playback", "eyebrow"), element("h2", "Watch"));
+  if (!groups.length) { note(watch, "The provider has no playable options for this title."); return; }
   let generation = 0;
 
-  async function streams(item) {
+  async function streams(item, name, files) {
     const current = ++generation;
-    const results = element("div", "", "actions");
+    const results = element("div");
     output.replaceChildren(results);
-    busy(results, "Resolving streams…");
+    busy(results, "Connecting to " + name + "…");
     await run(results, async () => {
-      const sources = await provider("sources", { id, link: item.link, series: /series|tv/i.test(detail.type ?? item.type ?? "") });
-      if (current !== generation) return;
-      results.replaceChildren();
-      if (!sources.length) note(results, "No compatible sources were returned.");
-      if (sources.length) results.append(action("Play", () => openPlayer(detail.title, sources), "primary"));
-      for (const [index, source] of sources.entries()) {
-        results.append(action([source.server, source.quality].filter(Boolean).join(" · "), () => openPlayer(detail.title, sources, index)));
+      let sources;
+      try {
+        sources = await provider("sources", { id, link: item.link, series: isSeries || /series|tv/i.test(item.type ?? "") });
+      } catch (error) {
+        if (!files || error.needsAccess) throw error;
+        if (current !== generation || !root.isConnected) return;
+        results.replaceChildren(element("p", error.message, "notice"));
+        if (firstOnline) results.append(action("Play online instead", () => firstOnline.click()));
+        return;
       }
+      if (current !== generation || !root.isConnected) return;
+      results.replaceChildren();
+      if (!sources.length) {
+        results.append(element("p", name + " did not return a playable file. Try another option.", "notice"));
+        if (files && firstOnline) results.append(action("Play online instead", () => firstOnline.click()));
+        return;
+      }
+      closePlayer();
+      openPlayer(isSeries ? detail.title + " · " + name : detail.title, sources.map((source) => ({
+        ...source, server: source.server.replace(/\bdownload\b/i, "File"),
+      })));
     });
   }
 
-  async function show(index) {
-    ++generation;
-    output.replaceChildren();
-    const group = detail.groups[Number(index)];
-    const list = element("div", "", "actions");
-    groupButtons.replaceChildren(list);
-    await run(list, async () => {
-      const entries = group.episodesLink ? await provider("episodes", { id, link: group.episodesLink }) : group.entries;
-      if (!entries.length) { note(list, "No episodes or sources returned."); return; }
-      for (const entry of entries) list.append(action(entry.title, () => void streams(entry)));
-    });
+  function choices(list, entries, files) {
+    list.replaceChildren();
+    if (!entries.length) { note(list, "No episodes or sources returned."); return; }
+    for (const entry of entries) {
+      const name = entry.title.replace(/\bdownload\b/ig, "").trim() || "Source";
+      const quality = files && name.match(/\b(?:\d{3,4}p|4k)\b/i)?.[0];
+      const player = name.match(/^Player\s*:\s*(\d+)$/i)?.[1];
+      const button = action("", () => void streams(entry, name, files), "play-option");
+      const icon = element("span", "▶", "play-icon");
+      icon.setAttribute("aria-hidden", "true");
+      const copy = element("span");
+      copy.append(element("strong", player ? "Play online" : "Play " + (quality || name)),
+        element("small", player ? "Player " + player : quality ? name.replace(quality, "").trim() || "File source" : files ? "File source" : "Streaming source"));
+      button.append(icon, copy);
+      list.append(button);
+      firstPlay ??= button;
+      if (!files) firstOnline ??= button;
+    }
   }
-  select(actions, "Season or quality", detail.groups.map((item, index) => ({ label: item.title, value: index })), show);
-  await show(0);
+  for (const group of groups) {
+    const files = /download/i.test(group.title);
+    const section = element("section", "", "source-group");
+    section.append(element("h3", files ? "File qualities" : group.title));
+    const list = element("div", "", "play-options");
+    section.append(list);
+    watch.append(section);
+    if (!group.episodesLink) choices(list, group.entries, files);
+    else list.append(action("Show episodes", () => {
+      busy(list, "Loading episodes…");
+      void run(list, async () => choices(list, await provider("episodes", { id, link: group.episodesLink }), files));
+    }));
+  }
+  watch.append(output);
 }
 
 function titleMatch(name, candidate) {
@@ -301,7 +423,7 @@ function titleMatch(name, candidate) {
 
 async function titlePage(root, query) {
   const section = element("section", "", "detail");
-  root.append(link("← Browse", "#browse", "button"), section);
+  root.append(link("←  Browse", "#browse", "button back-link"), section);
   busy(section);
   await run(section, async () => {
     const id = query.get("provider");
@@ -312,9 +434,9 @@ async function titlePage(root, query) {
     const raw = await tmdb(type + "/" + number);
     const entry = tmdbTitle(raw, type);
     section.replaceChildren(detailHeader(entry, [entry.type === "tv" ? "Series" : "Movie", entry.year].filter(Boolean).join(" · ")));
-    const options = element("section");
+    const options = element("section", "", "watch-panel");
     section.append(options);
-    options.append(action("Find provider sources", async () => {
+    options.append(element("h2", "Watch"), action("Find provider sources", async () => {
       busy(options, "Searching installed providers…");
       await run(options, async () => {
         if (!state.installed.length) throw new Error("Install a provider from Providers first.");
@@ -360,9 +482,9 @@ async function search(root, query) {
 }
 
 function settings(root) {
-  heading(root, "Settings");
+  heading(root, "Settings", "Make K45movies yours.");
   const group = element("fieldset");
-  group.append(element("legend", "Choose layout"));
+  group.append(element("legend", "Browse by"));
   for (const [value, name] of [["provider", "Provider Based"], ["movie", "Movie Based"]]) {
     const label = element("label");
     const input = element("input");
@@ -405,7 +527,7 @@ function settings(root) {
   }, state.theme);
   root.append(group, appearance, form, attribution);
   setup(root);
-  note(root, "Extract the ZIP. Open chrome://extensions or edge://extensions, enable Developer mode, choose Load unpacked, and select the extracted folder. Reload this site.");
+  note(root, "Extract the ZIP. Open brave://extensions, chrome://extensions or edge://extensions, enable Developer mode, then choose Load unpacked and select the extracted folder. For an update, replace the files in that folder and click Reload on the extension.");
 }
 
 function render() {
@@ -416,7 +538,7 @@ function render() {
   const root = element("div");
   main.replaceChildren(root);
   for (const anchor of document.querySelectorAll("nav a")) {
-    if (anchor.hash === "#" + route) anchor.setAttribute("aria-current", "page");
+    if (anchor.hash === "#" + (route === "title" ? "browse" : route)) anchor.setAttribute("aria-current", "page");
     else anchor.removeAttribute("aria-current");
   }
   if (route === "providers") void providersPage(root);
@@ -427,7 +549,10 @@ function render() {
     heading(root, "Watchlist");
     root.append(state.saved.length ? grid(state.saved) : element("p", "Your watchlist is empty."));
   } else void browse(root);
-  if (token > 1) main.focus();
+  if (token > 1) {
+    window.scrollTo(0, 0);
+    main.focus({ preventScroll: true });
+  }
 }
 
 function openSearch() {

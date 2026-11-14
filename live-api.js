@@ -53,6 +53,8 @@ export function tmdbTitle(raw, fallback) {
     original: raw.original_title ?? raw.original_name,
     kind: "tmdb", type, id: raw.id,
     image: raw.poster_path ? "https://image.tmdb.org/t/p/w342" + raw.poster_path : "",
+    poster: raw.poster_path ? "https://image.tmdb.org/t/p/w500" + raw.poster_path : "",
+    backdrop: raw.backdrop_path ? "https://image.tmdb.org/t/p/w1280" + raw.backdrop_path : "",
     year: (raw.release_date ?? raw.first_air_date ?? "").slice(0, 4),
     synopsis: raw.overview,
   };

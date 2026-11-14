@@ -2,7 +2,7 @@
 
 The site reads the live provider registry from K45movies-api and uses the K45movies Browser Bridge extension for provider catalog, search, metadata, episodes and source resolution. Both run without a hosted K45movies API.
 
-1. Open https://khiladi45.github.io/K45movies/ in Chrome or Edge.
+1. Open https://khiladi45.github.io/K45movies/ in Brave, Chrome or Edge.
 2. Extract the Browser Bridge ZIP linked from Providers and Settings.
 3. Open the extensions manager, enable Developer mode and use **Load unpacked** on the extracted folder.
 4. Reload the site, open Providers, and install a provider. Open the Browser Bridge toolbar icon and choose Allow provider access once, then retry the operation.
@@ -12,4 +12,4 @@ The extension bundles a pinned revision of provider code. The website fetches th
 
 The deployment branch is `gh-pages`. Its root contains these source assets plus the generated Browser Bridge ZIP and the pinned hls.js build. Build the extension with `npm run build:extension` from `web/`.
 
-The player attempts browser playback of direct media files and falls back to Browser Bridge for HLS requests when direct loading fails. It can switch to another resolved source automatically. Browser-incompatible containers and codecs still require a compatible source.
+Watch lists online streams and file qualities as Play choices. Each choice runs the same provider stream resolver used by the Android app. The web player opens immediately after resolution, plays compatible media files inline, and uses Browser Bridge for HLS when direct loading fails. A host that refuses access or only supplies media the browser cannot decode requires another source.

@@ -10,6 +10,31 @@ function element(tag, className, text) {
 const clock = (seconds) => Number.isFinite(seconds)
   ? Math.floor(seconds / 60) + ":" + String(Math.floor(seconds % 60)).padStart(2, "0") : "–:––";
 
+const icons = {
+  Play: "m9 5 12 7-12 7z",
+  Pause: "M9 5v14m6-14v14",
+  Mute: "M3 9h4l5-4v14l-5-4H3z M16 8a6 6 0 0 1 0 8m2-10a9 9 0 0 1 0 12",
+  Unmute: "M3 9h4l5-4v14l-5-4H3z m13 1 5 5m0-5-5 5",
+  Settings: "M4 7h16M4 17h16M9 4v6m6 4v6",
+  Theater: "M3 6h18v12H3z m4 2h10",
+  Fullscreen: "M9 4H4v5m11-5h5v5m0 6v5h-5M9 20H4v-5",
+  PiP: "M12 18H3V5h18v5m-8 2h9v7h-9z",
+  Close: "m6 6 12 12m0-12L6 18",
+};
+function drawButton(node, label) {
+  if (node.dataset.icon === label) return;
+  node.dataset.icon = label;
+  node.replaceChildren();
+  const ns = "http://www.w3.org/2000/svg";
+  const icon = document.createElementNS(ns, "svg");
+  const path = document.createElementNS(ns, "path");
+  icon.setAttribute("viewBox", "0 0 24 24");
+  icon.setAttribute("aria-hidden", "true");
+  path.setAttribute("d", icons[label]);
+  icon.append(path);
+  node.append(icon);
+}
+
 function bridgeLoader(ticket) {
   return class {
     constructor(config) { this.stats = new globalThis.Hls.DefaultConfig.loader(config).stats; }
@@ -54,6 +79,8 @@ export function openPlayer(title, sources, selected = 0) {
     const node = element("button", "", label);
     node.type = "button";
     node.setAttribute("aria-label", accessibleLabel);
+    node.title = accessibleLabel;
+    if (icons[label]) drawButton(node, label);
     node.onclick = action;
     return node;
   }
@@ -140,11 +167,16 @@ export function openPlayer(title, sources, selected = 0) {
     seek.max = seek.disabled ? 1 : video.duration;
     seek.value = video.currentTime;
     time.textContent = clock(video.currentTime) + " / " + clock(video.duration);
-    play.textContent = video.paused ? "Play" : "Pause";
-    play.setAttribute("aria-label", play.textContent);
+    const playback = video.paused ? "Play" : "Pause";
+    drawButton(play, playback);
+    play.setAttribute("aria-label", playback);
+    play.title = playback;
+    time.title = "Elapsed time / duration";
     center.hidden = !video.paused;
-    mute.textContent = video.muted ? "Unmute" : "Mute";
-    mute.setAttribute("aria-label", mute.textContent);
+    const volumeLabel = video.muted ? "Unmute" : "Mute";
+    drawButton(mute, volumeLabel);
+    mute.setAttribute("aria-label", volumeLabel);
+    mute.title = volumeLabel;
   }
   video.ontimeupdate = () => { if (performance.now() - lastPaint >= 175) { lastPaint = performance.now(); sync(); } };
   video.onplay = video.onpause = video.onvolumechange = sync;
