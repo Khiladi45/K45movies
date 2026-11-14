@@ -1,0 +1,119 @@
+@import "tailwindcss";
+
+@theme {
+  --color-canvas: #141414;
+  --color-surface: #1f1f1f;
+  --color-line: #36363e;
+  --color-muted: #b1afb9;
+  --color-accent: #a78bfa;
+  --color-action: #7c3aed;
+}
+
+html { color-scheme: dark; }
+
+body {
+  background: var(--color-canvas);
+  color: #f6f5fa;
+  font-family: system-ui, sans-serif;
+}
+
+button { cursor: pointer; }
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+.site-shell {
+  --rail: 14rem;
+  display: grid;
+  grid-template-columns: var(--rail) minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  min-height: 100dvh;
+}
+
+.site-shell[data-collapsed="true"] { --rail: 4.5rem; }
+
+.site-header {
+  @apply sticky top-0 z-20 col-span-2 flex h-16 items-center gap-3 border-b border-line px-4 sm:px-6;
+  background: #101014;
+}
+
+.brand { @apply flex shrink-0 items-center gap-2.5 font-bold tracking-tight; }
+.brand img { @apply rounded-lg; }
+
+.icon-button { @apply inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-muted hover:bg-white/10 hover:text-white; }
+
+.search-trigger {
+  @apply ml-auto inline-flex min-h-10 items-center gap-2 rounded-lg border border-line bg-surface px-3 text-sm text-muted hover:border-accent hover:text-white;
+}
+
+.search-trigger kbd { @apply ml-8 rounded border border-line px-1.5 py-0.5 text-xs; }
+
+.site-nav {
+  @apply sticky top-16 flex flex-col gap-1 border-r border-line p-3;
+  align-self: start;
+  height: calc(100dvh - 4rem);
+  background: #06090f;
+}
+
+.site-nav a {
+  @apply flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium text-muted hover:bg-white/5 hover:text-white;
+}
+
+.site-nav svg { flex-shrink: 0; }
+
+.site-nav a[aria-current="page"] {
+  @apply bg-accent/15 text-accent;
+  box-shadow: inset 2px 0 #8b5cf6;
+}
+
+[data-collapsed="true"] .site-nav a { justify-content: center; }
+[data-collapsed="true"] .site-nav span { display: none; }
+
+.site-content { @apply flex min-w-0 flex-col; }
+.site-content main { @apply mx-auto w-full max-w-[100rem] flex-1 px-5 py-7 sm:px-8 lg:px-10 lg:py-10; }
+.site-footer { @apply border-t border-line px-5 py-4 text-sm text-muted sm:px-8 lg:px-10; }
+.site-footer a { @apply underline underline-offset-4 hover:text-white; }
+.skip-link { @apply sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded focus:bg-canvas focus:p-3; }
+
+.home-hero {
+  @apply rounded-2xl border border-line px-6 py-12 sm:px-10 sm:py-16;
+  background: radial-gradient(ellipse at 86% 8%, #39205c, transparent 56%), #1b1920;
+}
+
+.field { @apply rounded-lg border border-line bg-canvas px-3 py-2 text-white placeholder:text-muted; }
+.primary-button { @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-action px-4 py-2 text-sm font-semibold text-white hover:bg-violet-600; }
+.empty-panel { @apply rounded-xl border border-line bg-surface p-6 text-muted; }
+
+.dialog-overlay { @apply fixed inset-0 z-30 bg-black/70; }
+.search-dialog { @apply fixed inset-x-4 top-[min(20dvh,9rem)] z-40 mx-auto max-w-lg rounded-xl border border-line bg-surface p-5 shadow-2xl; }
+
+.layout-option { @apply flex cursor-pointer items-start gap-3 rounded-xl border border-line bg-surface p-4 hover:border-accent; }
+.layout-option:has(input:checked) { @apply border-accent bg-accent/10; }
+.layout-option input { @apply mt-1 size-4 shrink-0 accent-accent; }
+
+@media (max-width: 767px) {
+  .site-shell { display: flex; flex-direction: column; }
+  .sidebar-toggle, .search-trigger kbd { display: none; }
+  .site-nav {
+    position: sticky;
+    z-index: 10;
+    top: 4rem;
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--color-line);
+    padding: 0.4rem;
+  }
+  .site-nav a { flex: 1; justify-content: center; gap: 0.35rem; padding-inline: 0.25rem; font-size: 0.75rem; }
+  .site-nav svg { width: 1rem; }
+  [data-collapsed="true"] .site-nav span { display: inline; }
+  .site-content { flex: 1; }
+}
+
+@media (max-width: 370px) {
+  .site-nav a { flex-direction: column; }
+}

@@ -2,6 +2,10 @@
 
 Mobile baseline `17be4e5` from `origin/main`. Provider repository inspected at `fce60ad`. The mobile app uses Expo SDK 57 and React Native 0.86. The website will live in `/web` with its own package and build. This phase records source behavior and design decisions for approval. Playback compatibility and performance require a running web build and representative streams. [Expo SDK 57 reference](https://docs.expo.dev/versions/v57.0.0/)
 
+## Approved website scope
+
+The website supports Provider Based and Movie Based. The YouTube layout entries below record the Android baseline only. Browser preferences and other suitable user state use localStorage. Session storage is excluded.
+
 ## Screens, navigation and Back
 
 `App.tsx` mounts the navigation tree, provider WebView bridge and persistent classic player overlay. The native stack starts at `Tabs`. Classic tabs start at Home and return there on Android Back from another tab. YouTube uses the same initial-tab Back policy with its own tabs. For the web, use browser history for normal navigation, return focus to the opener when a dialog closes, and provide Home or the appropriate parent as an explicit fallback when a deep link has no in-site history. Closing transient panels should preserve the underlying route, scroll position and selected tab.
@@ -148,7 +152,7 @@ The table groups dependencies with the same web treatment. The current player is
 1. **Analysis.** Commit this source audit to `feat/website` and review the open decisions.
 2. **Scaffold and design system.** Isolated `/web` package, strict TypeScript, Next App Router, responsive shell, tokens, brand assets, accessible primitives, skeleton/toast and app navigation.
 3. **Auth and data layer.** Implement the approved session contract, provider/TMDB handlers, validation/rate limits, React Query session and cache behavior, and Zustand persistence.
-4. **Layouts and screens.** Provider parity, TMDB title bridge and source choice, YouTube feed/search/Shorts/watchlist, settings entry and profile and provider flows. Verify Back and deep links.
+4. **Layouts and screens.** Provider parity, TMDB title bridge and source choice, search and watchlists, settings entry and profile and provider flows. Verify Back and deep links.
 5. **Player.** Media engine, controls, source/episode switch, subtitle panel, resume/PiP, browser matrix, recovery and throttled playback tests.
 6. **Settings.** Appearance, profiles, layout and language, playback/subtitles, provider management and diagnostics end to end.
 7. **Polish and tests.** Add requested tests, run tsc/lint/build, check keyboard/accessibility and Lighthouse, record player results, write `web/README.md` and verify Source link. Push the approved `feat/website` branch after final review.
