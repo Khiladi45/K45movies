@@ -3,7 +3,7 @@ import type { Episode, LinkGroup, Post, ProviderDetail, TitleDetail } from "./ca
 import { fuzzyTitleScore, normalizeTitle, searchVariants } from "./fuzzy";
 import { normalizeLangCode, TEXT_LANGUAGE_ABBREVIATIONS, TEXT_LANGUAGE_NAMES } from "./languages";
 
-export type Choice = { provider: string; episode: Episode; label: string; languages: string[] };
+export type Choice = { provider: string; episode: Episode; episodes: Episode[]; label: string; languages: string[] };
 export type Match = { post: Post; detail: ProviderDetail };
 const noise = new Set("download watch movie series season episode web dl hd fhd uhd webrip bluray hevc x264 x265 multi dual audio dubbed esub aac hdr complete".split(" "));
 
@@ -96,6 +96,7 @@ export async function choicesFor(provider: string, matches: Match[], season: num
         failure = error;
         continue;
       }
+      const episodes = episode ? items : [];
       if (episode) {
         const exact = items.find((item) => episodeNumber(item.title) === episode);
         const selected = exact ?? (items.every((item) => episodeNumber(item.title) === undefined) ? items[episode - 1] : undefined);
@@ -104,7 +105,7 @@ export async function choicesFor(provider: string, matches: Match[], season: num
       for (const item of items) {
         const label = group.quality || group.title || item.title;
         const languages = detectAudio([label, item.title, match.post.title].join(" "));
-        if (!output.has(item.ref)) output.set(item.ref, { provider, episode: item, label, languages });
+        if (!output.has(item.ref)) output.set(item.ref, { provider, episode: item, episodes, label, languages });
       }
     }
   }

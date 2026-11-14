@@ -8,7 +8,7 @@ export type ReferenceKind = "title" | "episodes" | "source";
 
 let localKey: Buffer | undefined;
 
-function referenceKey() {
+export function referenceKey() {
   const configured = process.env.K45_REFERENCE_SECRET;
   if (configured) {
     if (configured.length < 32) throw new HttpError(503, "The provider reference key is too short.");

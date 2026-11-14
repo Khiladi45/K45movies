@@ -125,3 +125,26 @@ export function providerNetwork(signal: AbortSignal) {
 
   return { request, http };
 }
+
+export async function streamUpstream(value: string, method: string, headers: Headers, signal: AbortSignal) {
+  let url = destination(value);
+  const connect = new AbortController();
+  const timer = setTimeout(() => connect.abort(), 15_000);
+  try {
+    const deadline = AbortSignal.any([signal, connect.signal]);
+    for (let index = 0; index <= 5; index++) {
+      const response = await upstreamFetch(url, {
+        method, headers: Array.from(headers.entries()), signal: deadline, redirect: "manual", dispatcher,
+      });
+      const location = response.headers.get("location");
+      if (!location || ![301, 302, 303, 307, 308].includes(response.status)) return { response, url };
+      await response.body?.cancel();
+      const next = destination(new URL(location, url));
+      if (url.origin !== next.origin) {
+        for (const name of ["authorization", "cookie", "origin", "referer"]) headers.delete(name);
+      }
+      url = next;
+    }
+    throw new Error("Too many media redirects.");
+  } finally { clearTimeout(timer); }
+}

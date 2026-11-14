@@ -7,6 +7,7 @@ import { ArrowUpDown, ExternalLink, Play } from "lucide-react";
 import { providers, tmdb } from "@/lib/catalog-api";
 import { providerLink, titleLink } from "@/lib/catalog-links";
 import type { Episode, MediaType, ProviderDetail, TitleDetail } from "@/lib/catalog-types";
+import { usePlayback, type PlaybackTarget } from "@/lib/playback";
 import { useLibrary } from "@/lib/library";
 import { choicesFor, episodeNumber, groupEpisodes, matchProvider, streamLanguages, type Choice } from "@/lib/title-bridge";
 import { languageName } from "@/lib/languages";
@@ -29,7 +30,7 @@ function DetailHero({ title, image, backdrop, synopsis, tags, children }: {
   </section>;
 }
 
-function SourceList({ choice, series, language }: { choice: Choice; series: boolean; language: string }) {
+function SourceList({ choice, series, language, target }: { choice: Choice; series: boolean; language: string; target: PlaybackTarget }) {
   const query = useQuery({ queryKey: ["sources", choice.provider, choice.episode.ref, series],
     queryFn: ({ signal }) => providers.sources(choice.provider, choice.episode.ref, series ? "series" : "movie", signal),
     staleTime: 60_000, gcTime: 120_000,
@@ -45,7 +46,10 @@ function SourceList({ choice, series, language }: { choice: Choice; series: bool
       <p className="mb-3 text-sm text-muted">{languageName(language)} audio could not be confirmed from source metadata.</p>}
     <ul className="grid gap-2">
       {list.map((entry,i) => <li className="list-row" key={entry.server + i}>
-        <span className="font-semibold">{entry.server}</span>
+        <button type="button" className="primary-button" onClick={() => {
+          const resume = useLibrary.getState().progress.find((item) => item.href === target.title.href && item.playback?.item.ref === target.item.ref);
+          usePlayback.getState().open({ target, sources: list, index: i, position: resume?.position ?? 0 });
+        }}><Play size={16} aria-hidden="true" /> Play {entry.server}</button>
         {(entry.quality || entry.type) && <span className="text-sm text-muted">{[entry.quality, entry.type].filter(Boolean).join(" · ")}</span>}
         {entry.languages.length > 0 && <span className="text-sm text-muted">{streamLanguages(entry.languages).map(languageName).join(", ")}</span>}
       </li>)}
@@ -74,7 +78,7 @@ function ProviderEpisodes({ id, detail }: { id: string; detail: ProviderDetail }
   if (order === "desc") visible.reverse();
 
   function choose(episode: Episode) {
-    select({ provider: id, episode, label: group.quality || group.title, languages: [] });
+    select({ provider: id, episode, episodes: items, label: group.quality || group.title, languages: [] });
   }
 
   return <div className="space-y-4">
@@ -103,7 +107,12 @@ function ProviderEpisodes({ id, detail }: { id: string; detail: ProviderDetail }
           </button>
         </li>)}
       </ul>}
-    {choice && <SourceList choice={choice} series={series} language="none" />}
+    {choice && <SourceList choice={choice} series={series} language="none" target={{
+      title: { href: providerLink(id, detail.ref), title: detail.title, image: detail.poster ?? detail.image, layout: "provider" },
+      item: { provider: id, ref: choice.episode.ref, title: choice.episode.title, series },
+      episodes: series ? [...items].sort((a, b) => (episodeNumber(a.title) ?? Infinity) - (episodeNumber(b.title) ?? Infinity))
+        .map((episode) => ({ provider: id, ref: episode.ref, title: episode.title, series })) : [],
+    }} />}
   </div>;
 }
 
@@ -180,7 +189,12 @@ function MovieChoices({ title, season, episode }: { title: TitleDetail; season: 
       </li>)}
     </ul>}
     {!items.length && <p role="status" className="text-muted">{pending ? "Checking installed providers…" : "No matching sources found."}</p>}
-    {selected && <SourceList choice={selected} series={title.mediaType === "tv"} language={language} />}
+    {selected && <SourceList choice={selected} series={title.mediaType === "tv"} language={language} target={{
+      title: { href: titleLink(title), title: title.title, image: title.image, layout: "movie" },
+      item: { provider: selected.provider, ref: selected.episode.ref, title: selected.episode.title, series: title.mediaType === "tv" },
+      episodes: selected.episodes.map((item) => ({ provider: selected.provider, ref: item.ref, title: item.title, series: true })),
+      episodeNumber: episode || undefined, seasonNumber: season || undefined, preferredLanguage: language,
+    }} />}
   </div>;
 }
 

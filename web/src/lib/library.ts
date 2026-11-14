@@ -1,12 +1,13 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import type { PlaybackTarget } from "./playback";
 import type { CatalogLayout } from "./appearance";
 
 export const avatars = ["Violet", "Ocean", "Emerald", "Gold", "Rose"] as const;
 export type Avatar = typeof avatars[number];
 export type Profile = { id: string; name: string; avatar: Avatar; photo?: string };
 export type SavedTitle = { href: string; title: string; layout: CatalogLayout; image?: string; note?: string };
-export type Progress = SavedTitle & { position: number; duration: number; updatedAt: number };
+export type Progress = SavedTitle & { position: number; duration: number; updatedAt: number; playback?: PlaybackTarget; source?: { server: string; quality?: string }; }
 const watchers = ["ta", "te", "ml", "kn", "hi", "en", "ko", "ja"] as const;
 export const audioLanguages = ["none", ...watchers] as const;
 export type AudioLanguage = typeof audioLanguages[number];

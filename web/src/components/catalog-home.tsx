@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { useCatalogReady } from "./catalog-context";
 import { Artwork, CardGrid, CatalogSkeleton, QueryMessage, Rail, type Card } from "./catalog-ui";
+import { resumePlayback } from "@/lib/player-actions";
 import { useAppearance } from "@/lib/appearance";
 import { useLibrary } from "@/lib/library";
 import { providers, tmdb, type MovieRow } from "@/lib/catalog-api";
@@ -23,16 +24,31 @@ function ContinueWatching() {
   const layout = useAppearance((state) => state.layout);
   const progress = useLibrary((state) => state.progress);
   const dismiss = useLibrary((state) => state.dismissProgress);
+  const [status, setStatus] = useState("");
+  const [resuming, setResuming] = useState("");
   const entries = progress.filter((entry) => entry.layout === layout).slice(0, 20);
   if (!entries.length) return null;
   return <Rail title="Continue Watching">
+    <p className="text-sm text-muted" role="status">{status}</p>
     <ul className="poster-rail">
       {entries.map((entry) => <li key={entry.href} className="relative min-w-0">
-        <Link href={entry.href} className="poster-card">
+        <Link href={entry.href} className="poster-card" onClick={async (event) => {
+          if (!entry.playback || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+          event.preventDefault();
+          if (resuming) return;
+          setResuming(entry.href);
+          setStatus("Resuming " + entry.title + "…");
+          try {
+            const resumed = await resumePlayback(entry, AbortSignal.timeout(26000));
+            setStatus(resumed ? "" : "Could not resume. Open title details to select another source.");
+          } catch { setStatus("Could not resume. Open title details to select another source."); }
+          finally { setResuming(""); }
+        }}>
           <Artwork src={entry.image} className="aspect-video rounded-xl" />
           <progress className="w-full accent-accent" value={entry.position} max={entry.duration || 1} aria-label="Playback progress" />
           <span className="block truncate text-sm font-semibold">{entry.title}</span>
         </Link>
+        {entry.playback && <Link className="text-xs text-accent" href={entry.href}>Title details</Link>}
         <button className="icon-button absolute top-1 right-1 bg-black/80" type="button" onClick={() => dismiss(entry.href)}
           aria-label={"Dismiss " + entry.title}><X size={16} /></button>
       </li>)}

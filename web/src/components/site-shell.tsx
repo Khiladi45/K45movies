@@ -5,8 +5,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Bookmark, House, PanelLeft, Puzzle, Search, Settings } from "lucide-react";
+import { usePlayback } from "@/lib/playback";
 import { useLibrary } from "@/lib/library";
 import { useAppearance } from "@/lib/appearance";
+import { PlayerHost } from "./player-host";
 import { SearchDialog } from "./search-dialog";
 
 const navigation = [
@@ -18,14 +20,15 @@ const navigation = [
 
 export function SiteShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const modal = usePlayback((state) => !!state.session && !state.minimized);
   const profile = useLibrary((state) => state.profiles.find(({ id }) => id === state.activeProfile));
   const collapsed = useAppearance((state) => state.sidebarCollapsed);
   const toggleSidebar = useAppearance((state) => state.toggleSidebar);
 
   return (
     <div className="site-shell" data-collapsed={collapsed}>
-      <a className="skip-link" href="#main">Skip to content</a>
-      <header className="site-header">
+      <a inert={modal} className="skip-link" href="#main">Skip to content</a>
+      <header className="site-header" inert={modal}>
         <button type="button" className="icon-button sidebar-toggle" onClick={toggleSidebar}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"} aria-controls="primary-nav"
           aria-expanded={!collapsed}>
@@ -44,7 +47,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
           {profile.name.slice(0, 1).toUpperCase()}
         </Link>}
       </header>
-      <nav className="site-nav" id="primary-nav" aria-label="Primary">
+      <nav inert={modal} className="site-nav" id="primary-nav" aria-label="Primary">
         {navigation.map(({ href, label, icon: Icon }) => {
           const current = pathname === href || (href !== "/" && pathname.startsWith(href + "/"));
           return (
@@ -56,12 +59,13 @@ export function SiteShell({ children }: { children: ReactNode }) {
           );
         })}
       </nav>
-      <div className="site-content">
+      <div className="site-content" inert={modal}>
         <main id="main" tabIndex={-1}>{children}</main>
         <footer className="site-footer">
           <a href="https://github.com/Khiladi45/K45movies/tree/feat/website">Source</a>
         </footer>
       </div>
+      <PlayerHost />
     </div>
   );
 }

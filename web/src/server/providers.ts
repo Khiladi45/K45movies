@@ -6,6 +6,7 @@ import { z } from "zod";
 import type { Category, Episode, Post, Provider, ProviderDetail, Source } from "@/lib/catalog-types";
 import { providerNetwork } from "./provider-network";
 import { decodeReference, encodeReference } from "./references";
+import { createMediaLink } from "./media";
 import { HttpError } from "./http";
 
 const defaultBase = "https://raw.githubusercontent.com/Khiladi45/K45movies-api/fce60ad0758822f734f505ef08661f837a450cbb/";
@@ -202,8 +203,20 @@ function sources(value: unknown): Source[] {
   return list(Array.isArray(value) ? value : [value]).flatMap((entry) => {
     const raw = item(entry);
     const link = text(raw.link);
-    if (!link || raw.downloadOnly === true || raw.kind === "audio" || raw.kind === "video") return [];
+    if (!link || raw.downloadOnly === true || /\bdownload[\s-]*only\b/i.test(text(raw.server) ?? "") || raw.kind === "audio" || raw.kind === "video") return [];
+    const url = createMediaLink(link, raw.headers);
+    if (!url) return [];
+    const subtitles = list(raw.subtitles).flatMap((entry) => {
+      const subtitle = item(entry);
+      const uri = text(subtitle.uri);
+      const subtitleUrl = uri && createMediaLink(uri, raw.headers, "subtitle", link);
+      return subtitleUrl ? [{
+        url: subtitleUrl, language: text(subtitle.language) ?? "und",
+        label: text(subtitle.title) ?? text(subtitle.language) ?? "Subtitles",
+      }] : [];
+    }).slice(0, 40);
     return [{
+      url, subtitles, hls: /hls|m3u8/i.test(text(raw.type) ?? "") || /\.m3u8(?:[?#]|$)/i.test(link),
       server: text(raw.server) ?? "Stream", quality: text(raw.quality), type: text(raw.type),
       label: text(raw.tag), languages: [...strings(raw.languages), ...strings(raw.audioLanguages), ...strings(raw.tags)],
     }];

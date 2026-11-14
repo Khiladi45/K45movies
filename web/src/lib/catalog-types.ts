@@ -4,7 +4,8 @@ export type Post = { title: string; ref: string; image?: string; type?: string; 
 export type Episode = { title: string; ref: string; type?: string; description?: string; image?: string };
 export type LinkGroup = { title: string; quality?: string; episodesRef?: string; directLinks: Episode[] };
 export type ProviderDetail = Post & { synopsis?: string; poster?: string; rating?: string; tags: string[]; cast: string[]; groups: LinkGroup[] };
-export type Source = { server: string; quality?: string; type?: string; label?: string; languages: string[] };
+export type SubtitleTrack = { url: string; language: string; label: string };
+export type Source = { url: string; hls: boolean; subtitles: SubtitleTrack[]; server: string; quality?: string; type?: string; label?: string; languages: string[] };
 export type MediaType = "movie" | "tv";
 export type Title = {
   id: number; mediaType: MediaType; title: string; originalTitle: string; year: string;
