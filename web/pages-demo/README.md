@@ -12,4 +12,4 @@ The extension bundles a pinned revision of provider code. The website fetches th
 
 The deployment branch is `gh-pages`. Its root contains these source assets plus the generated Browser Bridge ZIP and the pinned hls.js build. Build the extension with `npm run build:extension` from `web/`.
 
-Watch lists online streams and file qualities as Play choices. Each choice runs the same provider stream resolver used by the Android app. The web player opens immediately after resolution, plays compatible media files inline, and uses Browser Bridge for HLS when direct loading fails. A host that refuses access or only supplies media the browser cannot decode requires another source.
+Watch lists online streams and file qualities as Play choices. The web player tries another source for the same title when resolution or playback fails. For movies with a known release year, it also searches other installed providers for a matching title and year. Episode playback stays on the selected episode. Browser Bridge can carry HLS playback when the browser cannot fetch the stream directly. Profiles, watchlists and playback positions stay in localStorage.

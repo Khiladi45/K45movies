@@ -61,7 +61,7 @@ function bridgeLoader(ticket) {
 let close;
 export function closePlayer() { close?.(); }
 
-export function openPlayer(title, sources, selected = 0) {
+export function openPlayer(title, sources, selected = 0, options = {}) {
   closePlayer();
   const opener = document.activeElement;
   const dialog = element("dialog", "player-shell");
@@ -72,7 +72,7 @@ export function openPlayer(title, sources, selected = 0) {
   const stage = element("div", "player-stage");
   const status = element("p", "player-status");
   status.setAttribute("role", "status");
-  let engine, index = selected, generation = 0, resume = 0, lastPaint = 0, timer;
+  let engine, index = selected, generation = 0, resume = options.resume || 0, lastPaint = 0, timer, savedAt = -10, ready = false;
   let tried = new Set();
   const announce = (message) => { status.textContent = message; };
   function button(label, action, accessibleLabel = label) {
@@ -94,7 +94,8 @@ export function openPlayer(title, sources, selected = 0) {
   const server = element("small");
   heading.append(element("strong", "", title), server);
   const head = element("div", "bar player-head");
-  head.append(heading, button("Close", () => dialog.close(), "Close player"));
+  const back = button("←", () => dialog.close(), "Close player");
+  head.append(back, heading);
   const toggle = () => {
     if (video.paused) void video.play().catch(() => announce("Press Play to start playback."));
     else video.pause();
@@ -124,8 +125,7 @@ export function openPlayer(title, sources, selected = 0) {
   const panel = element("div", "actions player-panel");
   panel.hidden = true;
   const settings = button("Settings", () => {
-    panel.hidden = !panel.hidden;
-    settings.setAttribute("aria-expanded", String(!panel.hidden));
+    showSettings("all");
   });
   function select(label, options, change) {
     const group = element("label", "", label);
@@ -148,12 +148,30 @@ export function openPlayer(title, sources, selected = 0) {
   const captions = select("Captions", [[-1, "Off"]], (value) => {
     if (engine) { engine.subtitleTrack = value; engine.subtitleDisplay = value >= 0; }
   });
+  function showSettings(tab) {
+    const selectedTab = panel.dataset.tab === tab && !panel.hidden;
+    panel.dataset.tab = tab;
+    panel.hidden = selectedTab;
+    panel.classList.toggle("track-settings", tab === "tracks");
+    settings.setAttribute("aria-expanded", String(!panel.hidden));
+    if (tab === "tracks" && !panel.hidden) {
+      trackNotice.hidden = !(audio.group.hidden && captions.group.hidden);
+    } else trackNotice.hidden = true;
+  }
+  const trackNotice = element("p", "", "No optional audio or subtitle tracks are listed.");
+  trackNotice.hidden = true;
+  panel.append(trackNotice);
+  head.append(button("Quality", () => showSettings("quality")), button("Audio & subtitles", () => showSettings("tracks")));
+  audio.group.dataset.track = captions.group.dataset.track = "true";
+  function rebuildSources() {
+    source.field.replaceChildren(...sources.map((item, i) => new Option([item.server, item.quality].filter(Boolean).join(" · "), i)));
+  }
   const skip = (offset) => {
     if (Number.isFinite(video.duration)) video.currentTime = Math.max(0, Math.min(video.duration, video.currentTime + offset));
   };
   const controls = element("div", "player-controls");
   const row = element("div", "actions");
-  row.append(play, button("−10s", () => skip(-10)), button("+10s", () => skip(10)), mute, volume, time, settings,
+  row.append(button("−10s", () => skip(-10)), play, button("+10s", () => skip(10)), mute, volume, time, settings,
     theater, button("Fullscreen", fullscreen));
   if (document.pictureInPictureEnabled) row.append(button("PiP", async () => {
     try { await (document.pictureInPictureElement ? document.exitPictureInPicture() : video.requestPictureInPicture()); }
@@ -178,7 +196,16 @@ export function openPlayer(title, sources, selected = 0) {
     mute.setAttribute("aria-label", volumeLabel);
     mute.title = volumeLabel;
   }
-  video.ontimeupdate = () => { if (performance.now() - lastPaint >= 175) { lastPaint = performance.now(); sync(); } };
+  function reportProgress(force = false) {
+    if (ready && video.currentTime > 1 && Number.isFinite(video.duration) && (force || Math.abs(video.currentTime - savedAt) >= 8)) {
+      savedAt = video.currentTime;
+      options.onProgress?.(savedAt, video.duration);
+    }
+  }
+  video.ontimeupdate = () => {
+    if (performance.now() - lastPaint >= 175) { lastPaint = performance.now(); sync(); }
+    reportProgress();
+  };
   video.onplay = video.onpause = video.onvolumechange = sync;
   video.onplaying = () => announce("");
   video.onwaiting = () => announce("Buffering…");
@@ -191,6 +218,7 @@ export function openPlayer(title, sources, selected = 0) {
     clearTimeout(timer);
     index = next;
     const token = ++generation;
+    ready = false;
     const item = sources[index];
     const hls = /hls|m3u8/i.test(item.type ?? "") || /\.m3u8(?:[?#]|$)/i.test(item.url);
     video.onerror = null;
@@ -203,7 +231,7 @@ export function openPlayer(title, sources, selected = 0) {
     source.field.value = index;
     quality.group.hidden = audio.group.hidden = captions.group.hidden = true;
     announce("Connecting to source…");
-    function failed(reason) {
+    async function failed() {
       clearTimeout(timer);
       if (token !== generation) return;
       if (video.currentTime > 0) resume = video.currentTime;
@@ -215,10 +243,21 @@ export function openPlayer(title, sources, selected = 0) {
       const replacement = sources.findIndex((_, i) => !tried.has(i));
       if (replacement >= 0) load(replacement);
       else {
-        generation++;
-        announce(typeof reason === "string" && reason ? reason : /mkv|matroska/i.test(item.type ?? "")
-          ? "This Matroska source did not play. Try another quality or provider."
-          : "This source did not play. Try another quality or provider.");
+        const request = ++generation;
+        announce("Checking other sources for this title…");
+        let extra;
+        try { extra = await options.nextSources?.(); }
+        catch (error) {
+          if (request === generation) announce(error.needsAccess ? error.message : "No other source could be reached.");
+          return;
+        }
+        if (request !== generation) return;
+        if (extra?.length) {
+          const start = sources.length;
+          sources.push(...extra);
+          rebuildSources();
+          load(start);
+        } else announce("None of the available sources could play this title right now.");
       }
     }
     timer = setTimeout(failed, 18000);
@@ -227,6 +266,7 @@ export function openPlayer(title, sources, selected = 0) {
       video.oncanplay = null;
       clearTimeout(timer);
       if (token !== generation) return;
+      ready = true;
       void video.play().catch((error) => {
         if (error.name === "NotAllowedError") announce("Press Play to start.");
         else if (error.name !== "AbortError") failed();
@@ -243,13 +283,13 @@ export function openPlayer(title, sources, selected = 0) {
         quality.group.hidden = !engine.levels.length;
         audio.group.hidden = !engine.audioTracks.length;
         captions.group.hidden = !engine.subtitleTracks.length;
+        if (panel.dataset.tab === "tracks") trackNotice.hidden = !(audio.group.hidden && captions.group.hidden);
       };
       const events = globalThis.Hls.Events;
       for (const type of [events.MANIFEST_PARSED, events.AUDIO_TRACKS_UPDATED, events.SUBTITLE_TRACKS_UPDATED]) engine.on(type, update);
       engine.on(events.ERROR, (_, data) => {
         if (data.fatal || (!viaBridge && item.ticket && data.type === globalThis.Hls.ErrorTypes.NETWORK_ERROR)) {
-          const reason = data.response?.text ?? data.error?.message;
-          queueMicrotask(() => { if (token === generation) failed(reason); });
+          queueMicrotask(() => { if (token === generation) void failed(); });
         }
       });
       engine.loadSource(item.url);
@@ -269,6 +309,7 @@ export function openPlayer(title, sources, selected = 0) {
     event.preventDefault();
   };
   close = () => {
+    reportProgress(true);
     generation++;
     clearTimeout(timer);
     video.onerror = video.oncanplay = null;
