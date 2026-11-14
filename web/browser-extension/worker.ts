@@ -1,4 +1,5 @@
 import * as cheerio from "cheerio/slim";
+import { isAxiosError } from "axios";
 import { z } from "zod";
 import { HostAccess, httpsUrl, providerFetch, providerHttp } from "./network";
 import bundles from "pinned-providers";
@@ -31,6 +32,7 @@ const methods = { posts: "getPosts", search: "getSearchPosts", title: "getMeta",
 const own = (value: unknown): Record<string, unknown> => value && typeof value === "object" ? value as Record<string, unknown> : {};
 const text = (value: unknown) => typeof value === "string" ? value : undefined;
 const list = (value: unknown) => Array.isArray(value) ? value.slice(0, 300) as unknown[] : [];
+class SourceUnavailable extends Error {}
 
 function categories(bundle: Bundle) {
   return list(bundle.catalog).flatMap((value) => {
@@ -162,9 +164,11 @@ async function execute(input: z.infer<typeof request>) {
     stores.set(input.id, values);
     const signal = AbortSignal.timeout(25000);
     let missing: HostAccess | undefined;
+    let denied = false;
     const http = providerHttp(signal);
     http.interceptors.response.use(undefined, (error) => {
       if (error instanceof HostAccess) missing = error;
+      if (isAxiosError(error) && error.response?.status === 403) denied = true;
       throw error;
     });
     try {
@@ -186,8 +190,13 @@ async function execute(input: z.infer<typeof request>) {
       } });
       const output = tidy(result, input.op);
       if (missing && (Array.isArray(output) ? !output.length : !("title" in output && output.title))) throw missing;
+      if (denied && input.op === "sources" && Array.isArray(output) && !output.length) throw new SourceUnavailable();
       return output;
-    } catch (error) { throw missing ?? error; }
+    } catch (error) {
+      if (missing) throw missing;
+      if (denied && input.op === "sources") throw new SourceUnavailable("The source host refused this playback request (HTTP 403).");
+      throw error;
+    }
   } finally { active--; }
 }
 
@@ -201,6 +210,8 @@ chrome.runtime.onMessageExternal.addListener((message: unknown, sender, respond)
   void execute(input.data).then((data) => respond({ ok: true, data }), (error: unknown) => {
     if (error instanceof HostAccess) {
       respond({ ok: false, error: error.message, needsAccess: true });
+    } else if (error instanceof SourceUnavailable) {
+      respond({ ok: false, error: error.message });
     } else respond({ ok: false, error: "The provider could not complete this request. Try another provider or source." });
   });
   return true;
