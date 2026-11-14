@@ -8,6 +8,46 @@ const GITHUB_RAW_BASE =
 
 const MANIFEST_TTL_MS = 5 * 60 * 1000;
 
+// Providers shipped inside the app binary that the remote manifest may not
+// know about yet. They are always listable; "installing" one only flips the
+// store flag because no bundle download is needed.
+const BUILT_IN_PROVIDERS: ProviderMetadata[] = [
+  {
+    id: "dvdplay",
+    value: "dvdplay",
+    name: "DVDPlay",
+    display_name: "DVDPlay",
+    version: "1.0.0",
+    author: "K45movies",
+  },
+  {
+    id: "movieswood",
+    value: "movieswood",
+    name: "MoviesWood",
+    display_name: "MoviesWood",
+    version: "1.0.0",
+    author: "K45movies",
+  },
+  {
+    id: "1tamilblasters",
+    value: "1tamilblasters",
+    name: "1TamilBlasters",
+    display_name: "1TamilBlasters",
+    version: "1.0.0",
+    author: "K45movies",
+    description: "Tamil, Telugu, Malayalam and Hindi movies",
+  },
+  {
+    id: "hdmovieslife",
+    value: "hdmovieslife",
+    name: "HDMoviesLife",
+    display_name: "HDMoviesLife",
+    version: "1.0.0",
+    author: "K45movies",
+    description: "HD movies and series downloads",
+  },
+];
+
 export type ProviderMetadata = {
   id: string;
   value?: string;
@@ -53,6 +93,16 @@ class ProviderManagerClass {
             value: entry.value ?? entry.id,
             display_name: entry.display_name ?? entry.name ?? entry.id,
           }));
+        const known = new Set(normalized.map((entry) => entry.value));
+        for (const builtIn of BUILT_IN_PROVIDERS) {
+          if (
+            builtIn.value &&
+            !known.has(builtIn.value) &&
+            isStaticallyBundled(builtIn.value)
+          ) {
+            normalized.push(builtIn);
+          }
+        }
         this.manifestCache = { at: Date.now(), data: normalized };
         return normalized;
       })().finally(() => {

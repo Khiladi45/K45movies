@@ -77,6 +77,11 @@ export const tmdbImage = (
   size: "w185" | "w342" | "w500" | "w780" | "original" = "w342",
 ): string | null => (path ? `${IMG}/${size}${path}` : null);
 
+// TMDB is blocked or throttled on some mobile networks, and RN's fetch has no
+// default timeout — an unresponsive request would otherwise hang its caller
+// forever (the poster backfill used to block Home on exactly this).
+const REQUEST_TIMEOUT_MS = 8_000;
+
 async function request<T = any>(
   path: string,
   params: Record<string, string | number | boolean | undefined> = {},
@@ -94,20 +99,29 @@ async function request<T = any>(
     if (value !== undefined && value !== "") query.set(key, String(value));
   });
 
-  const response = await fetch(`${BASE}${path}?${query.toString()}`, {
-    signal,
-    headers: IS_BEARER
-      ? { Authorization: `Bearer ${RAW_KEY}`, accept: "application/json" }
-      : { accept: "application/json" },
-  });
-  if (!response.ok) {
-    throw new Error(
-      response.status === 401
-        ? "TMDB rejected the API key (401). Check EXPO_PUBLIC_TMDB_KEY."
-        : `TMDB request failed (${response.status})`,
-    );
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const onOuterAbort = () => controller.abort();
+  signal?.addEventListener("abort", onOuterAbort);
+  try {
+    const response = await fetch(`${BASE}${path}?${query.toString()}`, {
+      signal: controller.signal,
+      headers: IS_BEARER
+        ? { Authorization: `Bearer ${RAW_KEY}`, accept: "application/json" }
+        : { accept: "application/json" },
+    });
+    if (!response.ok) {
+      throw new Error(
+        response.status === 401
+          ? "TMDB rejected the API key (401). Check EXPO_PUBLIC_TMDB_KEY."
+          : `TMDB request failed (${response.status})`,
+      );
+    }
+    return (await response.json()) as T;
+  } finally {
+    clearTimeout(timer);
+    signal?.removeEventListener("abort", onOuterAbort);
   }
-  return (await response.json()) as T;
 }
 
 const yearOf = (date?: string | null) =>

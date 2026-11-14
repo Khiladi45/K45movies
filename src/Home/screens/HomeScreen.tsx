@@ -40,6 +40,8 @@ export default function HomeScreen({ navigation }: any) {
     data: catalogs,
     isLoading: isCatalogLoading,
     error: catalogError,
+    refetch: refetchCatalog,
+    isRefetching: isCatalogRefetching,
   } = useCatalog(activeProvider);
 
   // Catalogs without a filter/id can never fetch posts (usePosts stays
@@ -125,12 +127,21 @@ export default function HomeScreen({ navigation }: any) {
     return (
       <View className="flex-1 bg-background justify-center items-center p-4">
         <Text className="text-white text-center">
-          Failed to load from provider. Check your connection, then reinstall
-          the provider from the Providers screen.
+          Could not load this provider’s catalog.
         </Text>
         <Text className="text-gray-400 text-center text-xs mt-3">
           {(catalogError as any)?.message || String(catalogError)}
         </Text>
+        <TouchableOpacity
+          accessibilityRole="button"
+          className="mt-4 px-4 py-2"
+          disabled={isCatalogRefetching}
+          onPress={() => void refetchCatalog()}
+        >
+          <Text className="text-white">
+            {isCatalogRefetching ? "Loading…" : "Try again"}
+          </Text>
+        </TouchableOpacity>
       </View>
     );
   }

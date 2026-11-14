@@ -13,6 +13,7 @@ export const executeProvider = (
   args: Record<string, any>,
   signal?: AbortSignal,
 ) =>
+  !SandboxManager.hasBundledCatalog(providerId, method) &&
   LocalProviderRunner.has(providerId)
     ? LocalProviderRunner.execute(providerId, module, method, args, signal)
     : SandboxManager.execute(providerId, module, method, args, signal);

@@ -1,5 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { providerApi } from "../lib/providerApi";
+import { fillMissingPosters } from "../lib/tmdbPosters";
 
 export const useCatalog = (providerId: string) => {
   return useQuery({
@@ -10,9 +11,17 @@ export const useCatalog = (providerId: string) => {
 };
 
 export const usePosts = (providerId: string, filter: string) => {
+  const queryClient = useQueryClient();
+  const queryKey = ["posts", providerId, filter];
   return useQuery({
-    queryKey: ["posts", providerId, filter],
-    queryFn: ({ signal }) => providerApi.getPosts(providerId, filter, 1, signal),
+    queryKey,
+    queryFn: async ({ signal }) => {
+      const posts = await providerApi.getPosts(providerId, filter, 1, signal);
+      // Render rows immediately; poster backfill streams in when it resolves.
+      return fillMissingPosters(posts, signal, {
+        onUpdate: (next) => queryClient.setQueryData(queryKey, next),
+      });
+    },
     enabled: !!providerId && !!filter,
   });
 };

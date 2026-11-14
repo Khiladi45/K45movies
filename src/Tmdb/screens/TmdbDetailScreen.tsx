@@ -992,7 +992,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#1a1a1a",
   },
   stillOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: "rgba(0,0,0,0.3)",
     alignItems: "center",
     justifyContent: "center",

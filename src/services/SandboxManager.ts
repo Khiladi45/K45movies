@@ -2,6 +2,7 @@ import { File, Paths } from "expo-file-system";
 import { Platform } from "react-native";
 import type { RefObject } from "react";
 import type WebView from "react-native-webview";
+import cncHome from "../providers/cncHome";
 import { ProviderManager } from "./ProviderManager";
 
 type PendingRequest = {
@@ -17,6 +18,9 @@ export type OpenWebViewHandler = (
 ) => Promise<Record<string, any>>;
 
 const EXECUTION_TIMEOUT_MS = 30000;
+// A cold CNC home session can spend 48 seconds waiting for verification.
+const CNC_HOME_TIMEOUT_MS = 75000;
+const CNC_HOME_BUNDLE_ID = "__cncHome";
 
 // Per-request ceiling when the provider does not set its own timeout, so a
 // single hung connection cannot silently consume the whole execution budget.
@@ -360,6 +364,7 @@ class SandboxManagerClass {
             method,
             headers,
             body,
+            ...(req.withCredentials === false ? { credentials: "omit" as const } : {}),
             signal: attemptController.signal,
           });
         } catch (e: any) {
@@ -492,6 +497,11 @@ class SandboxManagerClass {
     return this.webviewRef;
   }
 
+  hasBundledCatalog(providerId: string, method: string): boolean {
+    return (method === "catalog" || method === "getPosts") &&
+      cncHome.providerIds.includes(providerId);
+  }
+
   async execute(
     providerId: string,
     module: string,
@@ -500,9 +510,11 @@ class SandboxManagerClass {
     signal?: AbortSignal,
   ): Promise<any> {
     const webviewRef = await this.ensureWebview();
+    const useCncHome = this.hasBundledCatalog(providerId, method);
+    const bundleId = useCncHome ? CNC_HOME_BUNDLE_ID : providerId;
 
-    if (!this.loadedProviders.has(providerId)) {
-      await this.loadProviderIntoSandbox(providerId);
+    if (!this.loadedProviders.has(bundleId)) {
+      await this.loadProviderIntoSandbox(bundleId, useCncHome ? cncHome.code : undefined);
     }
 
     await this.waitForPageLoad();
@@ -534,7 +546,7 @@ class SandboxManagerClass {
         cleanup();
         this.abortExecution(id);
         reject(new Error("Sandbox execution timeout"));
-      }, EXECUTION_TIMEOUT_MS);
+      }, useCncHome ? CNC_HOME_TIMEOUT_MS : EXECUTION_TIMEOUT_MS);
       this.pendingRequests.set(id, { resolve, reject, timer, cleanup });
 
       if (signal) {
@@ -551,7 +563,8 @@ class SandboxManagerClass {
             ${JSON.stringify(id)},
             ${JSON.stringify(providerId)},
             ${JSON.stringify(method)},
-            ${JSON.stringify(args ?? null)}
+            ${JSON.stringify(args ?? null)},
+            ${JSON.stringify(bundleId)}
           );
         })();
         true;
@@ -560,9 +573,7 @@ class SandboxManagerClass {
     });
   }
 
-  private async loadProviderIntoSandbox(providerId: string): Promise<void> {
-    const webviewRef = await this.ensureWebview();
-
+  private async readInstalledProviderCode(providerId: string): Promise<string> {
     // Self-heal: the persisted store can claim a provider is installed
     // without a bundle on disk. Re-download instead of making the user
     // reinstall from the Providers screen.
@@ -575,11 +586,16 @@ class SandboxManagerClass {
     }
 
     const bundleFile = new File(Paths.document, "providers", providerId, "bundle.js");
-    const jsCode = await bundleFile.text();
+    return bundleFile.text();
+  }
+
+  private async loadProviderIntoSandbox(providerId: string, code?: string): Promise<void> {
+    const webviewRef = await this.ensureWebview();
+    const jsCode = code ?? (await this.readInstalledProviderCode(providerId));
     await this.waitForPageLoad();
 
     return new Promise<void>((resolve, reject) => {
-      const id = `load_${providerId}_${Date.now()}`;
+      const id = `load_${providerId}_${Date.now()}_${Math.random().toString(36).slice(2)}`;
       const timer = setTimeout(() => {
         if (this.pendingRequests.has(id)) {
           this.pendingRequests.delete(id);
@@ -600,7 +616,8 @@ class SandboxManagerClass {
           window.loadProviderCode(
             ${JSON.stringify(id)},
             ${JSON.stringify(providerId)},
-            ${JSON.stringify(jsCode)}
+            ${JSON.stringify(jsCode)},
+            ${code !== undefined}
           );
         })();
         true;

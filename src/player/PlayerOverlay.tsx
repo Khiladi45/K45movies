@@ -4,6 +4,8 @@ import {
   AppState,
   BackHandler,
   DeviceEventEmitter,
+  Easing,
+  Linking,
   PanResponder,
   Platform,
   Pressable,
@@ -25,10 +27,6 @@ import Video, {
   ViewType,
 } from "react-native-video";
 import { LinearGradient } from "expo-linear-gradient";
-import { Image } from "expo-image";
-import { useAssets } from "expo-asset";
-import { File } from "expo-file-system";
-import { WebView } from "react-native-webview";
 import {
   Ionicons,
   MaterialCommunityIcons,
@@ -67,6 +65,7 @@ import { cueAt, subtitleTextStyle } from "@/lib/subtitles";
 import { currentRouteName, goBack, navigate } from "@/navigation/navigationRef";
 import {
   groupStreams,
+  isBrowserDownload,
   normalizeStreams,
   orderGroupEntries,
   preferredEntry,
@@ -91,18 +90,6 @@ import {
 
 const SIDE_PANELS = ["subtitleSettings", "episodes", "sources"];
 const ICON = "rgba(255,255,255,0.8)";
-const GALAXY_PLAY_LOGO = require("../../assets/GalaxyPlay.svg");
-const GALAXY_PLAY_POSTER = require("../../assets/GalaxyPlay-poster.png");
-
-let galaxyMarkupRequest: Promise<string> | null = null;
-
-const readGalaxyMarkup = (uri: string) => {
-  if (!galaxyMarkupRequest) galaxyMarkupRequest = new File(uri).text();
-  return galaxyMarkupRequest;
-};
-
-const galaxyPage = (markup: string) =>
-  `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0;padding:0;background:transparent;width:100%;height:100%;overflow:hidden}svg{width:100%;height:100%;display:block}</style></head><body>${markup}</body></html>`;
 const RATES = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
 const ASPECTS: { key: any; label: string }[] = [
   { key: ResizeMode.CONTAIN, label: "Fit" },
@@ -151,109 +138,51 @@ const fmtTime = (t: number) => {
   return h > 0 ? `${h}:${mm}:${ss}` : `${m}:${ss}`;
 };
 
-function LoadingIndicator({ text, size = 96 }: { text: string; size?: number }) {
-  // The GalaxyPlay artwork relies on SMIL animation, which native SVG
-  // renderers ignore, so it runs in a transparent WebView. The poster covers
-  // the gap while the WebView engine starts up.
-  const [logoAssets] = useAssets(GALAXY_PLAY_LOGO);
-  const [logoPage, setLogoPage] = useState<{ html: string } | null>(null);
-  const [logoReady, setLogoReady] = useState(false);
+function LoadingIndicator({ text }: { text: string }) {
+  const spin = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const uri = logoAssets?.[0]?.localUri;
-    if (!uri) return;
-    let active = true;
-    readGalaxyMarkup(uri)
-      .then((markup) => {
-        if (active) setLogoPage({ html: galaxyPage(markup) });
-      })
-      .catch(() => {});
-    return () => {
-      active = false;
-    };
-  }, [logoAssets]);
+    const loop = Animated.loop(
+      Animated.timing(spin, {
+        toValue: 1,
+        duration: 850,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, []);
+
+  const rotate = spin.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "360deg"],
+  });
 
   return (
     <View style={loaderStyles.wrap} pointerEvents="none">
-      <View style={{ width: size, height: size }}>
-        <Image
-          source={GALAXY_PLAY_POSTER}
-          style={[StyleSheet.absoluteFill, { opacity: logoReady ? 0 : 1 }]}
-          contentFit="contain"
-        />
-        {logoPage ? (
-          <WebView
-            source={logoPage}
-            style={[
-              StyleSheet.absoluteFill,
-              { backgroundColor: "transparent", opacity: logoReady ? 1 : 0 },
-            ]}
-            originWhitelist={["*"]}
-            scrollEnabled={false}
-            bounces={false}
-            overScrollMode="never"
-            showsHorizontalScrollIndicator={false}
-            showsVerticalScrollIndicator={false}
-            javaScriptEnabled={false}
-            onLoadEnd={() => setLogoReady(true)}
-          />
-        ) : null}
-      </View>
-      <View style={loaderStyles.textRow}>
-        <Text style={loaderStyles.text}>{text}</Text>
-        <LoadingDots />
-      </View>
-    </View>
-  );
-}
-
-function LoadingDots() {
-  const dots = [useRef(new Animated.Value(0)).current, useRef(new Animated.Value(0)).current, useRef(new Animated.Value(0)).current];
-  useEffect(() => {
-    const loops = dots.map((dot, index) =>
-      Animated.loop(
-        Animated.sequence([
-          Animated.delay(index * 200),
-          Animated.timing(dot, {
-            toValue: 1,
-            duration: 260,
-            useNativeDriver: true,
-          }),
-          Animated.timing(dot, {
-            toValue: 0,
-            duration: 260,
-            useNativeDriver: true,
-          }),
-        ]),
-      ),
-    );
-    loops.forEach((loop) => loop.start());
-    return () => loops.forEach((loop) => loop.stop());
-  }, []);
-  return (
-    <View style={{ flexDirection: "row", marginLeft: 3 }}>
-      {dots.map((dot, index) => (
-        <Animated.Text
-          key={index}
-          style={[loaderStyles.dot, { opacity: dot }]}
-        >
-          •
-        </Animated.Text>
-      ))}
+      <Animated.View style={[loaderStyles.spinner, { transform: [{ rotate }] }]} />
+      <Text style={loaderStyles.text}>{text}</Text>
     </View>
   );
 }
 
 const loaderStyles = StyleSheet.create({
-  wrap: { alignItems: "center", justifyContent: "center", gap: 14 },
-  textRow: { flexDirection: "row", alignItems: "center" },
+  wrap: { alignItems: "center", justifyContent: "center", gap: 12 },
+  spinner: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    borderWidth: 2.5,
+    borderColor: "rgba(255,255,255,0.15)",
+    borderTopColor: "#ffffff",
+  },
   text: {
     color: "rgba(255,255,255,0.85)",
     fontSize: 13.5,
     fontWeight: "700",
     letterSpacing: 0.3,
   },
-  dot: { color: "rgba(255,255,255,0.85)", fontSize: 13.5, marginHorizontal: 1 },
 });
 
 const formatQuality = (quality?: string | number, height?: number) => {
@@ -545,6 +474,7 @@ export default function PlayerOverlay() {
   );
   const currentStream: PlayableStream | undefined =
     normalizedStreams[streamIndex] || normalizedStreams[0];
+  const browserDownload = currentStream && isBrowserDownload(currentStream) ? currentStream : undefined;
   const streamGroups = useMemo(
     () => groupStreams(normalizedStreams),
     [normalizedStreams],
@@ -2705,11 +2635,10 @@ const renderSeekButton = (side: "left" | "right") => {
     >
       <StatusBar hidden={expanded} />
       <View style={StyleSheet.absoluteFill}>
-        {startupLoading ? (
+        {browserDownload ? null : startupLoading ? (
           <View style={styles.loadingScreen}>
             <LoadingIndicator
               text={pendingStream ? "Starting stream" : "Preparing stream"}
-              size={expanded ? 116 : 56}
             />
           </View>
         ) : (
@@ -2858,7 +2787,6 @@ const renderSeekButton = (side: "left" | "right") => {
             <View style={styles.centerOverlay} pointerEvents="none">
               <LoadingIndicator
                 text="Switching server"
-                size={expanded ? 96 : 56}
               />
             </View>
           )}
@@ -2872,7 +2800,6 @@ const renderSeekButton = (side: "left" | "right") => {
               <View style={styles.centerOverlay} pointerEvents="none">
                 <LoadingIndicator
                   text={!hasRendered ? "Starting stream" : "Buffering"}
-                  size={expanded ? 96 : 56}
                 />
               </View>
             )}
@@ -2890,7 +2817,7 @@ const renderSeekButton = (side: "left" | "right") => {
             </View>
           )}
 
-          {error && !switching && (
+          {(error || browserDownload) && !switching && (
             <View style={styles.errorBackdrop}>
               <View style={styles.errorCard}>
                 <MaterialCommunityIcons
@@ -2898,18 +2825,22 @@ const renderSeekButton = (side: "left" | "right") => {
                   size={34}
                   color="#f87171"
                 />
-                <Text style={styles.errorTitle}>Playback failed</Text>
-                <Text style={styles.errorMessage}>{error.message}</Text>
+                <Text style={styles.errorTitle}>{browserDownload ? "Browser download" : "Playback failed"}</Text>
+                <Text style={styles.errorMessage}>
+                  {browserDownload ? "Open this source in your browser." : error?.message}
+                </Text>
                 <View style={styles.errorActions}>
                   <TouchableOpacity
                     style={[
                       styles.errorButton,
                       { borderColor: primaryColor },
                     ]}
-                    onPress={retryStream}
+                    onPress={browserDownload
+                      ? () => void Linking.openURL(browserDownload.link).catch(() => setToast("Could not open the download page."))
+                      : retryStream}
                   >
                     <Ionicons
-                      name="refresh"
+                      name={browserDownload ? "open-outline" : "refresh"}
                       size={16}
                       color={primaryColor}
                     />
@@ -2919,7 +2850,7 @@ const renderSeekButton = (side: "left" | "right") => {
                         { color: primaryColor },
                       ]}
                     >
-                      Retry
+                      {browserDownload ? "Open" : "Retry"}
                     </Text>
                   </TouchableOpacity>
                   {normalizedStreams.length > 1 && (
@@ -2989,25 +2920,25 @@ const renderSeekButton = (side: "left" | "right") => {
               </TouchableOpacity>
               {showSourcesButton ? (
                 <TouchableOpacity
-                  style={styles.iconButton}
+                  style={styles.pill}
                   onPress={() => setPanel("sources")}
                   accessibilityLabel="Providers and qualities"
                 >
                   <MaterialCommunityIcons
                     name="server-network"
-                    size={22}
+                    size={17}
                     color={ICON}
                   />
                 </TouchableOpacity>
               ) : null}
               <TouchableOpacity
-                style={styles.iconButton}
+                style={styles.pill}
                 onPress={() => setPanel("subtitleSettings")}
                 accessibilityLabel="Subtitle settings"
               >
                 <MaterialCommunityIcons
                   name="format-letter-case"
-                  size={22}
+                  size={17}
                   color={ICON}
                 />
               </TouchableOpacity>
@@ -3151,7 +3082,7 @@ const renderSeekButton = (side: "left" | "right") => {
                   accessibilityLabel="Minimize to mini-player"
                 >
                   <MaterialCommunityIcons
-                    name="picture-in-picture-bottom-right-outline"
+                    name="headphones"
                     size={21}
                     color={ICON}
                   />
@@ -3664,7 +3595,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 2,
     width: "100%",
-    gap: 2,
+    gap: 5,
   },
   centerPlayback: {
     position: "absolute",

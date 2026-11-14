@@ -4,6 +4,7 @@ import {
   Text,
   Image,
   Alert,
+  Linking,
   Modal,
   Pressable,
   TouchableOpacity,
@@ -27,6 +28,7 @@ import { useWatchlistStore } from "@/store/useWatchlistStore";
 import { useThemeStore } from "@/store/useThemeStore";
 import { usePreferencesStore } from "@/store/usePreferencesStore";
 import {
+  isBrowserDownload,
   normalizeStreams,
   selectPlaybackStreams,
   type PlayableStream,
@@ -254,7 +256,10 @@ export default function DetailScreen({ route, navigation }: any) {
     source: StartSource;
     stage?: string;
   }>(null);
-  const [playbackError, setPlaybackError] = useState<string | null>(null);
+  const [playbackError, setPlaybackError] = useState<{
+    message: string;
+    browserUrl?: string;
+  } | null>(null);
   const startInFlight = useRef(false);
   const playbackAbort = useRef<AbortController | null>(null);
   const launchingRef = useRef(false);
@@ -319,9 +324,9 @@ export default function DetailScreen({ route, navigation }: any) {
   // spinner would otherwise stay on screen forever with the error hidden
   // behind it. Close the pending player and surface the failure here.
   const failPendingStart = useCallback(
-    (message: string) => {
+    (message: string, browserUrl?: string) => {
       setStarting(null);
-      setPlaybackError(message);
+      setPlaybackError({ message, browserUrl });
       const playerState = usePlayerStore.getState();
       if (
         playerState.currentVideoUrl === "pending://stream" &&
@@ -366,7 +371,7 @@ export default function DetailScreen({ route, navigation }: any) {
     if (!pendingEpisodesError || !pendingEpisodesUrl) return;
     launchingRef.current = false;
     setStarting(null);
-    setPlaybackError("Could not load episodes for this title.");
+    setPlaybackError({ message: "Could not load episodes for this title." });
   }, [pendingEpisodesError, pendingEpisodesUrl]);
 
   useEffect(() => {
@@ -383,7 +388,7 @@ export default function DetailScreen({ route, navigation }: any) {
     } else {
       launchingRef.current = false;
       setStarting(null);
-      setPlaybackError("No episodes were found for this title.");
+      setPlaybackError({ message: "No episodes were found for this title." });
     }
   }, [pendingEpisodes, pendingEpisodesUrl, startPlayback]);
 
@@ -463,10 +468,14 @@ export default function DetailScreen({ route, navigation }: any) {
         });
         if (!mountedRef.current || controller.signal.aborted) return;
         if (selection.streams.length === 0) {
+          const browserUrl = normalizeStreams(streams).find(isBrowserDownload)?.link;
           failPendingStart(
-            selection.skippedDownloadOnly > 0
-              ? "This provider only offers download-only servers. Use Download to save it for offline playback."
+            browserUrl
+              ? "This source is available through your browser."
+              : selection.skippedDownloadOnly > 0
+              ? "This title is only available for download. Use Download to open the available sources."
               : "This provider returned no playable stream.",
+            browserUrl,
           );
           return;
         }
@@ -654,11 +663,17 @@ export default function DetailScreen({ route, navigation }: any) {
         );
         return null;
       }
-      if (list.length === 1) return list[0];
-      return await new Promise<PlayableStream | null>((resolve) => {
-        downloadPickerResolve.current = resolve;
-        setDownloadStreams(list);
-      });
+      const picked = list.length === 1
+        ? list[0]
+        : await new Promise<PlayableStream | null>((resolve) => {
+            downloadPickerResolve.current = resolve;
+            setDownloadStreams(list);
+          });
+      if (picked && isBrowserDownload(picked)) {
+        await Linking.openURL(picked.link);
+        return null;
+      }
+      return picked;
     } catch (error: any) {
       Alert.alert(
         "Download unavailable",
@@ -865,9 +880,18 @@ export default function DetailScreen({ route, navigation }: any) {
                   color="#F87171"
                 />
                 <Text style={styles.errorBannerText} numberOfLines={3}>
-                  {playbackError}
+                  {playbackError.message}
                 </Text>
-                {lastAttempt.current && (
+                {playbackError.browserUrl ? (
+                  <TouchableOpacity
+                    onPress={() => void Linking.openURL(playbackError.browserUrl!).catch(() =>
+                      Alert.alert("Download unavailable", "Could not open the download page."),
+                    )}
+                    style={styles.retryBtn}
+                  >
+                    <Text style={styles.retryBtnText}>Open</Text>
+                  </TouchableOpacity>
+                ) : lastAttempt.current && (
                   <TouchableOpacity
                     onPress={retryLast}
                     style={styles.retryBtn}
