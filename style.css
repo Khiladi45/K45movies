@@ -46,3 +46,9 @@ dialog input { display: block; width: 100%; margin: .5rem 0 1rem; }
 footer { display: flex; gap: 1rem; padding: 1rem clamp(1rem, 4vw, 3rem); border-top: 1px solid #36363e; font-size: .875rem; color: #c1becb; }
 @media (max-width: 680px) { body { display: flex; flex-direction: column; } nav { display: flex; gap: .25rem; border: 0; border-bottom: 1px solid #36363e; } nav a { margin-bottom: 0; flex: 1; text-align: center; } main { flex: 1; } kbd { display: none; } }
 @media (prefers-reduced-motion: reduce) { .card { transition: none; } }
+
+.panel { margin: 1rem 0; padding: 1rem; border: 1px solid #49454f; border-radius: .75rem; background: #1f1f1f; }
+.provider-list { max-width: 46rem; }
+.notice { border-left: 3px solid var(--accent); padding-left: 1rem; }
+input[type=password] { display: block; margin: .5rem 0; width: min(100%, 28rem); color: inherit; background: #141414; padding: .6rem; border: 1px solid #6b6476; border-radius: .5rem; }
+@media (max-width: 390px) { nav a { font-size: .85rem; padding-inline: .3rem; } }
