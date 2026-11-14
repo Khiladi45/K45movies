@@ -1,0 +1,462 @@
+env: load .env
+env: export EXPO_PUBLIC_TMDB_KEY
+Starting project at D:\My projects\Mobile App\K45movies
+Logs: D:\My projects\Mobile App\K45movies\.expo\dev\logs\start.log
+Starting Metro Bundler
+
+warning: Bundler cache is empty, rebuilding (this may take a minute)
+Waiting on http://localhost:8081
+
+An update for expo is available: 57.0.30 → ~57.0.32
+7 other packages may need updating. Run npx expo install --check for details.
+Logs for your project will appear below.
+Android Bundled 21932ms index.ts (1968 modules)
+Android Bundled 1433ms index.ts (1 module)
+ WARN  setLayoutAnimationEnabledExperimental is currently a no-op in the New Architecture.
+ WARN  setLayoutAnimationEnabledExperimental is currently a no-op in the New Architecture.
+ WARN  setLayoutAnimationEnabledExperimental is currently a no-op in the New Architecture.
+ WARN  setLayoutAnimationEnabledExperimental is currently a no-op in the New Architecture.
+ LOG  Fetched provider URL configuration
+ LOG  [hdm-hop] 0 https://links.hdlinks.online/… status: 200 final: https://www.gdfiles-xyz.workers.dev/… ct: text/html; charset=UTF-8 len: 67730
+ LOG  [hdm-hop] 1 https://www.gdfiles-xyz.workers.dev/… status: 403 final: https://cloud-01.fxcloud-as.site/… ct: text/html;charset=UTF-8 len: 4128
+ LOG  [play] provider returned 1 stream(s)
+ LOG  [play] opening player: 1 playable stream(s), start #0
+ LOG  [player] error {"cause":{"stackElements":[{"methodName":"handleIoException","lineNumber":927,"fileName":"ExoPlayerImplInternal.java","className":"androidx.media3.exoplayer.ExoPlayerImplInternal"},{"methodName":"handleMessage","lineNumber":899,"fileName":"ExoPlayerImplInternal.java","className":"androidx.media3.exoplayer.ExoPlayerImplInternal"},{"methodName":"dispatchMessage","lineNumber":103,"fileName":"Handler.java","className":"android.os.Handler"},{"methodName":"loopOnce","lineNumber":232,"fileName":"Looper.java","className":"android.os.Looper"},{"methodName":"loop","lineNumber":317,"fileName":"Looper.java","className":"android.os.Looper"},{"methodName":"run","lineNumber":85,"fileName":"HandlerThread.java","className":"android.os.HandlerThread"}],"message":"Source error","name":"ExoPlaybackException"},"errorStackTrace":"androidx.media3.exoplayer.ExoPlaybackException: Source error\n\tat androidx.media3.exoplayer.ExoPlayerImplInternal.handleIoException(ExoPlayerImplInternal.java:927)\n\tat androidx.media3.exoplayer.ExoPlayerImplInternal.handleMessage(ExoPlayerImplInternal.java:899)\n\tat android.os.Handler.dispatchMessage(Handler.java:103)\n\tat android.os.Looper.loopOnce(Looper.java:232)\n\tat android.os.Looper.loop(Looper.java:317)\n\tat android.os.HandlerThread.run(HandlerThread.java:85)\nCaused by: androidx.media3.datasource.HttpDataSource$InvalidResponseCodeException: Response code: 403\n\tat androidx.media3.datasource.okhttp.OkHttpDataSource.open(OkHttpDataSource.java:309)\n\tat com.brentvatne.exoplayer.RangeFallbackHttpDataSource.open(RangeFallbackHttpDataSource.java:49)\n\tat androidx.media3.datasource.DefaultDataSource.open(DefaultDataSource.java:275)\n\tat com.brentvatne.exoplayer.ParallelDataSource.open(ParallelDataSource.java:137)\n\tat com.brentvatne.exoplayer.ChainedMatroskaDataSource.open(ChainedMatroskaDataSource.java:65)\n\tat androidx.media3.datasource.StatsDataSource.open(StatsDataSource.java:88)\n\tat androidx.media3.exoplayer.source.ProgressiveMediaPeriod$ExtractingLoadable.load(ProgressiveMediaPeriod.java:1109)\n\tat androidx.media3.exoplayer.upstream.Loader$LoadTask.run(Loader.java:453)\n\tat java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1145)\n\tat java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:644)\n\tat java.lang.Thread.run(Thread.java:1012)\n\tSuppressed: androidx.media3.datasource.HttpDataSource$InvalidResponseCodeException: Response code: 403\n\t\tat androidx.media3.datasource.okhttp.OkHttpDataSource.open(OkHttpDataSource.java:309)\n\t\tat com.brentvatne.exoplayer.RangeFallbackHttpDataSource.openChunk(RangeFallbackHttpDataSource.java:81)\n\t\tat com.brentvatne.exoplayer.RangeFallbackHttpDataSource.open(RangeFallbackHttpDataSource.java:58)\n\t\t... 9 more\n","errorCode":"22004","errorException":"androidx.media3.exoplayer.ExoPlaybackException: Source error","errorString":"ExoPlaybackException: ERROR_CODE_IO_BAD_HTTP_STATUS"}
+D:\My projects\Mobile App\K45movies\node_modules\expo\node_modules\@expo\cli\build\src\utils\errors.js:130
+    throw error;
+    ^
+
+SyntaxError: Unexpected end of input
+    at cssToReactNativeRuntime (D:\My projects\Mobile App\K45movies\node_modules\react-native-css-interop\dist\css-to-rn\index.js:49:34)
+    at Object.onChange (D:\My projects\Mobile App\K45movies\node_modules\react-native-css-interop\dist\metro\index.js:217:71)
+    at ChildProcess.<anonymous> (D:\My projects\Mobile App\K45movies\node_modules\nativewind\dist\metro\tailwind\v3\index.js:51:37)
+    at ChildProcess.emit (node:events:514:28)
+    at emit (node:internal/child_process:989:14)
+    at process.processTicksAndRejections (node:internal/process/task_queues:91:21) {
+  fileName: 'style.css',
+  source: '*, ::before, ::after {\n' +
+    '  --tw-border-spacing-x: 0;\n' +
+    '  --tw-border-spacing-y: 0;\n' +
+    '  --tw-translate-x: 0;\n' +
+    '  --tw-translate-y: 0;\n' +
+    '  --tw-rotate: 0;\n' +
+    '  --tw-skew-x: 0;\n' +
+    '  --tw-skew-y: 0;\n' +
+    '  --tw-scale-x: 1;\n' +
+    '  --tw-scale-y: 1;\n' +
+    '  --tw-pan-x:  ;\n' +
+    '  --tw-pan-y:  ;\n' +
+    '  --tw-pinch-zoom:  ;\n' +
+    '  --tw-scroll-snap-strictness: proximity;\n' +
+    '  --tw-gradient-from-position:  ;\n' +
+    '  --tw-gradient-via-position:  ;\n' +
+    '  --tw-gradient-to-position:  ;\n' +
+    '  --tw-ordinal:  ;\n' +
+    '  --tw-slashed-zero:  ;\n' +
+    '  --tw-numeric-figure:  ;\n' +
+    '  --tw-numeric-spacing:  ;\n' +
+    '  --tw-numeric-fraction:  ;\n' +
+    '  --tw-ring-inset:  ;\n' +
+    '  --tw-ring-offset-width: 0px;\n' +
+    '  --tw-ring-offset-color: #fff;\n' +
+    '  --tw-ring-color: rgb(59 130 246 / 0.5);\n' +
+    '  --tw-blur:  ;\n' +
+    '  --tw-brightness:  ;\n' +
+    '  --tw-contrast:  ;\n' +
+    '  --tw-grayscale:  ;\n' +
+    '  --tw-hue-rotate:  ;\n' +
+    '  --tw-invert:  ;\n' +
+    '  --tw-saturate:  ;\n' +
+    '  --tw-sepia:  ;\n' +
+    '  --tw-drop-shadow:  ;\n' +
+    '  --tw-backdrop-blur:  ;\n' +
+    '  --tw-backdrop-brightness:  ;\n' +
+    '  --tw-backdrop-contrast:  ;\n' +
+    '  --tw-backdrop-grayscale:  ;\n' +
+    '  --tw-backdrop-hue-rotate:  ;\n' +
+    '  --tw-backdrop-invert:  ;\n' +
+    '  --tw-backdrop-opacity:  ;\n' +
+    '  --tw-backdrop-saturate:  ;\n' +
+    '  --tw-backdrop-sepia:  ;\n' +
+    '  --tw-contain-size:  ;\n' +
+    '  --tw-contain-layout:  ;\n' +
+    '  --tw-contain-paint:  ;\n' +
+    '  --tw-contain-style:  ;\n' +
+    '  --tw-ring-offset-shadow: 0 0 #0000;\n' +
+    '  --tw-ring-shadow: 0 0 #0000;\n' +
+    '  --tw-shadow: 0 0 #0000;\n' +
+    '  --tw-shadow-colored: 0 0 #0000;\n' +
+    '  --tw-rotate: 0deg;\n' +
+    '  --tw-skew-x: 0deg;\n' +
+    '  --tw-skew-y: 0deg\n' +
+    '}\n' +
+    '\n' +
+    '::-ms-backdrop {\n' +
+    '  --tw-border-spacing-x: 0;\n' +
+    '  --tw-border-spacing-y: 0;\n' +
+    '  --tw-translate-x: 0;\n' +
+    '  --tw-translate-y: 0;\n' +
+    '  --tw-rotate: 0;\n' +
+    '  --tw-skew-x: 0;\n' +
+    '  --tw-skew-y: 0;\n' +
+    '  --tw-scale-x: 1;\n' +
+    '  --tw-scale-y: 1;\n' +
+    '  --tw-pan-x:  ;\n' +
+    '  --tw-pan-y:  ;\n' +
+    '  --tw-pinch-zoom:  ;\n' +
+    '  --tw-scroll-snap-strictness: proximity;\n' +
+    '  --tw-gradient-from-position:  ;\n' +
+    '  --tw-gradient-via-position:  ;\n' +
+    '  --tw-gradient-to-position:  ;\n' +
+    '  --tw-ordinal:  ;\n' +
+    '  --tw-slashed-zero:  ;\n' +
+    '  --tw-numeric-figure:  ;\n' +
+    '  --tw-numeric-spacing:  ;\n' +
+    '  --tw-numeric-fraction:  ;\n' +
+    '  --tw-ring-inset:  ;\n' +
+    '  --tw-ring-offset-width: 0px;\n' +
+    '  --tw-ring-offset-color: #fff;\n' +
+    '  --tw-ring-color: rgb(59 130 246 / 0.5);\n' +
+    '  --tw-blur:  ;\n' +
+    '  --tw-brightness:  ;\n' +
+    '  --tw-contrast:  ;\n' +
+    '  --tw-grayscale:  ;\n' +
+    '  --tw-hue-rotate:  ;\n' +
+    '  --tw-invert:  ;\n' +
+    '  --tw-saturate:  ;\n' +
+    '  --tw-sepia:  ;\n' +
+    '  --tw-drop-shadow:  ;\n' +
+    '  --tw-backdrop-blur:  ;\n' +
+    '  --tw-backdrop-brightness:  ;\n' +
+    '  --tw-backdrop-contrast:  ;\n' +
+    '  --tw-backdrop-grayscale:  ;\n' +
+    '  --tw-backdrop-hue-rotate:  ;\n' +
+    '  --tw-backdrop-invert:  ;\n' +
+    '  --tw-backdrop-opacity:  ;\n' +
+    '  --tw-backdrop-saturate:  ;\n' +
+    '  --tw-backdrop-sepia:  ;\n' +
+    '  --tw-contain-size:  ;\n' +
+    '  --tw-contain-layout:  ;\n' +
+    '  --tw-contain-paint:  ;\n' +
+    '  --tw-contain-style:  ;\n' +
+    '  --tw-ring-offset-shadow: 0 0 #0000;\n' +
+    '  --tw-ring-shadow: 0 0 #0000;\n' +
+    '  --tw-shadow: 0 0 #0000;\n' +
+    '  --tw-shadow-colored: 0 0 #0000;\n' +
+    '  --tw-rotate: 0deg;\n' +
+    '  --tw-skew-x: 0deg;\n' +
+    '  --tw-skew-y: 0deg\n' +
+    '}\n' +
+    '\n' +
+    '::backdrop {\n' +
+    '  --tw-border-spacing-x: 0;\n' +
+    '  --tw-border-spacing-y: 0;\n' +
+    '  --tw-translate-x: 0;\n' +
+    '  --tw-translate-y: 0;\n' +
+    '  --tw-rotate: 0;\n' +
+    '  --tw-skew-x: 0;\n' +
+    '  --tw-skew-y: 0;\n' +
+    '  --tw-scale-x: 1;\n' +
+    '  --tw-scale-y: 1;\n' +
+    '  --tw-pan-x:  ;\n' +
+    '  --tw-pan-y:  ;\n' +
+    '  --tw-pinch-zoom:  ;\n' +
+    '  --tw-scroll-snap-strictness: proximity;\n' +
+    '  --tw-gradient-from-position:  ;\n' +
+    '  --tw-gradient-via-position:  ;\n' +
+    '  --tw-gradient-to-position:  ;\n' +
+    '  --tw-ordinal:  ;\n' +
+    '  --tw-slashed-zero:  ;\n' +
+    '  --tw-numeric-figure:  ;\n' +
+    '  --tw-numeric-spacing:  ;\n' +
+    '  --tw-numeric-fraction:  ;\n' +
+    '  --tw-ring-inset:  ;\n' +
+    '  --tw-ring-offset-width: 0px;\n' +
+    '  --tw-ring-offset-color: #fff;\n' +
+    '  --tw-ring-color: rgb(59 130 246 / 0.5);\n' +
+    '  --tw-blur:  ;\n' +
+    '  --tw-brightness:  ;\n' +
+    '  --tw-contrast:  ;\n' +
+    '  --tw-grayscale:  ;\n' +
+    '  --tw-hue-rotate:  ;\n' +
+    '  --tw-invert:  ;\n' +
+    '  --tw-saturate:  ;\n' +
+    '  --tw-sepia:  ;\n' +
+    '  --tw-drop-shadow:  ;\n' +
+    '  --tw-backdrop-blur:  ;\n' +
+    '  --tw-backdrop-brightness:  ;\n' +
+    '  --tw-backdrop-contrast:  ;\n' +
+    '  --tw-backdrop-grayscale:  ;\n' +
+    '  --tw-backdrop-hue-rotate:  ;\n' +
+    '  --tw-backdrop-invert:  ;\n' +
+    '  --tw-backdrop-opacity:  ;\n' +
+    '  --tw-backdrop-saturate:  ;\n' +
+    '  --tw-backdrop-sepia:  ;\n' +
+    '  --tw-contain-size:  ;\n' +
+    '  --tw-contain-layout:  ;\n' +
+    '  --tw-contain-paint:  ;\n' +
+    '  --tw-contain-style:  ;\n' +
+    '  --tw-ring-offset-shadow: 0 0 #0000;\n' +
+    '  --tw-ring-shadow: 0 0 #0000;\n' +
+    '  --tw-shadow: 0 0 #0000;\n' +
+    '  --tw-shadow-colored: 0 0 #0000;\n' +
+    '  --tw-rotate: 0deg;\n' +
+    '  --tw-skew-x: 0deg;\n' +
+    '  --tw-skew-y: 0deg\n' +
+    '}\n' +
+    '\n' +
+    '@cssInterop set darkMode media;\n' +
+    '\n' +
+    '@cssInterop set nativewind;\n' +
+    '\n' +
+    '.container {\n' +
+    '  width: 100%\n' +
+    '}\n' +
+    '\n' +
+    '@media (min-width: 640px) {\n' +
+    '  .container {\n' +
+    '    max-width: 640px\n' +
+    '  }\n' +
+    '}\n' +
+    '\n' +
+    '@media (min-width: 768px) {\n' +
+    '  .container {\n' +
+    '    max-width: 768px\n' +
+    '  }\n' +
+    '}\n' +
+    '\n' +
+    '@media (min-width: 1024px) {\n' +
+    '  .container {\n' +
+    '    max-width: 1024px\n' +
+    '  }\n' +
+    '}\n' +
+    '\n' +
+    '@media (min-width: 1280px) {\n' +
+    '  .container {\n' +
+    '    max-width: 1280px\n' +
+    '  }\n' +
+    '}\n' +
+    '\n' +
+    '@media (min-width: 1536px) {\n' +
+    '  .container {\n' +
+    '    max-width: 1536px\n' +
+    '  }\n' +
+    '}\n' +
+    '\n' +
+    '.static {\n' +
+    '  position: static\n' +
+    '}\n' +
+    '\n' +
+    '.fixed {\n' +
+    '  position: fixed\n' +
+    '}\n' +
+    '\n' +
+    '.absolute {\n' +
+    '  position: absolute\n' +
+    '}\n' +
+    '\n' +
+    '.relative {\n' +
+    '  position: relative\n' +
+    '}\n' +
+    '\n' +
+    '.m-1 {\n' +
+    '  margin: 0.25rem\n' +
+    '}\n' +
+    '\n' +
+    '.mt-2 {\n' +
+    '  margin-top: 0.5rem\n' +
+    '}\n' +
+    '\n' +
+    '.mt-3 {\n' +
+    '  margin-top: 0.75rem\n' +
+    '}\n' +
+    '\n' +
+    '.block {\n' +
+    '  display: block\n' +
+    '}\n' +
+    '\n' +
+    '.flex {\n' +
+    '  display: flex\n' +
+    '}\n' +
+    '\n' +
+    '.table {\n' +
+    '  display: table\n' +
+    '}\n' +
+    '\n' +
+    '.grid {\n' +
+    '  display: grid\n' +
+    '}\n' +
+    '\n' +
+    '.contents {\n' +
+    '  display: contents\n' +
+    '}\n' +
+    '\n' +
+    '.hidden {\n' +
+    '  display: none\n' +
+    '}\n' +
+    '\n' +
+    '.flex-1 {\n' +
+    '  flex: 1 1 0%\n' +
+    '}\n' +
+    '\n' +
+    '.shrink {\n' +
+    '  flex-shrink: 1\n' +
+    '}\n' +
+    '\n' +
+    '.grow {\n' +
+    '  flex-grow: 1\n' +
+    '}\n' +
+    '\n' +
+    '.transform {\n' +
+    '  -webkit-transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));\n' +
+    '          transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))\n' +
+    '}\n' +
+    '\n' +
+    '.grid-cols-2 {\n' +
+    '  grid-template-columns: repeat(2, minmax(0, 1fr))\n' +
+    '}\n' +
+    '\n' +
+    '.items-center {\n' +
+    '  align-items: center\n' +
+    '}\n' +
+    '\n' +
+    '.justify-center {\n' +
+    '  justify-content: center\n' +
+    '}\n' +
+    '\n' +
+    '.gap-2 {\n' +
+    '  gap: 0.5rem\n' +
+    '}\n' +
+    '\n' +
+    '.rounded {\n' +
+    '  border-radius: 0.25rem\n' +
+    '}\n' +
+    '\n' +
+    '.border {\n' +
+    '  border-width: 1px\n' +
+    '}\n' +
+    '\n' +
+    '.bg-background {\n' +
+    '  background-color: #141414\n' +
+    '}\n' +
+    '\n' +
+    '.p-4 {\n' +
+    '  padding: 1rem\n' +
+    '}\n' +
+    '\n' +
+    '.text-left {\n' +
+    '  text-align: left\n' +
+    '}\n' +
+    '\n' +
+    '.text-center {\n' +
+    '  text-align: center\n' +
+    '}\n' +
+    '\n' +
+    '.text-sm {\n' +
+    '  font-size: 0.875rem;\n' +
+    '  line-height: 1.25rem\n' +
+    '}\n' +
+    '\n' +
+    '.text-xl {\n' +
+    '  font-size: 1.25rem;\n' +
+    '  line-height: 1.75rem\n' +
+    '}\n' +
+    '\n' +
+    '.text-xs {\n' +
+    '  font-size: 0.75rem;\n' +
+    '  line-height: 1rem\n' +
+    '}\n' +
+    '\n' +
+    '.font-bold {\n' +
+    '  font-weight: 700\n' +
+    '}\n' +
+    '\n' +
+    '.font-semibold {\n' +
+    '  font-weight: 600\n' +
+    '}\n' +
+    '\n' +
+    '.uppercase {\n' +
+    '  text-transform: uppercase\n' +
+    '}\n' +
+    '\n' +
+    '.capitalize {\n' +
+    '  text-transform: capitalize\n' +
+    '}\n' +
+    '\n' +
+    '.italic {\n' +
+    '  font-style: italic\n' +
+    '}\n' +
+    '\n' +
+    '.tabular-nums {\n' +
+    '  --tw-numeric-spacing: tabular-nums;\n' +
+    '  font-variant-numeric: var(--tw-ordinal) var(--tw-slashed-zero) var(--tw-numeric-figure) var(--tw-numeric-spacing) var(--tw-numeric-fraction)\n' +
+    '}\n' +
+    '\n' +
+    '.text-gray-400 {\n' +
+    '  color: #9ca3af\n' +
+    '}\n' +
+    '\n' +
+    '.text-white {\n' +
+    '  color: #fff\n' +
+    '}\n' +
+    '\n' +
+    '.ring {\n' +
+    '  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);\n' +
+    '  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(3px + var(--tw-ring-offset-width)) var(--tw-ring-color);\n' +
+    '  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000)\n' +
+    '}\n' +
+    '\n' +
+    '.\\!filter {\n' +
+    '  -webkit-filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow) !important;\n' +
+    '          filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow) !important\n' +
+    '}\n' +
+    '\n' +
+    '.filter {\n' +
+    '  -webkit-filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);\n' +
+    '          filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)\n' +
+    '}\n' +
+    '\n' +
+    '.transition {\n' +
+    '  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, rotate, rotateX, rotateY, rotateZ, scale, scaleX, scaleY, translateX, translateY, skewX, skewY, backdrop-filter, -webkit-perspective, -webkit-filter;\n' +
+    '  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, perspective, rotate, rotateX, rotateY, rotateZ, scale, scaleX, scaleY, translateX, translateY, skewX, skewY, filter, backdrop-filter;\n' +
+    '  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, perspective, rotate, rotateX, rotateY, rotateZ, scale, scaleX, scaleY, translateX, translateY, skewX, skewY, filter, backdrop-filter, -webkit-perspective, -webkit-filter;\n' +
+    '  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n' +
+    '  transition-duration: 150ms\n' +
+    '}\n' +
+    '\n' +
+    '.elevation {\n' +
+    '  -rn-elevation: 3\n' +
+    '}\n' +
+    '\n' +
+    '.shadow {\n' +
+    '  --tw-shadow-color: rgba(0, 0, 0, 0.35);\n' +
+    '  -rn-shadow-color: var(--tw-shadow-color);\n' +
+    '  @rn-move -rn-shadow-offset-width \\&shadow-offset\\.width;\n' +
+    '  -rn-shadow-offset-width: 0px;\n' +
+    '  @rn-move -rn-shadow-offset-height \\&shadow-offset\\.height;\n' +
+    '  -rn-shadow-offset-height: 1px;\n' +
+    '  -rn-shadow-radius: 4px;\n' +
+    '  -rn-shadow-opacity: 1px;\n' +
+    '  -rn-elevation: 3\n' +
+    '}\n' +
+    '\n' +
+    '.\\!visible {\n' +
+    '  opacity: 1 !important\n' +
+    '}\n' +
+    '\n' +
+    '.visible {\n' +
+    '  opacity: 1\n' +
+    '}\n' +
+    '\n' +
+    '.elevation {\n' +
+    '  -rn-elevation: 3\n' +
+    '}\n' +
+    '\n' +
+    '.\\[-\\:\\\\s\\] {\n' +
+    '  -: \\s\n' +
+    '}',
+  loc: { line: 421, column: 1 },
+  data: { type: 'EndOfInput' }
+}
+
+Node.js v24.21.0

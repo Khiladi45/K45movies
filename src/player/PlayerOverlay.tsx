@@ -5,6 +5,7 @@ import {
   BackHandler,
   DeviceEventEmitter,
   Easing,
+  Linking,
   PanResponder,
   Platform,
   Pressable,
@@ -64,6 +65,7 @@ import { cueAt, subtitleTextStyle } from "@/lib/subtitles";
 import { currentRouteName, goBack, navigate } from "@/navigation/navigationRef";
 import {
   groupStreams,
+  isBrowserDownload,
   normalizeStreams,
   orderGroupEntries,
   preferredEntry,
@@ -472,6 +474,7 @@ export default function PlayerOverlay() {
   );
   const currentStream: PlayableStream | undefined =
     normalizedStreams[streamIndex] || normalizedStreams[0];
+  const browserDownload = currentStream && isBrowserDownload(currentStream) ? currentStream : undefined;
   const streamGroups = useMemo(
     () => groupStreams(normalizedStreams),
     [normalizedStreams],
@@ -2632,7 +2635,7 @@ const renderSeekButton = (side: "left" | "right") => {
     >
       <StatusBar hidden={expanded} />
       <View style={StyleSheet.absoluteFill}>
-        {startupLoading ? (
+        {browserDownload ? null : startupLoading ? (
           <View style={styles.loadingScreen}>
             <LoadingIndicator
               text={pendingStream ? "Starting stream" : "Preparing stream"}
@@ -2814,7 +2817,7 @@ const renderSeekButton = (side: "left" | "right") => {
             </View>
           )}
 
-          {error && !switching && (
+          {(error || browserDownload) && !switching && (
             <View style={styles.errorBackdrop}>
               <View style={styles.errorCard}>
                 <MaterialCommunityIcons
@@ -2822,18 +2825,22 @@ const renderSeekButton = (side: "left" | "right") => {
                   size={34}
                   color="#f87171"
                 />
-                <Text style={styles.errorTitle}>Playback failed</Text>
-                <Text style={styles.errorMessage}>{error.message}</Text>
+                <Text style={styles.errorTitle}>{browserDownload ? "Browser download" : "Playback failed"}</Text>
+                <Text style={styles.errorMessage}>
+                  {browserDownload ? "Open this source in your browser." : error?.message}
+                </Text>
                 <View style={styles.errorActions}>
                   <TouchableOpacity
                     style={[
                       styles.errorButton,
                       { borderColor: primaryColor },
                     ]}
-                    onPress={retryStream}
+                    onPress={browserDownload
+                      ? () => void Linking.openURL(browserDownload.link).catch(() => setToast("Could not open the download page."))
+                      : retryStream}
                   >
                     <Ionicons
-                      name="refresh"
+                      name={browserDownload ? "open-outline" : "refresh"}
                       size={16}
                       color={primaryColor}
                     />
@@ -2843,7 +2850,7 @@ const renderSeekButton = (side: "left" | "right") => {
                         { color: primaryColor },
                       ]}
                     >
-                      Retry
+                      {browserDownload ? "Open" : "Retry"}
                     </Text>
                   </TouchableOpacity>
                   {normalizedStreams.length > 1 && (

@@ -290,6 +290,7 @@ const SANDBOX_HTML = `
         body: serializeBody(data),
         timeout: Number(config.timeout) || 0,
         responseType: config.responseType || 'text',
+        withCredentials: config.withCredentials,
         redirect: config.redirect || 'follow'
       }));
     });
@@ -519,14 +520,16 @@ const SANDBOX_HTML = `
     });
   };
 
-  window.loadProviderCode = function (requestId, providerId, code) {
+  window.loadProviderCode = function (requestId, providerId, code, reuse) {
     try {
-      var module = { exports: {} };
-      var exports = module.exports;
-      var wrappedCode = code + '\\n;return module.exports;';
-      var factory = new Function('module', 'exports', wrappedCode);
-      var result = factory(module, exports);
-      window.providers[providerId] = result || module.exports;
+      if (!reuse || !window.providers[providerId]) {
+        var module = { exports: {} };
+        var exports = module.exports;
+        var wrappedCode = code + '\\n;return module.exports;';
+        var factory = new Function('module', 'exports', wrappedCode);
+        var result = factory(module, exports);
+        window.providers[providerId] = result || module.exports;
+      }
       window.ReactNativeWebView.postMessage(JSON.stringify({ id: requestId, result: true }));
     } catch (e) {
       window.ReactNativeWebView.postMessage(JSON.stringify({ id: requestId, error: e.message }));
@@ -595,13 +598,15 @@ const SANDBOX_HTML = `
   }
   window.sha1Hex = sha1Hex;
 
-  window.executeProvider = async function (requestId, providerId, method, args) {
+  window.executeProvider = async function (requestId, providerId, method, args, bundleId) {
     try {
-      if (!window.providers[providerId]) {
+      var bundle = window.providers[bundleId || providerId];
+      var provider = bundleId && bundleId !== providerId ? bundle && bundle[providerId] : bundle;
+      if (!provider) {
         throw new Error('Provider not loaded: ' + providerId);
       }
 
-      var target = window.providers[providerId][method];
+      var target = provider[method];
       if (target === undefined) {
         throw new Error('Method not found: ' + method);
       }

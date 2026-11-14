@@ -70,6 +70,24 @@ export default function CategoryScreen({ route, navigation }: any) {
       try {
         const payload = await fillMissingPosters(
           await providerApi.getPosts(providerId, filter, nextPage),
+          undefined,
+          {
+            // Posters arrive later; never keep the grid on a spinner for them.
+            onUpdate: (updated) => {
+              if (!mounted.current) return;
+              const posters = new Map(
+                updated
+                  .filter((item) => item?.image)
+                  .map((item) => [keyFor(item), item.image]),
+              );
+              if (posters.size === 0) return;
+              itemsRef.current = itemsRef.current.map((item) => {
+                const poster = posters.get(keyFor(item));
+                return !item.image && poster ? { ...item, image: poster } : item;
+              });
+              setItems(itemsRef.current);
+            },
+          },
         );
         if (!mounted.current) return;
         const incoming = extractPosts(payload).filter(

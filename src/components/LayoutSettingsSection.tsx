@@ -27,21 +27,20 @@ const OPTIONS: {
 }[] = [
   {
     value: "provider",
-    title: "Provider Based",
-    description: "Browse and search inside your installed providers",
+    title: "StreamVerse",
+    description: "Your providers, your universe. Dive in and discover endless entertainment!",
     icon: "puzzle-outline",
   },
   {
     value: "movie",
-    title: "Movie Based",
-    description: "Browse movies and series from TMDB, then find streams",
+    title: "movieZone",
+    description: "From hidden gems to blockbusters. Find your next obsession!",
     icon: "movie-open-outline",
   },
   {
     value: "youtube",
-    title: "YouTube Layout",
-    description:
-      "Video feed with Shorts, a video page, search history and a Watchlist",
+    title: "YouTube",
+    description: "Scroll the vibes, binge the videos, and save what you love!",
     icon: "youtube",
   },
 ];
@@ -113,9 +112,9 @@ export default function LayoutSettingsSection() {
             />
           </View>
           <View style={styles.rowText}>
-            <Text style={styles.title}>Choose Layout</Text>
+            <Text style={styles.title}>Pick Your Universe</Text>
             <Text style={styles.subtitle} numberOfLines={1}>
-              {open ? "Switch how Home and Search find content" : current}
+              {open ? "Three worlds. Endless chaos. Choose your addiction!" : current}
             </Text>
           </View>
           <Animated.View

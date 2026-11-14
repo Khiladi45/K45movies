@@ -12,6 +12,11 @@ const PROVIDERS = [
     load: () => require("./bundles/1flex.js"),
   },
   {
+    id: "1tamilblasters",
+    modules: ["catalog","posts","meta","stream","episodes"],
+    load: () => require("./bundles/1tamilblasters.js"),
+  },
+  {
     id: "1tamilmv",
     modules: ["catalog","posts","meta","stream","episodes"],
     load: () => require("./bundles/1tamilmv.js"),
@@ -67,6 +72,11 @@ const PROVIDERS = [
     load: () => require("./bundles/drive.js"),
   },
   {
+    id: "dvdplay",
+    modules: ["catalog","posts","meta","stream","episodes"],
+    load: () => require("./bundles/dvdplay.js"),
+  },
+  {
     id: "gokuHD",
     modules: ["catalog","posts","meta","stream","episodes"],
     load: () => require("./bundles/gokuHD.js"),
@@ -75,6 +85,11 @@ const PROVIDERS = [
     id: "hdhub4u",
     modules: ["catalog","posts","meta","stream"],
     load: () => require("./bundles/hdhub4u.js"),
+  },
+  {
+    id: "hdmovieslife",
+    modules: ["catalog","posts","meta","stream","episodes"],
+    load: () => require("./bundles/hdmovieslife.js"),
   },
   {
     id: "hiAnime",
@@ -120,6 +135,11 @@ const PROVIDERS = [
     id: "moviesda",
     modules: ["catalog","posts","meta","stream","episodes"],
     load: () => require("./bundles/moviesda.js"),
+  },
+  {
+    id: "movieswood",
+    modules: ["catalog","posts","meta","stream","episodes"],
+    load: () => require("./bundles/movieswood.js"),
   },
   {
     id: "moviezwap",

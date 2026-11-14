@@ -1,12 +1,23 @@
 // Providers whose listing pages carry no posters (e.g. 1TamilMV) still know
 // the release name, so missing thumbnails are backfilled from TMDB by title.
+//
+// Backfill must never block rendering: on networks where TMDB is blocked or
+// slow, waiting for lookups made Home sit on skeletons indefinitely. Callers
+// get the list immediately and receive the poster-enriched list via onUpdate.
 
 import { tmdbConfigured, searchTmdb, tmdbImage } from "./tmdbApi";
 import { fuzzyTitleScore } from "./fuzzy";
 
 const cache = new Map<string, string | null>();
-const MAX_LOOKUPS = 30;
-const CONCURRENCY = 6;
+const pending = new Map<string, Promise<string | null>>();
+
+const MAX_LOOKUPS = 20;
+const CONCURRENCY = 4;
+const NETWORK_FAILURE_LIMIT = 3;
+const COOLDOWN_MS = 5 * 60_000;
+
+let consecutiveFailures = 0;
+let cooldownUntil = 0;
 
 const nameOf = (title: string) =>
   title
@@ -17,7 +28,13 @@ const nameOf = (title: string) =>
 
 const yearOf = (title: string) => title.match(/\((\d{4})\)/)?.[1];
 
-async function posterFor(title: string, signal?: AbortSignal): Promise<string | null> {
+const cacheKey = (title: string) =>
+  `${nameOf(title).toLowerCase()}|${yearOf(title) || ""}`;
+
+async function lookupPoster(
+  title: string,
+  signal?: AbortSignal,
+): Promise<string | null> {
   const name = nameOf(title);
   if (!name) return null;
 
@@ -39,33 +56,92 @@ async function posterFor(title: string, signal?: AbortSignal): Promise<string | 
   return tmdbImage(best.poster, "w342");
 }
 
+function posterFor(title: string, signal?: AbortSignal): Promise<string | null> {
+  const key = cacheKey(title);
+  if (cache.has(key)) return Promise.resolve(cache.get(key) ?? null);
+
+  const inflight = pending.get(key);
+  if (inflight) return inflight;
+
+  const task = lookupPoster(title, signal)
+    .then((poster) => {
+      cache.set(key, poster);
+      consecutiveFailures = 0;
+      return poster;
+    })
+    .catch((error) => {
+      // A cancelled lookup (navigation / provider switch) is not a TMDB
+      // outage and must not open the circuit.
+      if (!signal?.aborted) {
+        consecutiveFailures += 1;
+        if (consecutiveFailures >= NETWORK_FAILURE_LIMIT) {
+          cooldownUntil = Date.now() + COOLDOWN_MS;
+        }
+      }
+      return null;
+    })
+    .finally(() => {
+      pending.delete(key);
+    });
+
+  pending.set(key, task);
+  return task;
+}
+
+const withCachedPosters = (posts: any[]) =>
+  posts.map((post) => {
+    if (!post || post.image) return post;
+    const poster = cache.get(cacheKey(post.title));
+    return poster ? { ...post, image: poster } : post;
+  });
+
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+type FillOptions = {
+  /** How long to wait for fresh lookups before returning. 0 = immediate. */
+  waitMs?: number;
+  /** Called with the poster-enriched list once background lookups finish. */
+  onUpdate?: (posts: any[]) => void;
+};
+
 export const fillMissingPosters = async (
   posts: any[],
   signal?: AbortSignal,
+  options: FillOptions = {},
 ): Promise<any[]> => {
   if (!Array.isArray(posts) || posts.length === 0 || !tmdbConfigured()) {
     return posts;
   }
 
-  const missing = posts.filter((p) => p && !p.image && !cache.has(p.title));
-  const queue = missing.slice(0, MAX_LOOKUPS);
+  const initial = withCachedPosters(posts);
+  if (Date.now() < cooldownUntil) return initial;
+
+  const seen = new Set<string>();
+  const queue = initial
+    .filter((post) => post && !post.image)
+    .filter((post) => {
+      const key = cacheKey(post.title);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, MAX_LOOKUPS);
+
+  if (queue.length === 0) return initial;
 
   let cursor = 0;
-  const worker = async () => {
-    while (cursor < queue.length) {
-      const post = queue[cursor++];
-      try {
-        cache.set(post.title, await posterFor(post.title, signal));
-      } catch {
-        cache.set(post.title, null);
+  const run = Promise.all(
+    Array.from({ length: Math.min(CONCURRENCY, queue.length) }, async () => {
+      while (cursor < queue.length) {
+        const post = queue[cursor++];
+        await posterFor(post.title, signal);
       }
-    }
-  };
-  await Promise.all(
-    Array.from({ length: Math.min(CONCURRENCY, queue.length) }, worker),
-  );
+    }),
+  ).then(() => {
+    options.onUpdate?.(withCachedPosters(posts));
+  });
 
-  return posts.map((p) =>
-    p && !p.image && cache.get(p.title) ? { ...p, image: cache.get(p.title)! } : p,
-  );
+  if (!options.waitMs) return initial;
+  await Promise.race([run, delay(options.waitMs)]);
+  return withCachedPosters(posts);
 };

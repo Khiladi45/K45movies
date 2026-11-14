@@ -188,6 +188,7 @@ export const normalizeStreams = (rawStreams: any[]): PlayableStream[] => {
       raw.server || raw.name || raw.label || `Source ${streams.length + 1}`,
     ).trim();
     const { format, formatLabel } = formatFromTypeAndLink(raw.type, link);
+    const downloadOnly = raw.downloadOnly === true || /\bdownload[\s-]*only\b/i.test(server);
     const explicit = parseQuality(raw.quality);
     const fromUrl = inferQualityFromUrl(link);
     const quality = explicit.height != null ? explicit : fromUrl;
@@ -202,9 +203,9 @@ export const normalizeStreams = (rawStreams: any[]): PlayableStream[] => {
       qualityLabel: fallbackLabel,
       height: quality.height,
       format,
-      formatLabel,
+      formatLabel: downloadOnly && raw.type === "embed" ? "Browser" : formatLabel,
       adaptive: format === "hls" || format === "dash",
-      downloadOnly: /\bdownload[\s-]*only\b/i.test(server),
+      downloadOnly,
       headers: sanitizeHeaders(raw.headers),
       subtitles: raw.subtitles,
       skip: raw.skip,
@@ -213,6 +214,15 @@ export const normalizeStreams = (rawStreams: any[]): PlayableStream[] => {
   });
 
   return streams;
+};
+
+export const isBrowserDownload = (stream: PlayableStream) => {
+  const isEmbed = stream.raw?.type === "embed" || stream.formatLabel === "EMBED";
+  // Older HDMoviesLife bundles did not always flag their FXShare pages.
+  const isLegacyFxShare =
+    /^hdmovies(?:life)?\b/i.test(stream.server) &&
+    /^https?:\/\/(?:[\w-]+\.)?(?:hdlinks\.online|fxshare\.org|fxdl\.site|fxcloud-as\.site|gdfiles-xyz\.workers\.dev)\//i.test(stream.link);
+  return isEmbed && (stream.downloadOnly || isLegacyFxShare);
 };
 
 export const orderGroupEntries = (
@@ -414,9 +424,9 @@ export async function selectPlaybackStreams(
   const normalized = normalizeStreams(rawStreams);
   const isDownloadOnly = (stream: PlayableStream) =>
     stream.downloadOnly || /\bdownload[\s-]*only\b/i.test(stream.server);
-  const playable = options?.includeDownloadOnly
-    ? normalized
-    : normalized.filter((stream) => !isDownloadOnly(stream));
+  const playable = normalized.filter((stream) =>
+    !isBrowserDownload(stream) && (options?.includeDownloadOnly || !isDownloadOnly(stream)),
+  );
   const skippedDownloadOnly = normalized.length - playable.length;
   const streams = playable.map((stream, index) =>
     stream.index === index ? stream : { ...stream, index },
