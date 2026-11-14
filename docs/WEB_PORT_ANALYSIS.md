@@ -4,7 +4,7 @@ Mobile baseline `17be4e5` from `origin/main`. Provider repository inspected at `
 
 ## Approved website scope
 
-The website supports Provider Based and Movie Based. The YouTube layout entries below record the Android baseline only. Browser preferences and other suitable user state use localStorage. Session storage is excluded.
+The website supports Provider Based and Movie Based. The YouTube layout entries below record the Android baseline only. Browser preferences and other suitable user state use localStorage. Local profiles are the approved identity model. Profiles, watchlists, progress and preferences stay in the browser. Account sign-in and cross-device synchronization are outside the approved scope.
 
 ## Screens, navigation and Back
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -19,10 +19,6 @@ export function SiteShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const collapsed = useAppearance((state) => state.sidebarCollapsed);
   const toggleSidebar = useAppearance((state) => state.toggleSidebar);
-
-  useEffect(() => {
-    void useAppearance.persist.rehydrate();
-  }, []);
 
   return (
     <div className="site-shell" data-collapsed={collapsed}>
