@@ -17,7 +17,7 @@ TanStack Query handles catalog data, cancellation, retry and cache freshness. Zu
 
 Provider results depend on upstream availability and supported requests. Live Vega browsing, title details and source resolution were verified. Interactive challenges that rely on the Android WebView require a supported upstream alternative.
 
-Run `npm run lint`, `npm run build`, and `npm run typecheck` to verify the app.
+Run `npm test`, `npm run lint`, `npm run build`, and `npm run typecheck` to verify the app. The tests cover local persistence, provider title and episode matching, media event cleanup, server probes, resume and subtitle parsing.
 
 ## Player verification
 
@@ -30,4 +30,12 @@ The production build was exercised in headless Chrome 157 on Windows at 1440 × 
 | Switch to the HLS episode and start playback | 1.88 s |
 
 The last sample showed 68 rendered HLS frames with zero dropped, six HLS segment requests and two waiting events after the resume page loaded. The smoke test also verified manual quality selection, external subtitles, speed, in-place episode selection, controls lock, mini-player and resume after reopening Home. The live Vega gateway returned a 206 byte-range response from two large-file sources and rejected a tampered playback link. Browser decoding, native audio tracks and OS picture-in-picture vary by browser and codec. PiP, live HLS delivery and long-run memory were outside this measured smoke test.
+
+## Settings
+
 Settings provides the dark theme accent picker, local profiles, layout and language selection, playback defaults, subtitle styling and provider diagnostics. Playback and accent preferences are stored in localStorage and shared by Settings and the player. Background playback respects the site preference when browser visibility changes. Actual background execution depends on browser and OS media policy. Diagnostics checks registered providers through the same catalog and media APIs used by the screens.
+## Accessibility and performance
+
+A local production-build audit of Provider Based Home with live Vega data scored 94 for performance and 100 each for accessibility, best practices and SEO in Lighthouse 13.6 desktop. Largest Contentful Paint was 1.6 s, Total Blocking Time was 0 ms and Cumulative Layout Shift was 0. These are lab measurements and upstream response times vary.
+
+An axe-core scan at 1440 and 390 px found zero WCAG A/AA violations across Home, Settings, Appearance, Playback preferences, Provider diagnostics, Providers, Watchlist, Search and the open search dialog. Chrome smoke tests also covered keyboard search, deep links and in-site Back. Live Movie Based verification requires a TMDB credential.

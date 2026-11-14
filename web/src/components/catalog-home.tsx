@@ -16,8 +16,29 @@ import { categoryLink, providerLink, titleLink } from "@/lib/catalog-links";
 export function CatalogHome() {
   const layout = useAppearance((state) => state.layout);
   const ready = useCatalogReady();
-  if (!ready) return <CatalogSkeleton />;
+  if (!ready) return <HomeSkeleton />;
   return layout === "movie" ? <MovieHome /> : <ProviderHome />;
+}
+
+function HeroSkeleton() {
+  return <div className="catalog-hero motion-safe:animate-pulse" aria-hidden="true">
+    <div className="h-20 w-2/3 rounded-xl bg-white/5 sm:w-1/3" />
+  </div>;
+}
+
+function PendingRail() {
+  return <div className="mt-8" aria-hidden="true">
+    <div className="mb-4 h-8 w-40 rounded-lg bg-surface" />
+    <CatalogSkeleton rail />
+  </div>;
+}
+
+function HomeSkeleton() {
+  return <div role="status" aria-label="Loading catalog">
+    <div className="mb-5 h-9 w-56 rounded-full bg-surface" aria-hidden="true" />
+    <HeroSkeleton />
+    <PendingRail />
+  </div>;
 }
 
 function ContinueWatching() {
@@ -58,7 +79,7 @@ function ContinueWatching() {
 
 function Hero({ item, subtitle, change }: { item: Card; subtitle?: string; change?: (offset: number) => void }) {
   return <section className="catalog-hero">
-    <Artwork src={item.image} className="catalog-hero-art" />
+    <Artwork src={item.image} className="catalog-hero-art" priority />
     <div className="relative max-w-xl">
       <h2 className="text-3xl font-bold tracking-tight sm:text-5xl">{item.title}</h2>
       {subtitle && <p className="mt-3 line-clamp-3 text-sm text-muted sm:text-base">{subtitle}</p>}
@@ -87,7 +108,7 @@ function ProviderRail({ id, category }: { id: string; category: Category }) {
   const posts = useQuery({ queryKey: ["posts", id, category.filter, 1], queryFn: ({ signal }) => providers.posts(id, category.filter, 1, signal), enabled: visible });
   if (posts.data && !posts.data.length) return null;
   return <div ref={anchor}><Rail title={category.title} href={categoryLink(id, category.filter)}>
-    {posts.isPending ? <CatalogSkeleton /> : posts.isError ? <QueryMessage retry={() => void posts.refetch()}>{posts.error.message}</QueryMessage> :
+    {posts.isPending ? <CatalogSkeleton rail /> : posts.isError ? <QueryMessage retry={() => void posts.refetch()}>{posts.error.message}</QueryMessage> :
       <CardGrid rail items={posts.data.map((post) => ({ ...post, href: providerLink(id, post.ref), note: post.tag }))} />}
   </Rail></div>;
 }
@@ -116,10 +137,10 @@ function ProviderHome() {
       </button>)}
       <Link href="/providers" className="chip">Manage providers</Link>
     </div>
-    {item && active && <Hero item={{ ...item, href: providerLink(active, item.ref) }} subtitle={item.tag} change={rotation.length > 1 ? (offset) => setIndex((current) => (current + offset + rotation.length) % rotation.length) : undefined} />}
+    {active && (item ? <Hero item={{ ...item, href: providerLink(active, item.ref) }} subtitle={item.tag} change={rotation.length > 1 ? (offset) => setIndex((current) => (current + offset + rotation.length) % rotation.length) : undefined} /> : <HeroSkeleton />)}
     <ContinueWatching />
     {!active ? <QueryMessage>Install a provider to browse its catalog.</QueryMessage> :
-      catalog.isPending ? <CatalogSkeleton /> :
+      catalog.isPending ? <PendingRail /> :
       catalog.isError ? <QueryMessage retry={() => void catalog.refetch()}>{catalog.error.message}</QueryMessage> :
       !catalog.data.length ? <QueryMessage>This provider has no categories.</QueryMessage> :
       catalog.data.map((category) => <ProviderRail key={category.filter + category.title} id={active} category={category} />)}
@@ -142,7 +163,7 @@ function MovieRail({ label, row, type, page, language }: typeof rows[number] & {
   const catalog = useQuery({ queryKey: ["tmdb", row, type, page, language],
     queryFn: ({ signal }) => tmdb.row(row, type, page, language, signal) });
   return <Rail title={label}>
-    {catalog.isPending ? <CatalogSkeleton /> :
+    {catalog.isPending ? <CatalogSkeleton rail /> :
       catalog.isError ? <QueryMessage retry={() => void catalog.refetch()}>{catalog.error.message}</QueryMessage> :
       catalog.data.items.length ? <CardGrid rail items={catalog.data.items.map((title) => ({ ...title, href: titleLink(title), note: title.year }))} /> :
       <QueryMessage>No titles found.</QueryMessage>}
@@ -160,9 +181,9 @@ function MovieHome() {
   if (trending.isError) return <QueryMessage retry={() => void trending.refetch()}>{trending.error.message}</QueryMessage>;
 
   return <>
-    {featured && <Hero item={{ ...featured, href: titleLink(featured), image: featured.backdrop }} subtitle={featured.synopsis} />}
+    {featured ? <Hero item={{ ...featured, href: titleLink(featured), image: featured.backdrop }} subtitle={featured.synopsis} /> : <HeroSkeleton />}
     <ContinueWatching />
-    {trending.isPending ? <CatalogSkeleton /> : <>
+    {trending.isPending ? <PendingRail /> : <>
       {label && <>
         <MovieRail label={"Popular " + label + " Movies"} row="language" type="movie" page={1} language={language} />
         <MovieRail label={"Popular " + label + " Series"} row="language" type="tv" page={1} language={language} />

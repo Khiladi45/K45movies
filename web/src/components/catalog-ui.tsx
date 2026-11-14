@@ -8,14 +8,14 @@ import { useLibrary, type SavedTitle } from "@/lib/library";
 
 export type Card = { href: string; title: string; image?: string; note?: string };
 
-export function Artwork({ src, className = "" }: { src?: string; className?: string }) {
+export function Artwork({ src, className = "", priority = false }: { src?: string; className?: string; priority?: boolean }) {
   return (
     <span className={"artwork " + className}>
       <Film size={26} aria-hidden="true" />
       {src && (
         // Provider artwork has runtime-selected hosts and unknown dimensions.
         // eslint-disable-next-line @next/next/no-img-element
-        <img key={src} src={src} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={(event) => { event.currentTarget.hidden = true; }} />
+        <img key={src} src={src} alt="" loading={priority ? "eager" : "lazy"} fetchPriority={priority ? "high" : undefined} decoding="async" referrerPolicy="no-referrer" onError={(event) => { event.currentTarget.hidden = true; }} />
       )}
     </span>
   );
@@ -37,10 +37,13 @@ export function CardGrid({ items, rail = false }: { items: Card[]; rail?: boolea
   );
 }
 
-export function CatalogSkeleton() {
+export function CatalogSkeleton({ rail = false }: { rail?: boolean } = {}) {
   return (
-    <div className="poster-grid motion-safe:animate-pulse" role="status" aria-label="Loading titles">
-      {Array.from({ length: 6 }, (_, i) => <div key={i} className="aspect-[2/3] rounded-xl bg-surface" />)}
+    <div className={(rail ? "poster-rail" : "poster-grid") + " motion-safe:animate-pulse"} role="status" aria-label="Loading titles">
+      {Array.from({ length: 6 }, (_, i) => <div key={i}>
+          <div className="aspect-[2/3] rounded-xl bg-surface" />
+          {rail && <div className="mt-2 h-5 w-3/4 rounded bg-surface" />}
+        </div>)}
     </div>
   );
 }
