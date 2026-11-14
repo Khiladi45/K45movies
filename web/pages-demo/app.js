@@ -1,6 +1,6 @@
-import { manifest, provider, tmdb, tmdbTitle, tmdbKey, saveTmdbKey } from "./live-api.js";
+import { manifest, provider, tmdb, tmdbTitle, tmdbKey, saveTmdbKey } from "./live-api.js?v=cinema";
 
-import { openPlayer, closePlayer } from "./player.js";
+import { openPlayer, closePlayer } from "./player.js?v=cinema";
 import { firstAvailable, sameMovie, titleIdentity } from "./recovery.js";
 
 const main = document.querySelector("main");
