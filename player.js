@@ -1,4 +1,4 @@
-import { provider } from "./live-api.js";
+import { provider } from "./live-api.js?v=cinema";
 
 function element(tag, className, text) {
   const node = document.createElement(tag);
