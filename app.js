@@ -1,17 +1,21 @@
 import { manifest, provider, tmdb, tmdbTitle, tmdbKey, saveTmdbKey } from "./live-api.js";
 
+import { openPlayer, closePlayer } from "./player.js";
+
 const main = document.querySelector("main");
 const template = document.querySelector("#card");
 const dialog = document.querySelector("#search-dialog");
 const searchInput = document.querySelector("#query");
-const defaults = { layout: "provider", installed: [], active: "", saved: [] };
+const defaults = { layout: "provider", installed: [], active: "", saved: [], theme: "violet" };
 const state = load();
+document.documentElement.dataset.theme = state.theme;
 let revision = 0;
 
 function load() {
   try {
     const value = JSON.parse(localStorage.getItem("k45-pages-live") ?? "{}");
-    return { ...defaults, ...value, installed: Array.isArray(value.installed) ? value.installed : [],
+    return { ...defaults, ...value, installed: Array.isArray(value.installed) ? value.installed.filter((id) => id !== "vega") : [],
+      active: value.active === "vega" ? "" : value.active,
       saved: Array.isArray(value.saved) ? value.saved : [] };
   } catch { return { ...defaults }; }
 }
@@ -62,7 +66,7 @@ function heading(root, title) { root.append(element("h1", title)); }
 function note(root, message) { root.append(element("p", message)); }
 function setup(root) {
   const box = element("section", "", "panel");
-  box.append(element("h2", "Browser Bridge"), element("p", "Install the extension in Chrome or Edge to open provider catalogs, details and playback sources."),
+  box.append(element("h2", "Browser Bridge"), element("p", "Load Browser Bridge in Brave, Chrome or Edge, then use its toolbar icon to allow provider access once."),
     link("Install browser extension", "./k45movies-bridge.zip", "button primary"), " ",
     link("Installation instructions", "#settings", "button"));
   root.append(box);
@@ -74,7 +78,7 @@ function busy(root, label = "Loading…") {
 }
 async function run(root, work) {
   try { await work(); }
-  catch (error) { root.replaceChildren(element("p", error instanceof Error ? error.message : "Request failed.", "notice")); }
+  catch (error) { root.replaceChildren(element("p", error instanceof Error ? error.message : "Request failed.", "notice"), action("Retry", () => void run(root, work))); }
 }
 function select(root, label, items, onChange, current) {
   const caption = element("label", label + " ");
@@ -91,6 +95,31 @@ function select(root, label, items, onChange, current) {
   return input;
 }
 
+function feature(entry, title, cta = "View details") {
+  const hero = element("section", "", "hero");
+  const art = element("img");
+  art.src = asset(entry.image);
+  art.alt = "";
+  art.fetchPriority = "high";
+  const content = element("div");
+  content.append(element("span", title, "tag"), element("h2", entry.name), link(cta, titleUrl(entry), "button primary"));
+  hero.append(art, content);
+  return hero;
+}
+
+function detailHeader(entry, subtitle) {
+  const hero = element("section", "", "detail-hero");
+  const art = element("img");
+  art.src = asset(entry.image);
+  art.alt = "";
+  const content = element("div");
+  content.append(element("span", subtitle, "tag"), element("h1", entry.name));
+  if (entry.synopsis) content.append(element("p", entry.synopsis));
+  content.append(saveButton(entry));
+  hero.append(art, content);
+  return hero;
+}
+
 async function browse(root) {
   heading(root, "Browse");
   const content = element("section");
@@ -99,7 +128,8 @@ async function browse(root) {
   await run(content, async () => {
     if (state.layout === "movie") {
       const data = await tmdb("trending/all/week");
-      content.replaceChildren(element("h2", "Trending this week"), grid(data.results.map((item) => tmdbTitle(item)).filter(Boolean)));
+      const items = data.results.map((item) => tmdbTitle(item)).filter(Boolean);
+      content.replaceChildren(...(items.length ? [feature(items[0], "Trending"), element("h2", "Trending this week"), grid(items)] : [element("p", "No trending titles.")]));
       return;
     }
     if (!state.active) {
@@ -122,7 +152,9 @@ async function browse(root) {
         let page = 1;
         const items = await provider("posts", { id, filter, page });
         if (request !== call) return;
-        results.replaceChildren(items.length ? grid(items.map((item) => post(id, item))) : element("p", "No titles returned."));
+        const cards = items.map((item) => post(id, item));
+        const featured = cards.find((item) => item.image) ?? cards[0];
+        results.replaceChildren(...(featured ? [feature(featured, id), element("h2", "Catalog"), grid(cards)] : [element("p", "No titles returned.")]));
         if (!items.length) return;
         const more = action("Load more", async () => {
           more.disabled = true;
@@ -214,51 +246,17 @@ function saveButton(entry) {
   return button;
 }
 
-let mediaEngine;
-function clearMedia() { mediaEngine?.destroy(); mediaEngine = undefined; }
-async function play(root, source) {
-  clearMedia();
-  const video = element("video");
-  video.controls = true;
-  video.playsInline = true;
-  const status = element("p", "");
-  status.setAttribute("role", "status");
-  const fail = () => {
-    status.textContent = /mkv|matroska/i.test(source.type ?? "")
-      ? "This Matroska stream could not play in your browser. Try another source or quality."
-      : "This source could not play directly in your browser. Try another server.";
-  };
-  video.onerror = fail;
-  root.replaceChildren(video, status);
-  const hls = /hls|m3u8/i.test(source.type ?? "") || /\.m3u8(?:[?#]|$)/i.test(source.url);
-  if (hls && !video.canPlayType("application/vnd.apple.mpegurl")) {
-    if (!globalThis.Hls?.isSupported()) { fail(); return; }
-    mediaEngine = new globalThis.Hls();
-    mediaEngine.on(globalThis.Hls.Events.ERROR, (_, data) => { if (data.fatal) fail(); });
-    mediaEngine.loadSource(source.url);
-    mediaEngine.attachMedia(video);
-    video.addEventListener("canplay", () => { void video.play().catch(() => {}); }, { once: true });
-  } else {
-    video.src = source.url;
-    void video.play().catch((error) => {
-      if (error.name === "NotAllowedError") status.textContent = "Press Play to start.";
-      else if (error.name !== "AbortError") fail();
-    });
-  }
-}
-
 async function providerDetails(root, id, ref, metadata) {
   let detail = metadata;
   if (!detail) detail = await provider("title", { id, link: ref });
   if (!detail.title) throw new Error("Provider returned no title details.");
-  const entry = { id, link: ref, kind: "provider", name: detail.title, image: detail.image };
-  root.replaceChildren(element("h2", detail.title), element("p", detail.synopsis), saveButton(entry));
+  const entry = { id, link: ref, kind: "provider", name: detail.title, image: detail.image, synopsis: detail.synopsis };
+  root.replaceChildren(detailHeader(entry, id));
   if (!detail.groups.length) { note(root, "No source groups returned."); return; }
   const actions = element("div", "", "actions");
   const groupButtons = element("div", "", "actions");
   const output = element("section");
-  const player = element("section");
-  root.append(actions, groupButtons, output, player);
+  root.append(element("h2", "Watch"), actions, groupButtons, output);
   let generation = 0;
 
   async function streams(item) {
@@ -271,7 +269,10 @@ async function providerDetails(root, id, ref, metadata) {
       if (current !== generation) return;
       results.replaceChildren();
       if (!sources.length) note(results, "No compatible sources were returned.");
-      for (const source of sources) results.append(action([source.server, source.quality].filter(Boolean).join(" · "), () => void play(player, source), "primary"));
+      if (sources.length) results.append(action("Play", () => openPlayer(detail.title, sources), "primary"));
+      for (const [index, source] of sources.entries()) {
+        results.append(action([source.server, source.quality].filter(Boolean).join(" · "), () => openPlayer(detail.title, sources, index)));
+      }
     });
   }
 
@@ -310,7 +311,7 @@ async function titlePage(root, query) {
     if (!["movie", "tv"].includes(type) || !/^\d+$/.test(number ?? "")) throw new Error("Invalid title.");
     const raw = await tmdb(type + "/" + number);
     const entry = tmdbTitle(raw, type);
-    section.replaceChildren(element("h1", entry.name), element("p", entry.synopsis), saveButton(entry));
+    section.replaceChildren(detailHeader(entry, [entry.type === "tv" ? "Series" : "Movie", entry.year].filter(Boolean).join(" · ")));
     const options = element("section");
     section.append(options);
     options.append(action("Find provider sources", async () => {
@@ -395,7 +396,14 @@ function settings(root) {
   form.append(hint);
   const attribution = element("p");
   attribution.append("This product uses the TMDB API but is not endorsed or certified by TMDB. ", link("TMDB", "https://www.themoviedb.org/"));
-  root.append(group, form, attribution);
+  const appearance = element("fieldset");
+  appearance.append(element("legend", "Appearance"));
+  select(appearance, "Theme", [{label:"Violet",value:"violet"},{label:"Ember",value:"ember"},{label:"Ocean",value:"ocean"}], (theme) => {
+    state.theme = theme;
+    document.documentElement.dataset.theme = theme;
+    persist();
+  }, state.theme);
+  root.append(group, appearance, form, attribution);
   setup(root);
   note(root, "Extract the ZIP. Open chrome://extensions or edge://extensions, enable Developer mode, choose Load unpacked, and select the extracted folder. Reload this site.");
 }
@@ -403,7 +411,7 @@ function settings(root) {
 function render() {
   const [route, query = ""] = (location.hash.slice(1) || "browse").split(/\/(.*)/s);
   if (route === "content") return;
-  clearMedia();
+  closePlayer();
   const token = ++revision;
   const root = element("div");
   main.replaceChildren(root);

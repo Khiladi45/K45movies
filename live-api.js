@@ -3,7 +3,7 @@ const bridge = "clmdkafdliblcnolllgpholokkololjb";
 const registry = fetch(root + "manifest.json", { signal: AbortSignal.timeout(12000) }).then(async (response) => {
   if (!response.ok) throw new Error("Unable to load provider manifest.");
   const manifest = await response.json();
-  return manifest.providers.filter(({ id }) => id !== "youtube" && id !== "moviesApi");
+  return manifest.providers.filter(({ id }) => !["vega", "youtube", "moviesApi"].includes(id));
 });
 registry.catch(() => {});
 
@@ -14,12 +14,12 @@ export function provider(op, args = {}) {
       reject(new Error("Install the K45movies Browser Bridge, then reload this page."));
       return;
     }
-    const timer = setTimeout(() => reject(new Error("The provider timed out. Please retry.")), 30000);
+    const timer = setTimeout(() => reject(new Error("The provider timed out. Please retry.")), op === "media" ? 18000 : 30000);
     globalThis.chrome.runtime.sendMessage(bridge, { op, ...args }, (response) => {
       clearTimeout(timer);
       if (globalThis.chrome.runtime.lastError || !response) {
         reject(new Error("Install or reload the K45movies Browser Bridge, then reload this page."));
-      } else if (!response.ok) reject(new Error(response.error));
+      } else if (!response.ok) reject(Object.assign(new Error(response.error), { needsAccess: response.needsAccess === true }));
       else resolve(response.data);
     });
   });
