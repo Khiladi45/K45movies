@@ -68,7 +68,7 @@ Persisted Zustand state uses **MMKV** in this revision. AsyncStorage is the stat
 
 Classic Continue Watching rows appear after 10 seconds and finish at 90% or later. Explicit dismissal persists, and saved source/audio/caption selections help rehydrate a session. Keep history at the same layout boundaries. YouTube mini-player position belongs to the current in-memory session on Android.
 
-**Account authentication requires a contract.** The app has local profile CRUD and a commented-out Logout row. The inspected provider backend exposes no account routes, and the app has no account flow, account-token storage or auth store. Firebase packages in the mobile manifest are for analytics/crash reporting. To deliver account login, registration and logout, identify the intended existing service and its session and account-data contracts. If provider-repo auth must be added, that changes the approved scope. Local profile parity is independently implementable.
+The Android app stores profiles locally and the provider backend exposes no account routes. The approved website scope uses local profiles and browser-local persistence.
 
 ## Network and provider contracts
 
@@ -84,7 +84,7 @@ Classic Continue Watching rows appear after 10 seconds and finish at 90% or late
 
 Use the existing provider repository as the catalog/bundle source of truth. Introduce typed Next.js Route Handlers under `/api/proxy` for provider operations, metadata and playback gateway requests. Keep provider execution server-side using reviewed, pinned bundles in a restricted worker/process. Pin module/method per route and validate IDs, argument shapes, approved hostnames and redirects. Use per-provider/session cookie jars, bounded concurrency/deadlines, distributed rate limiting and streamed byte-range responses with origin cache semantics. Issue expiring playback handles for approved sources and rewrite nested HLS URI references through the same policy where media CORS or required headers prevent direct playback. Keep upstream credentials, private addresses, signed links and provider errors out of browser-visible logs and persistent state. Cache independently by data freshness and credential scope. TanStack Query handles cancellation, pagination, retry and client invalidation, with the mobile default of five-minute freshness for ordinary catalog/metadata as a starting point.
 
-Use a server-only provider base URL. Document `NEXT_PUBLIC_TMDB_KEY` for a deliberately public API key if configured. Prefer server-only `TMDB_API_KEY` for credentials that must stay private, accessed through the same-origin metadata handler. Use a secure, HTTP-only session cookie if the approved account service offers an appropriate session contract. [Next.js Route Handlers](https://nextjs.org/docs/app/getting-started/route-handlers)
+Use a server-only provider base URL. Document `NEXT_PUBLIC_TMDB_KEY` for a deliberately public API key if configured. Prefer server-only `TMDB_API_KEY` for credentials that must stay private, accessed through the same-origin metadata handler. [Next.js Route Handlers](https://nextjs.org/docs/app/getting-started/route-handlers)
 
 ## Player behavior and browser design
 
@@ -145,13 +145,13 @@ The table groups dependencies with the same web treatment. The current player is
 - Browser JavaScript cannot control global brightness or volume, force OS orientation across browsers, or guarantee background playback. Use video-local brightness/volume, responsive geometry and best-effort media-session/PiP. Browser autoplay rules may require a user gesture or muted start.
 - The Android provider WebView and cookie bridge are platform-specific. A same-origin server adapter addresses CORS for approved public endpoints and stream hosts. A browser iframe cannot extract third-party cross-origin cookies or page data. Where upstream requires an interactive challenge, authenticated browser state, unsupported codecs or unavailable media, report that provider capability and use an approved API/embed or playable alternate. Confirm which providers are in scope if those constraints block parity.
 - Provider artifacts change independently. `scripts/build-providers.js` bundles the sibling provider repo with esbuild, generated registry and compatibility shims. For web, validate a supported provider matrix against a pinned manifest snapshot, and keep the backend publication authoritative. Existing mobile regression tests document cookie handling, static runner signatures/cancellation and SHA-1 shim behavior. Base web selection and store tests on those contracts plus browser fixtures.
-- Account identity and persistence depend on the service contract described above. Decide whether web is local-profile-only initially or uses a named existing login/register/logout service. Also confirm whether classic episode autoplay, which would extend Android behavior, should default on or off.
+- Confirm whether classic episode autoplay, which would extend Android behavior, should default on or off.
 
 ## Phases and approval gates
 
 1. **Analysis.** Commit this source audit to `feat/website` and review the open decisions.
 2. **Scaffold and design system.** Isolated `/web` package, strict TypeScript, Next App Router, responsive shell, tokens, brand assets, accessible primitives, skeleton/toast and app navigation.
-3. **Auth and data layer.** Implement the approved session contract, provider/TMDB handlers, validation/rate limits, React Query session and cache behavior, and Zustand persistence.
+3. **Auth and data layer.** Implement local profile persistence, provider/TMDB handlers, validation and rate limits, and React Query cache behavior.
 4. **Layouts and screens.** Provider parity, TMDB title bridge and source choice, search and watchlists, settings entry and profile and provider flows. Verify Back and deep links.
 5. **Player.** Media engine, controls, source/episode switch, subtitle panel, resume/PiP, browser matrix, recovery and throttled playback tests.
 6. **Settings.** Appearance, profiles, layout and language, playback/subtitles, provider management and diagnostics end to end.

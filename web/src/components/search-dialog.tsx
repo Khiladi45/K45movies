@@ -1,6 +1,7 @@
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
+import { useLibrary } from "@/lib/library";
 import { Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
@@ -24,7 +25,8 @@ export function SearchDialog({ children }: { children: ReactNode }) {
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const query = String(new FormData(event.currentTarget).get("q") ?? "").trim();
-    if (!query) return;
+    if (query.length < 2) return;
+    useLibrary.getState().addSearch(query);
     setOpen(false);
     router.push("/search?" + new URLSearchParams({ q: query }));
   }
@@ -46,7 +48,7 @@ export function SearchDialog({ children }: { children: ReactNode }) {
           <Dialog.Description className="sr-only">Search the selected catalog for a movie or series.</Dialog.Description>
           <form onSubmit={submit} className="mt-4 flex gap-2">
             <input name="q" type="search" aria-label="Title" placeholder="Movie or series"
-              className="field min-w-0 flex-1" maxLength={120} required />
+              className="field min-w-0 flex-1" minLength={2} maxLength={120} required />
             <button className="primary-button" type="submit"><Search size={17} aria-hidden="true" /> Search</button>
           </form>
         </Dialog.Content>

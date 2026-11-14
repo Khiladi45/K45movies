@@ -117,3 +117,37 @@ button { cursor: pointer; }
 @media (max-width: 370px) {
   .site-nav a { flex-direction: column; }
 }
+
+.secondary-button { @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-line bg-surface px-3 py-2 text-sm font-medium text-white hover:border-accent disabled:cursor-wait disabled:opacity-60; }
+.chip { @apply inline-flex min-h-9 items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1 text-sm text-muted; }
+button.chip:hover, a.chip:hover, .chip[aria-pressed="true"] { @apply border-accent text-accent; }
+.list-row { @apply flex min-h-12 items-center gap-3 rounded-xl border border-line bg-surface p-3; }
+button.list-row:hover, .list-row[aria-pressed="true"] { @apply border-accent; }
+.search-history { @apply flex max-w-full items-center gap-2 rounded-full border border-line bg-surface px-3 py-1 text-sm; }
+.search-history a { @apply truncate hover:text-accent; }
+.search-history button { @apply shrink-0 text-muted hover:text-white; }
+.profile-avatar { @apply grid size-10 shrink-0 place-items-center overflow-hidden rounded-full font-semibold; }
+.profile-avatar img { @apply size-full object-cover; }
+.poster-grid { @apply grid grid-cols-2 gap-x-4 gap-y-5 min-[450px]:grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8; }
+.poster-rail { @apply grid auto-cols-[minmax(8.25rem,12vw)] grid-flow-col gap-4 overflow-x-auto px-1 pt-1 pb-3; }
+.poster-card { @apply block rounded-xl motion-safe:transition-transform; }
+.poster-card:hover, .poster-card:focus-visible { @apply text-accent; }
+.poster-card:hover .artwork, .poster-card:focus-visible .artwork { @apply ring-2 ring-accent; }
+.artwork { @apply relative grid w-full place-items-center overflow-hidden bg-surface text-muted; }
+.artwork img { @apply absolute inset-0 size-full object-cover; }
+.catalog-hero { @apply relative isolate flex min-h-72 items-end overflow-hidden rounded-2xl border border-line bg-surface p-6 sm:min-h-96 sm:p-10; }
+.catalog-hero-art, .detail-backdrop { @apply absolute inset-0 -z-10 h-full; }
+.catalog-hero-art::after, .detail-backdrop::after {
+  content: "";
+  @apply absolute inset-0;
+  background: linear-gradient(90deg, #141414 0%, #14141445 80%), linear-gradient(0deg, #141414 0%, transparent 85%);
+}
+.catalog-hero-art img { object-position: center 35%; }
+.detail-hero { @apply relative isolate flex flex-wrap items-end gap-6 overflow-hidden rounded-2xl border border-line bg-surface p-5 sm:flex-nowrap sm:p-8; }
+.detail-poster { @apply aspect-[2/3] w-24 shrink-0 rounded-xl sm:w-36; }
+.detail-hero > div { @apply flex-1; }
+@media (max-width: 500px) {
+  .detail-hero > div { flex: 1 0 100%; }
+}
+
+.header-profile { @apply grid size-8 shrink-0 place-items-center rounded-full bg-action text-sm font-semibold text-white hover:bg-violet-600; }

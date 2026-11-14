@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Bookmark, House, PanelLeft, Puzzle, Search, Settings } from "lucide-react";
+import { useLibrary } from "@/lib/library";
 import { useAppearance } from "@/lib/appearance";
 import { SearchDialog } from "./search-dialog";
 
@@ -17,6 +18,7 @@ const navigation = [
 
 export function SiteShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const profile = useLibrary((state) => state.profiles.find(({ id }) => id === state.activeProfile));
   const collapsed = useAppearance((state) => state.sidebarCollapsed);
   const toggleSidebar = useAppearance((state) => state.toggleSidebar);
 
@@ -38,6 +40,9 @@ export function SiteShell({ children }: { children: ReactNode }) {
           <span>Search titles</span>
           <kbd>Ctrl K</kbd>
         </SearchDialog>
+        {profile && <Link href="/settings" className="header-profile" aria-label={"Settings for " + profile.name} title={profile.name}>
+          {profile.name.slice(0, 1).toUpperCase()}
+        </Link>}
       </header>
       <nav className="site-nav" id="primary-nav" aria-label="Primary">
         {navigation.map(({ href, label, icon: Icon }) => {

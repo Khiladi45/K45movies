@@ -1,14 +1,8 @@
 import type { Metadata } from "next";
-import { LayoutChoice } from "@/components/layout-choice";
 import { PageHeading } from "@/components/page-heading";
+import { SettingsEntry } from "@/components/settings-entry";
 
 export const metadata: Metadata = { title: "Settings" };
-
-export default function Settings() {
-  return (
-    <>
-      <PageHeading title="Settings" />
-      <LayoutChoice />
-    </>
-  );
+export default function Page() {
+  return <><PageHeading title="Settings" /><SettingsEntry /></>;
 }
