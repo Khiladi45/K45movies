@@ -11,14 +11,14 @@ export const manifest = () => registry;
 export function provider(op, args = {}) {
   return new Promise((resolve, reject) => {
     if (!globalThis.chrome?.runtime?.sendMessage) {
-      reject(new Error("Install the K45movies Browser Bridge, then reload this page."));
+      reject(Object.assign(new Error("Install the K45movies Browser Bridge, then reload this page."), { bridgeMissing: true }));
       return;
     }
     const timer = setTimeout(() => reject(new Error("The provider timed out. Please retry.")), op === "media" ? 18000 : 30000);
     globalThis.chrome.runtime.sendMessage(bridge, { op, ...args }, (response) => {
       clearTimeout(timer);
       if (globalThis.chrome.runtime.lastError || !response) {
-        reject(new Error("Install or reload the K45movies Browser Bridge, then reload this page."));
+        reject(Object.assign(new Error("Install or reload the K45movies Browser Bridge, then reload this page."), { bridgeMissing: true }));
       } else if (!response.ok) reject(Object.assign(new Error(response.error), { needsAccess: response.needsAccess === true }));
       else resolve(response.data);
     });
