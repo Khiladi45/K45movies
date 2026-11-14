@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Explore the K45movies website with a sample catalog and browser-local watchlist.">
+  <meta name="theme-color" content="#141414">
+  <title>K45movies · Demo</title>
+  <link rel="icon" href="./brand.png" type="image/png">
+  <link rel="stylesheet" href="./style.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <header>
+    <a class="brand" href="#browse"><img src="./brand.png" alt="" width="36" height="36"><span>K45movies</span></a>
+    <button id="search-open" type="button" aria-keyshortcuts="Control+K Meta+K">Search <kbd>Ctrl K</kbd></button>
+  </header>
+  <nav aria-label="Main navigation">
+    <a href="#browse">Browse</a>
+    <a href="#watchlist">Watchlist</a>
+    <a href="#settings">Settings</a>
+  </nav>
+  <main id="content" tabindex="-1"></main>
+  <footer><span>Sample catalog</span><a href="https://github.com/Khiladi45/K45movies/tree/feat/website/web/pages-demo">Source</a></footer>
+  <dialog id="search-dialog" aria-labelledby="search-title">
+    <form id="search-form" role="search">
+      <div class="bar"><h2 id="search-title">Search titles</h2><button type="button" id="search-close" aria-label="Close search">×</button></div>
+      <label for="query">Title or genre</label>
+      <input id="query" type="search" autocomplete="off" maxlength="120">
+      <button class="primary" type="submit">Search</button>
+    </form>
+  </dialog>
+  <template id="card">
+    <li><a class="card"><img alt="" width="480" height="270" loading="lazy"><strong></strong><small></small></a></li>
+  </template>
+</body>
+</html>
