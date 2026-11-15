@@ -13,14 +13,15 @@ export const audioLanguages = ["none", ...watchers] as const;
 export type AudioLanguage = typeof audioLanguages[number];
 
 type Library = {
-  profiles: Profile[]; activeProfile: string | null; installed: string[]; activeProvider: string | null;
+  profiles: Profile[]; activeProfile: string | null; installed: string[]; activeProvider: string | null; providersInitialized: boolean;
   watchlist: SavedTitle[]; progress: Progress[]; history: string[]; language: AudioLanguage;
   episodeOrder: Record<string, "asc" | "desc">;
   saveProfile: (profile: Omit<Profile, "id">, id?: string) => void;
   selectProfile: (id: string) => void;
   removeProfile: (id: string) => void;
   activate: (id: string) => void;
-  removeProvider: (id: string, fallback?: string) => void;
+  initializeProviders: (ids: string[]) => void;
+  removeProvider: (id: string) => void;
   toggleSaved: (entry: SavedTitle) => void;
   saveProgress: (entry: Progress) => void;
   dismissProgress: (href: string) => void;
@@ -34,7 +35,7 @@ type Library = {
 
 export const useLibrary = create<Library>()(
   persist((set) => ({
-    profiles: [], activeProfile: null, installed: ["vega"], activeProvider: "vega",
+    profiles: [], activeProfile: null, installed: ["vega"], activeProvider: "vega", providersInitialized: false,
     watchlist: [], progress: [], dismissed: [], history: [], language: "none", episodeOrder: {},
     saveProfile: (profile, id) => set((state) => {
       if (id) return { profiles: state.profiles.map((existing) => existing.id === id ? { ...profile, id } : existing) };
@@ -49,10 +50,14 @@ export const useLibrary = create<Library>()(
     activate: (id) => set((state) => ({
       activeProvider: id, installed: state.installed.includes(id) ? state.installed : [...state.installed, id],
     })),
-    removeProvider: (id, fallback) => set((state) => {
+    initializeProviders: (ids) => set((state) => state.providersInitialized || !ids.length ? state : {
+      installed: [...new Set(ids)], activeProvider: ids.includes(state.activeProvider ?? "") ? state.activeProvider : ids[0],
+      providersInitialized: true,
+    }),
+    removeProvider: (id) => set((state) => {
       const installed = state.installed.filter((provider) => provider !== id);
       if (state.activeProvider !== id) return { installed };
-      return { activeProvider: installed[0] ?? fallback ?? null, installed: installed.length || !fallback ? installed : [fallback] };
+      return { activeProvider: installed[0] ?? null, installed };
     }),
     toggleSaved: (entry) => set((state) => ({
       watchlist: state.watchlist.some(({ href }) => href === entry.href)
@@ -77,5 +82,9 @@ export const useLibrary = create<Library>()(
     name: "k45-web-library",
     storage: createJSONStorage(() => localStorage),
     skipHydration: true,
+    merge: (saved, defaults) => {
+      const data = saved as Partial<Library> | undefined;
+      return { ...defaults, ...data, providersInitialized: data?.providersInitialized ?? Array.isArray(data?.installed) };
+    },
   }),
 );

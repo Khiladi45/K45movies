@@ -18,20 +18,27 @@ export function ProviderSettings() {
   const activate = useLibrary((state) => state.activate);
   const remove = useLibrary((state) => state.removeProvider);
   const [filter, setFilter] = useState("");
-  const [busy, setBusy] = useState<string>();
+  const [checking, setChecking] = useState<string>();
   const [notice, setNotice] = useState("");
   const manifest = useQuery({ queryKey: ["manifest"], queryFn: ({ signal }) => providers.manifest(signal) });
+  const health = useQuery({ queryKey: ["provider-health"], queryFn: ({ signal }) => providers.health(signal), enabled: ready, staleTime: 0, refetchInterval: 30_000 });
 
-  async function select(provider: Provider) {
-    setBusy(provider.id);
-    setNotice("");
+  function select(provider: Provider) {
+    activate(provider.id);
+    setNotice(provider.name + " is active.");
+  }
+
+  async function check(provider: Provider) {
+    setChecking(provider.id);
     try {
-      await queryClient.fetchQuery({ queryKey: ["catalog", provider.id], queryFn: ({ signal }) => providers.catalog(provider.id, signal) });
-      activate(provider.id);
-      setNotice(provider.name + " is active.");
-    } catch {
-      setNotice("Could not activate " + provider.name + ". Try again.");
-    } finally { setBusy(undefined); }
+      await providers.catalog(provider.id);
+      setNotice(provider.name + " catalog responded.");
+    } catch (error) {
+      setNotice(provider.name + " · " + (error instanceof Error ? error.message : "Unknown provider response."));
+    } finally {
+      setChecking(undefined);
+      void queryClient.invalidateQueries({ queryKey: ["provider-health"] });
+    }
   }
 
   if (!ready || manifest.isPending) return <CatalogSkeleton />;
@@ -57,7 +64,7 @@ export function ProviderSettings() {
     </div>
     <div role="status" className="mb-3 text-sm text-muted">{notice}</div>
     {missing.map((id) => <div key={id} className="list-row mb-2"><span className="flex-1">{id} is no longer listed.</span>
-      <button type="button" className="secondary-button" onClick={() => remove(id, manifest.data[0]?.id)}>Remove</button></div>)}
+      <button type="button" className="secondary-button" onClick={() => remove(id)}>Remove</button></div>)}
     {groups.map((group) => <section key={group.title} className="mt-6 max-w-4xl">
       <h2 className="mb-3 text-xl font-semibold">{group.title}</h2>
       {group.entries.length ? <ul className="grid gap-2">{group.entries.map((provider) => <li key={provider.id} className="list-row flex-wrap">
@@ -66,19 +73,27 @@ export function ProviderSettings() {
           <strong>{provider.name}</strong>
           {provider.version && <span className="ml-2 text-xs text-muted">v{provider.version}</span>}
           {provider.description && <p className="text-sm text-muted">{provider.description}</p>}
+          {health.data?.[provider.id]?.issue && <p className="text-sm text-muted">{health.data[provider.id].issue?.message}</p>}
         </div>
+        <span className="chip capitalize">{health.data?.[provider.id]?.state ?? "unchecked"}</span>
+        <button type="button" className="secondary-button" disabled={!!checking} onClick={() => void check(provider)}>
+          {checking === provider.id ? "Checking…" : "Check catalog"}
+        </button>
         {active === provider.id ? <span className="chip"><Check size={15} /> Active</span> :
-          <button type="button" className="secondary-button" disabled={!!busy} onClick={() => void select(provider)}>
-            {busy === provider.id ? "Connecting…" : installed.includes(provider.id) ? "Activate" : "Install"}
+          <button type="button" className="secondary-button" onClick={() => select(provider)}>
+            {installed.includes(provider.id) ? "Activate" : "Install"}
           </button>}
         {installed.includes(provider.id) && <button type="button" className="icon-button" aria-label={"Remove " + provider.name}
           onClick={() => {
             if (!window.confirm("Remove " + provider.name + "?")) return;
-            remove(provider.id, manifest.data.find(({ id }) => id !== provider.id)?.id);
+            remove(provider.id);
             setNotice(provider.name + " removed.");
           }}><Trash2 size={17} /></button>}
       </li>)}</ul> : <p className="text-sm text-muted">{find ? "No matching providers." : "No providers here."}</p>}
     </section>)}
-    <Link href="/" className="secondary-button mt-6">Browse catalog</Link>
+    <div className="mt-6 flex flex-wrap gap-2">
+      <Link href="/" className="secondary-button">Browse catalog</Link>
+      <Link href="/settings/providers/diagnostics" className="secondary-button">Provider diagnostics</Link>
+    </div>
   </>;
 }
