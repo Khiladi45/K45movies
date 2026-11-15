@@ -1,0 +1,1482 @@
+{
+  "ref": "a77aa81c9ae068e747d3c8b7b40809e895db0188",
+  "apiRef": "02f2b0e96ea822cc68b2d18609418501534283ca",
+  "urlChecks": {
+    "multi": {
+      "host": "m1.multimovies.courses",
+      "finalHost": "m1.multimovies.courses",
+      "status": 200,
+      "ms": 937
+    },
+    "drive": {
+      "host": "new3.moviesdrive.cyou",
+      "finalHost": "new3.moviesdrive.cyou",
+      "status": 200,
+      "ms": 967
+    },
+    "nfMirror": {
+      "host": "net77.cc",
+      "finalHost": "net77.cc",
+      "status": 403,
+      "ms": 4102
+    },
+    "UhdMovies": {
+      "host": "uhdmovies.beauty",
+      "error": "TimeoutError",
+      "ms": 10007
+    },
+    "kissKh": {
+      "host": "kisskh.is",
+      "finalHost": "kisskh.is",
+      "status": 200,
+      "ms": 321
+    },
+    "showbox": {
+      "host": "www.showbox.media",
+      "error": "ECONNRESET",
+      "ms": 459
+    },
+    "moviesda": {
+      "host": "moviezda.co",
+      "finalHost": "moviezda.co",
+      "status": 200,
+      "ms": 627
+    },
+    "gokuHD": {
+      "host": "gokuhd.com",
+      "error": "TimeoutError",
+      "ms": 10002
+    },
+    "kmmovies": {
+      "host": "kmmovies.beer",
+      "finalHost": "kmmovies.beer",
+      "status": 200,
+      "ms": 215
+    },
+    "animesalt": {
+      "host": "animesalt.in",
+      "finalHost": "animesalt.in",
+      "status": 200,
+      "ms": 1054
+    },
+    "movies4u": {
+      "host": "movies4u.tc",
+      "error": "TimeoutError",
+      "ms": 10009
+    },
+    "joya9tv": {
+      "host": "joya9tv1.com",
+      "error": "TimeoutError",
+      "ms": 10010
+    },
+    "1tamilblasters": {
+      "host": "www.1tamilblasters.blog",
+      "finalHost": "www.1tamilblasters.blog",
+      "status": 200,
+      "ms": 340
+    },
+    "1tamilmv": {
+      "host": "www.1tamilmv.io",
+      "finalHost": "www.1tamilmv.io",
+      "status": 200,
+      "ms": 454
+    },
+    "hdmovieslife": {
+      "host": "hdmovies.life",
+      "finalHost": "hdmovies.life",
+      "status": 200,
+      "ms": 1112
+    },
+    "mxplayer": {
+      "host": "www.mxplayer.in",
+      "finalHost": "www.primevideo.com",
+      "status": 200,
+      "ms": 1800
+    },
+    "dvdplay": {
+      "host": "dvdplay.singles",
+      "finalHost": "dvdplay.singles",
+      "status": 200,
+      "ms": 465
+    },
+    "movieswood": {
+      "host": "movieswood.cloud",
+      "finalHost": "movieswood.cloud",
+      "status": 200,
+      "ms": 644
+    }
+  },
+  "results": [
+    {
+      "id": "1tamilblasters",
+      "title": "The Beast (2026) [Tam + Tel + Hin + Mal + Kan + Eng]",
+      "operations": {
+        "catalog": {
+          "state": "pass",
+          "count": 9,
+          "ms": 11,
+          "events": []
+        },
+        "posts": {
+          "state": "pass",
+          "count": 30,
+          "ms": 580,
+          "events": [
+            {
+              "host": "www.1tamilblasters.blog",
+              "status": 200
+            }
+          ]
+        },
+        "search": {
+          "state": "pass",
+          "count": 3,
+          "ms": 7221,
+          "events": [
+            {
+              "host": "www.1tamilblasters.blog",
+              "status": 200
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "1tamilmv",
+      "title": "Sandakari (2026)",
+      "operations": {
+        "catalog": {
+          "state": "pass",
+          "count": 5,
+          "ms": 7,
+          "events": []
+        },
+        "posts": {
+          "state": "pass",
+          "count": 189,
+          "ms": 710,
+          "events": [
+            {
+              "host": "www.1tamilmv.io",
+              "status": 200
+            }
+          ]
+        },
+        "search": {
+          "state": "pass",
+          "count": 25,
+          "ms": 794,
+          "events": [
+            {
+              "host": "www.1tamilmv.io",
+              "status": 200
+            },
+            {
+              "host": "www.1tamilmv.io",
+              "status": 200
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "Joya9tv",
+      "operations": {
+        "catalog": {
+          "state": "pass",
+          "count": 2,
+          "ms": 4,
+          "events": []
+        },
+        "posts": {
+          "state": "fail",
+          "error": "Joya9TV posts failed: fetch failed",
+          "ms": 10568,
+          "events": []
+        },
+        "search": {
+          "state": "fail",
+          "error": "Joya9TV search posts failed: fetch failed",
+          "ms": 10565,
+          "events": []
+        }
+      }
+    },
+    {
+      "id": "animesalt",
+      "title": "JoJo's Bizarre Adventure",
+      "operations": {
+        "catalog": {
+          "state": "pass",
+          "count": 3,
+          "ms": 0,
+          "events": []
+        },
+        "posts": {
+          "state": "pass",
+          "count": 19,
+          "ms": 1236,
+          "events": [
+            {
+              "host": "animesalt.in",
+              "status": 200
+            }
+          ]
+        },
+        "search": {
+          "state": "pass",
+          "count": 9,
+          "ms": 1634,
+          "events": [
+            {
+              "host": "animesalt.in",
+              "status": 200
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "animesub",
+      "title": "Steel Ball Run: JoJo no Kimyou na Bouken",
+      "operations": {
+        "meta": {
+          "state": "pass",
+          "count": 1,
+          "ms": 2710,
+          "events": [
+            {
+              "host": "kitsu.io",
+              "status": 200
+            },
+            {
+              "host": "anime-kitsu.strem.fun",
+              "status": 200
+            },
+            {
+              "host": "api.aniskip.com",
+              "status": 200
+            },
+            {
+              "host": "api.aniskip.com",
+              "status": 200
+            },
+            {
+              "host": "api.aniskip.com",
+              "status": 200
+            },
+            {
+              "host": "api.aniskip.com",
+              "status": 200
+            },
+            {
+              "host": "api.aniskip.com",
+              "status": 200
+            },
+            {
+              "host": "api.aniskip.com",
+              "code": "ERR_BAD_RESPONSE",
+              "status": 404
+            },
+            {
+              "host": "api.aniskip.com",
+              "code": "ERR_BAD_RESPONSE",
+              "status": 404
+            },
+            {
+              "host": "api.aniskip.com",
+              "status": 200
+            },
+            {
+              "host": "api.aniskip.com",
+              "status": 200
+            },
+            {
+              "host": "api.theintrodb.org",
+              "status": 200
+            },
+            {
+              "host": "api.theintrodb.org",
+              "status": 200
+            }
+          ]
+        },
+        "episodes": {
+          "state": "skipped"
+        },
+        "stream": {
+          "state": "pass",
+          "count": 35,
+          "ms": 1736,
+          "events": [
+            {
+              "host": "animesub.duckdns.org",
+              "status": 200
+            },
+            {
+              "host": "torrentio.strem.fun",
+              "status": 200
+            }
+          ]
+        },
+        "catalog": {
+          "state": "pass",
+          "count": 4,
+          "ms": 0,
+          "events": []
+        },
+        "posts": {
+          "state": "pass",
+          "count": 50,
+          "ms": 826,
+          "events": [
+            {
+              "host": "myanimelist.net",
+              "status": 200
+            }
+          ]
+        },
+        "search": {
+          "state": "pass",
+          "count": 9,
+          "ms": 2121,
+          "events": [
+            {
+              "host": "myanimelist.net",
+              "status": 200
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "disneyPlus",
+      "state": "no standalone Android bundle"
+    },
+    {
+      "id": "drive",
+      "title": "Avengers Endgame: Encore (2026) IMAX [Hindi – English – Tamil – Telugu] 480p | 720p | 1080p | 2160p 4K SDR [x264/ESubs] | Full Movie",
+      "operations": {
+        "meta": {
+          "state": "pass",
+          "count": 1,
+          "ms": 937,
+          "events": [
+            {
+              "host": "new3.moviesdrive.cyou",
+              "status": 200
+            },
+            {
+              "host": "v3-cinemeta.strem.io",
+              "status": 200
+            }
+          ]
+        },
+        "episodes": {
+          "state": "skipped"
+        },
+        "stream": {
+          "state": "empty",
+          "count": 0,
+          "ms": 1854,
+          "events": [
+            {
+              "host": "playdrive.vip",
+              "status": 200
+            },
+            {
+              "host": "playdrive.vip",
+              "status": 200
+            },
+            {
+              "host": "playdrive.vip",
+              "status": 200
+            }
+          ]
+        },
+        "catalog": {
+          "state": "pass",
+          "count": 7,
+          "ms": 0,
+          "events": []
+        },
+        "posts": {
+          "state": "pass",
+          "count": 26,
+          "ms": 1508,
+          "events": []
+        },
+        "search": {
+          "state": "pass",
+          "count": 10,
+          "ms": 2567,
+          "events": []
+        }
+      }
+    },
+    {
+      "id": "dvdplay",
+      "title": "Ranabaali [HDRip]",
+      "operations": {
+        "meta": {
+          "state": "pass",
+          "count": 1,
+          "ms": 496,
+          "events": [
+            {
+              "host": "dvdplay.singles",
+              "status": 200
+            }
+          ]
+        },
+        "episodes": {
+          "state": "skipped"
+        },
+        "stream": {
+          "state": "pass",
+          "count": 3,
+          "ms": 3773,
+          "events": [
+            {
+              "host": "dvdplay.singles",
+              "status": 200
+            },
+            {
+              "host": "hubcloud.pw",
+              "status": 200
+            },
+            {
+              "host": "gamerxyt.com",
+              "status": 200
+            },
+            {
+              "host": "floral-forest-499c.ceromig960.workers.dev",
+              "code": "ERR_BAD_RESPONSE",
+              "status": 403
+            }
+          ]
+        },
+        "catalog": {
+          "state": "pass",
+          "count": 5,
+          "ms": 0,
+          "events": []
+        },
+        "posts": {
+          "state": "pass",
+          "count": 10,
+          "ms": 559,
+          "events": [
+            {
+              "host": "dvdplay.singles",
+              "status": 200
+            }
+          ]
+        },
+        "search": {
+          "state": "fail",
+          "error": "DVDPlay search failed: Search is unavailable. Browse the categories.",
+          "ms": 2,
+          "events": []
+        }
+      }
+    },
+    {
+      "id": "gokuHD",
+      "operations": {
+        "catalog": {
+          "state": "pass",
+          "count": 5,
+          "ms": 0,
+          "events": []
+        },
+        "posts": {
+          "state": "fail",
+          "error": "fetch failed",
+          "ms": 10621,
+          "events": [
+            {
+              "code": "UND_ERR_CONNECT_TIMEOUT"
+            }
+          ]
+        },
+        "search": {
+          "state": "fail",
+          "error": "The operation was aborted due to timeout",
+          "ms": 12333,
+          "events": [
+            {
+              "host": "search.pingora.fyi",
+              "code": "ERR_BAD_RESPONSE",
+              "status": 403
+            },
+            {
+              "code": 23
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "hdmovieslife",
+      "title": "Avengers Endgame : Encore",
+      "operations": {
+        "catalog": {
+          "state": "pass",
+          "count": 6,
+          "ms": 0,
+          "events": []
+        },
+        "posts": {
+          "state": "pass",
+          "count": 18,
+          "ms": 788,
+          "events": [
+            {
+              "host": "hdmovies.life",
+              "status": 200
+            }
+          ]
+        },
+        "search": {
+          "state": "empty",
+          "count": 0,
+          "ms": 811,
+          "events": [
+            {
+              "host": "hdmovies.life",
+              "status": 200
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "hiAnime",
+      "operations": {
+        "catalog": {
+          "state": "pass",
+          "count": 4,
+          "ms": 0,
+          "events": []
+        },
+        "posts": {
+          "state": "empty",
+          "count": 0,
+          "ms": 7,
+          "events": [
+            {
+              "code": "ERR_INVALID_URL"
+            }
+          ]
+        },
+        "search": {
+          "state": "empty",
+          "count": 0,
+          "ms": 6,
+          "events": [
+            {
+              "code": "ERR_INVALID_URL"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "hotstar",
+      "state": "no standalone Android bundle"
+    },
+    {
+      "id": "kissKh",
+      "title": "Blossom in Darkness",
+      "operations": {
+        "meta": {
+          "state": "pass",
+          "count": 1,
+          "ms": 286,
+          "events": [
+            {
+              "host": "kisskh.is",
+              "status": 200
+            }
+          ]
+        },
+        "episodes": {
+          "state": "skipped"
+        },
+        "stream": {
+          "state": "pass",
+          "count": 1,
+          "ms": 1150,
+          "events": [
+            {
+              "host": "kisskh.is",
+              "status": 200
+            },
+            {
+              "host": "kisskh.is",
+              "status": 200
+            },
+            {
+              "host": "kisskh.is",
+              "status": 200
+            },
+            {
+              "host": "kisskh.is",
+              "status": 200
+            },
+            {
+              "host": "kisskh.is",
+              "status": 200
+            },
+            {
+              "code": "ERR_INVALID_URL"
+            }
+          ]
+        },
+        "catalog": {
+          "state": "pass",
+          "count": 4,
+          "ms": 0,
+          "events": []
+        },
+        "posts": {
+          "state": "pass",
+          "count": 10,
+          "ms": 461,
+          "events": [
+            {
+              "host": "kisskh.is",
+              "status": 200
+            }
+          ]
+        },
+        "search": {
+          "state": "pass",
+          "count": 2,
+          "ms": 299,
+          "events": [
+            {
+              "host": "kisskh.is",
+              "status": 200
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "kmMovies",
+      "title": "The Beast",
+      "operations": {
+        "meta": {
+          "state": "pass",
+          "count": 1,
+          "ms": 959,
+          "events": [
+            {
+              "host": "kmmovies.beer",
+              "status": 200
+            },
+            {
+              "host": "v3-cinemeta.strem.io",
+              "status": 200
+            }
+          ]
+        },
+        "episodes": {
+          "state": "skipped"
+        },
+        "stream": {
+          "state": "empty",
+          "count": 0,
+          "ms": 8137,
+          "events": [
+            {
+              "host": "one.kmcloud.lol",
+              "status": 200
+            },
+            {
+              "host": "z1.kmphotos.cv",
+              "status": 200
+            },
+            {
+              "host": "z1.kmphotos.cv",
+              "status": 200
+            },
+            {
+              "code": "ERR_TLS_CERT_ALTNAME_INVALID"
+            }
+          ]
+        },
+        "catalog": {
+          "state": "pass",
+          "count": 6,
+          "ms": 0,
+          "events": []
+        },
+        "posts": {
+          "state": "pass",
+          "count": 35,
+          "ms": 214,
+          "events": [
+            {
+              "host": "kmmovies.beer",
+              "status": 200
+            }
+          ]
+        },
+        "search": {
+          "state": "pass",
+          "count": 11,
+          "ms": 893,
+          "events": [
+            {
+              "host": "kmmovies.beer",
+              "status": 200
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "luxMovies",
+      "title": "The Great Indian Kapil Show (Season 5)",
+      "operations": {
+        "catalog": {
+          "state": "pass",
+          "count": 9,
+          "ms": 0,
+          "events": []
+        },
+        "posts": {
+          "state": "pass",
+          "count": 22,
+          "ms": 668,
+          "events": []
+        },
+        "search": {
+          "state": "empty",
+          "count": 0,
+          "ms": 1536,
+          "events": [
+            {
+              "host": "rogmovies.autos",
+              "status": 200
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "marvel",
+      "state": "no standalone Android bundle"
+    },
+    {
+      "id": "movies4u",
+      "operations": {
+        "catalog": {
+          "state": "pass",
+          "count": 2,
+          "ms": 0,
+          "events": []
+        },
+        "posts": {
+          "state": "fail",
+          "error": "Movies4u posts failed: fetch failed",
+          "ms": 10564,
+          "events": [
+            {
+              "code": "UND_ERR_CONNECT_TIMEOUT"
+            }
+          ]
+        },
+        "search": {
+          "state": "fail",
+          "error": "Movies4u search posts failed: The operation was aborted due to timeout",
+          "ms": 12017,
+          "events": [
+            {
+              "code": 23
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "moviesda",
+      "title": "Maaya Oviyan (2026)",
+      "operations": {
+        "catalog": {
+          "state": "pass",
+          "count": 6,
+          "ms": 1,
+          "events": []
+        },
+        "posts": {
+          "state": "pass",
+          "count": 20,
+          "ms": 634,
+          "events": []
+        },
+        "search": {
+          "state": "empty",
+          "count": 0,
+          "ms": 1289,
+          "events": []
+        }
+      }
+    },
+    {
+      "id": "movieswood",
+      "title": "Ranabaali (2026)",
+      "operations": {
+        "catalog": {
+          "state": "pass",
+          "count": 5,
+          "ms": 0,
+          "events": []
+        },
+        "posts": {
+          "state": "pass",
+          "count": 9,
+          "ms": 458,
+          "events": [
+            {
+              "host": "movieswood.cloud",
+              "status": 200
+            }
+          ]
+        },
+        "search": {
+          "state": "fail",
+          "error": "MoviesWood search failed: Search is unavailable. Browse the categories.",
+          "ms": 1,
+          "events": []
+        }
+      }
+    },
+    {
+      "id": "multi",
+      "title": "Mononoke the Movie: Chapter 2 - The Ashes of Rage",
+      "operations": {
+        "meta": {
+          "state": "pass",
+          "count": 1,
+          "ms": 586,
+          "events": [
+            {
+              "host": "m1.multimovies.courses",
+              "status": 200
+            }
+          ]
+        },
+        "episodes": {
+          "state": "empty",
+          "count": 0,
+          "ms": 544,
+          "events": [
+            {
+              "host": "m1.multimovies.courses",
+              "status": 200
+            }
+          ]
+        },
+        "stream": {
+          "state": "pass",
+          "count": 5,
+          "ms": 3525,
+          "events": [
+            {
+              "host": "m1.multimovies.courses",
+              "status": 200
+            },
+            {
+              "host": "raw.githubusercontent.com",
+              "code": "ERR_BAD_RESPONSE",
+              "status": 404
+            },
+            {
+              "host": "streams.iqsmartgames.com",
+              "status": 200
+            },
+            {
+              "host": "rozgarlelo.modiplay.xyz",
+              "status": 200
+            },
+            {
+              "host": "streams.iqsmartgames.com",
+              "status": 200
+            },
+            {
+              "host": "raw.githubusercontent.com",
+              "code": "ERR_BAD_RESPONSE",
+              "status": 404
+            },
+            {
+              "host": "embed.filmu.in",
+              "code": "ERR_BAD_RESPONSE",
+              "status": 404
+            },
+            {
+              "host": "api.movy.lol",
+              "status": 404
+            },
+            {
+              "host": "raw.githubusercontent.com",
+              "code": "ERR_BAD_RESPONSE",
+              "status": 404
+            },
+            {
+              "host": "pro.iqsmartgames.com",
+              "status": 200
+            },
+            {
+              "host": "raw.githubusercontent.com",
+              "code": "ERR_BAD_RESPONSE",
+              "status": 404
+            },
+            {
+              "host": "scraper.vidbolt.xyz",
+              "status": 404
+            },
+            {
+              "host": "scraper.vidbolt.xyz",
+              "code": "ERR_BAD_RESPONSE",
+              "status": 502
+            },
+            {
+              "host": "scraper.vidbolt.xyz",
+              "status": 404
+            },
+            {
+              "host": "morencius.com",
+              "status": 200
+            },
+            {
+              "host": "hanerix.com",
+              "status": 200
+            }
+          ]
+        },
+        "catalog": {
+          "state": "pass",
+          "count": 13,
+          "ms": 0,
+          "events": []
+        },
+        "posts": {
+          "state": "pass",
+          "count": 30,
+          "ms": 845,
+          "events": [
+            {
+              "host": "m1.multimovies.courses",
+              "status": 200
+            }
+          ]
+        },
+        "search": {
+          "state": "pass",
+          "count": 23,
+          "ms": 721,
+          "events": [
+            {
+              "host": "m1.multimovies.courses",
+              "status": 200
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "mxplayer",
+      "title": "Ki & Ka",
+      "operations": {
+        "meta": {
+          "state": "empty",
+          "count": 0,
+          "ms": 1066,
+          "events": [
+            {
+              "host": "www.primevideo.com",
+              "status": 200
+            }
+          ]
+        },
+        "episodes": {
+          "state": "pass",
+          "count": 1,
+          "ms": 2,
+          "events": []
+        },
+        "stream": {
+          "state": "pass",
+          "count": 4,
+          "ms": 251,
+          "events": [
+            {
+              "host": "api.mxplayer.in",
+              "status": 200
+            }
+          ]
+        },
+        "catalog": {
+          "state": "pass",
+          "count": 5,
+          "ms": 0,
+          "events": []
+        },
+        "posts": {
+          "state": "pass",
+          "count": 20,
+          "ms": 2168,
+          "events": [
+            {
+              "host": "www.primevideo.com",
+              "status": 200
+            },
+            {
+              "host": "api.mxplayer.in",
+              "status": 200
+            }
+          ]
+        },
+        "search": {
+          "state": "pass",
+          "count": 10,
+          "ms": 2014,
+          "events": [
+            {
+              "host": "www.primevideo.com",
+              "status": 200
+            },
+            {
+              "host": "api.mxplayer.in",
+              "status": 200
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "netflix",
+      "state": "no standalone Android bundle"
+    },
+    {
+      "id": "pixar",
+      "state": "no standalone Android bundle"
+    },
+    {
+      "id": "primeVideo",
+      "state": "no standalone Android bundle"
+    },
+    {
+      "id": "showbox",
+      "title": "The Batman",
+      "operations": {
+        "meta": {
+          "state": "pass",
+          "count": 1,
+          "ms": 1550,
+          "events": [
+            {
+              "host": "www.showbox.media",
+              "status": 200
+            },
+            {
+              "host": "www.showbox.media",
+              "status": 200
+            },
+            {
+              "host": "www.febbox.com",
+              "status": 200
+            }
+          ]
+        },
+        "episodes": {
+          "state": "pass",
+          "count": 6,
+          "ms": 307,
+          "events": [
+            {
+              "host": "www.febbox.com",
+              "status": 200
+            }
+          ]
+        },
+        "stream": {
+          "state": "fail",
+          "error": "ShowBox stream failed: HTTP 404 | URL [url] | Upstream request failed.",
+          "ms": 460,
+          "events": [
+            {
+              "host": "feb.8man.workers.dev",
+              "code": "ERR_BAD_RESPONSE",
+              "status": 404
+            }
+          ]
+        },
+        "catalog": {
+          "state": "pass",
+          "count": 3,
+          "ms": 0,
+          "events": []
+        },
+        "posts": {
+          "state": "fail",
+          "error": "fetch failed",
+          "ms": 2121,
+          "events": [
+            {
+              "code": "ECONNRESET"
+            },
+            {
+              "code": "ECONNRESET"
+            },
+            {
+              "code": "ECONNRESET"
+            }
+          ]
+        },
+        "search": {
+          "state": "pass",
+          "count": 32,
+          "ms": 2660,
+          "events": [
+            {
+              "code": "ECONNRESET"
+            },
+            {
+              "host": "www.showbox.media",
+              "status": 200
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "starWars",
+      "state": "no standalone Android bundle"
+    },
+    {
+      "id": "torrentio",
+      "title": "Heart of the Beast",
+      "operations": {
+        "meta": {
+          "state": "pass",
+          "count": 1,
+          "ms": 73,
+          "events": [
+            {
+              "host": "v3-cinemeta.strem.io",
+              "status": 200
+            }
+          ]
+        },
+        "episodes": {
+          "state": "skipped"
+        },
+        "stream": {
+          "state": "pass",
+          "count": 218,
+          "ms": 293,
+          "events": [
+            {
+              "host": "torrentio.strem.fun",
+              "status": 200
+            }
+          ]
+        },
+        "catalog": {
+          "state": "pass",
+          "count": 4,
+          "ms": 0,
+          "events": []
+        },
+        "posts": {
+          "state": "pass",
+          "count": 50,
+          "ms": 235,
+          "events": [
+            {
+              "host": "cinemeta-catalogs.strem.io",
+              "status": 200
+            }
+          ]
+        },
+        "search": {
+          "state": "pass",
+          "count": 40,
+          "ms": 236,
+          "events": [
+            {
+              "host": "v3-cinemeta.strem.io",
+              "status": 200
+            },
+            {
+              "host": "v3-cinemeta.strem.io",
+              "status": 200
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "uhd",
+      "operations": {
+        "catalog": {
+          "state": "pass",
+          "count": 9,
+          "ms": 0,
+          "events": []
+        },
+        "posts": {
+          "state": "fail",
+          "error": "UHDMovies posts failed: fetch failed",
+          "ms": 10329,
+          "events": [
+            {
+              "code": "UND_ERR_CONNECT_TIMEOUT"
+            }
+          ]
+        },
+        "search": {
+          "state": "fail",
+          "error": "UHDMovies search posts failed: The operation was aborted due to timeout",
+          "ms": 12012,
+          "events": [
+            {
+              "code": 23
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "uniquestream",
+      "operations": {
+        "catalog": {
+          "state": "pass",
+          "count": 3,
+          "ms": 1,
+          "events": []
+        },
+        "posts": {
+          "state": "empty",
+          "count": 0,
+          "ms": 10196,
+          "events": [
+            {
+              "code": "UND_ERR_CONNECT_TIMEOUT"
+            }
+          ]
+        },
+        "search": {
+          "state": "empty",
+          "count": 0,
+          "ms": 12008,
+          "events": [
+            {
+              "code": 23
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "zeefliz",
+      "operations": {
+        "catalog": {
+          "state": "pass",
+          "count": 2,
+          "ms": 0,
+          "events": []
+        },
+        "posts": {
+          "state": "fail",
+          "error": "ZeeFliz posts failed: Invalid URL",
+          "ms": 7,
+          "events": [
+            {
+              "code": "ERR_INVALID_URL"
+            }
+          ]
+        },
+        "search": {
+          "state": "fail",
+          "error": "ZeeFliz search posts failed: Invalid URL",
+          "ms": 5,
+          "events": [
+            {
+              "code": "ERR_INVALID_URL"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "disneyMirror",
+      "title": "Batman: Knightfall Part 1: Knightfall",
+      "operations": {
+        "catalog": {
+          "state": "pass",
+          "count": 4,
+          "ms": 0,
+          "events": []
+        },
+        "posts": {
+          "state": "empty",
+          "count": 0,
+          "ms": 1615,
+          "events": [
+            {
+              "host": "mobiledetects.com",
+              "status": 200
+            },
+            {
+              "host": "tv.imgcdn.kim",
+              "status": 200
+            }
+          ]
+        },
+        "search": {
+          "state": "pass",
+          "count": 8,
+          "ms": 1755,
+          "events": [
+            {
+              "host": "mobiledetects.com",
+              "status": 200
+            },
+            {
+              "host": "tv.imgcdn.kim",
+              "status": 200
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "netflixMirror",
+      "title": "Batman Ninja",
+      "operations": {
+        "catalog": {
+          "state": "pass",
+          "count": 4,
+          "ms": 0,
+          "events": []
+        },
+        "posts": {
+          "state": "empty",
+          "count": 0,
+          "ms": 1113,
+          "events": [
+            {
+              "host": "mobiledetects.com",
+              "status": 200
+            },
+            {
+              "host": "tv.imgcdn.kim",
+              "status": 200
+            }
+          ]
+        },
+        "search": {
+          "state": "pass",
+          "count": 5,
+          "ms": 1108,
+          "events": [
+            {
+              "host": "mobiledetects.com",
+              "status": 200
+            },
+            {
+              "host": "tv.imgcdn.kim",
+              "status": 200
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "primeMirror",
+      "title": "Batman",
+      "operations": {
+        "catalog": {
+          "state": "pass",
+          "count": 4,
+          "ms": 0,
+          "events": []
+        },
+        "posts": {
+          "state": "empty",
+          "count": 0,
+          "ms": 700,
+          "events": [
+            {
+              "host": "mobiledetects.com",
+              "status": 200
+            },
+            {
+              "host": "tv.imgcdn.kim",
+              "status": 200
+            }
+          ]
+        },
+        "search": {
+          "state": "pass",
+          "count": 13,
+          "ms": 637,
+          "events": [
+            {
+              "host": "mobiledetects.com",
+              "status": 200
+            },
+            {
+              "host": "tv.imgcdn.kim",
+              "status": 200
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "youtube",
+      "title": "SCENE Meme Review - Today Trending Troll #surya #nazriya",
+      "operations": {
+        "catalog": {
+          "state": "pass",
+          "count": 9,
+          "ms": 0,
+          "events": []
+        },
+        "posts": {
+          "state": "pass",
+          "count": 2,
+          "ms": 1399,
+          "events": [
+            {
+              "host": "www.youtube.com",
+              "status": 200
+            }
+          ]
+        },
+        "search": {
+          "state": "pass",
+          "count": 24,
+          "ms": 1326,
+          "events": [
+            {
+              "host": "www.youtube.com",
+              "status": 200
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "moviesApi",
+      "state": "no standalone Android bundle"
+    }
+  ]
+}
