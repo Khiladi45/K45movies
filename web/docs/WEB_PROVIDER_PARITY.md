@@ -73,6 +73,20 @@ Read each cell as before → after. P means populated response, E means empty re
 | youtube | F → F | — → — | F → F | — → — | — → — | — → — |
 | moviesApi | F → F | — → — | F → F | — → — | — → — | — → — |
 
+### Seven operation-deadline providers
+
+| Provider | Catalog before / after | Search before / after |
+| --- | ---: | ---: |
+| disneyPlus | 25046 / 25343 ms | 25014 / 25008 ms |
+| hotstar | 25043 / 25348 ms | 25011 / 25006 ms |
+| marvel | 25140 / 25567 ms | 25008 / 25015 ms |
+| netflix | 25059 / 25350 ms | 25007 / 25015 ms |
+| pixar | 25045 / 25318 ms | 25014 / 25007 ms |
+| primeVideo | 25157 / 25772 ms | 25016 / 25006 ms |
+| starWars | 25043 / 25391 ms | 25018 / 25016 ms |
+
+All 28 operations above returned HTTP 504. Catalog timings include registry and bundle lookup.
+
 ### Remaining causes and limits
 
 | Provider(s) | Evidence |
@@ -130,4 +144,10 @@ For the Android-bundle comparison, use a sibling K45movies-api checkout with API
 
 ~~~sh
 node --conditions=react-server --import tsx scripts/provider-smoke/compare-android.mts docs/web-phase-2/android-comparison.json
+~~~
+
+To measure the deployed host rather than the local provider runtime, use the public website origin. This mode uses HTTP for every operation and includes the server's structured error response. Internal VM diagnostics are available in the in-process mode.
+
+~~~sh
+node --import tsx scripts/provider-smoke/run.mts deployed-smoke.json --url https://YOUR_WEBSITE_ORIGIN
 ~~~

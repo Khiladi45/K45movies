@@ -4,8 +4,6 @@ import { execFile } from "node:child_process";
 import { writeFile } from "node:fs/promises";
 import { promisify } from "node:util";
 import { Script } from "node:vm";
-import { GET } from "../../src/app/api/proxy/providers/route";
-import { GET as mediaGET } from "../../src/app/api/proxy/media/[token]/route";
 import type { Category, Episode, Post, Provider, ProviderDetail, ProviderIssue, Source } from "../../src/lib/catalog-types";
 
 type Trace = { requests: number; statuses: Record<string, number>; errors: Set<string>; providerLogs: number; webViewCalls: number };
@@ -77,31 +75,50 @@ Script.prototype.runInContext = function (context, options) {
   }
 };
 
-const [output, ...ids] = process.argv.slice(2);
-if (!output) throw new Error("Usage: node --conditions=react-server --import tsx scripts/provider-smoke/run.mts OUTPUT.json [provider ...]");
+const args = process.argv.slice(2);
+const flag = args.indexOf("--url");
+const remote = flag < 0 ? undefined : new URL(args.splice(flag, 2)[1] ?? "");
+if (remote && (!["https:", "http:"].includes(remote.protocol) || remote.username || remote.password || remote.search || remote.hash)) {
+  throw new Error("--url must be the HTTP(S) origin of the deployed website.");
+}
+const localRoutes = remote ? undefined : await Promise.all([
+  import("../../src/app/api/proxy/providers/route"), import("../../src/app/api/proxy/media/[token]/route"),
+]);
+const [output, ...ids] = args;
+if (!output) throw new Error("Usage: node --conditions=react-server --import tsx scripts/provider-smoke/run.mts OUTPUT.json [--url WEBSITE_ORIGIN] [provider ...]");
 const query = process.env.K45_SMOKE_QUERY || "Batman";
-const baseUrl = process.env.K45_SMOKE_SITE_URL;
+const baseUrl = remote?.origin || process.env.K45_SMOKE_SITE_URL;
+let clientCookie: string | undefined;
 const supplementalIds = ["disneyMirror", "netflixMirror", "primeMirror", "youtube", "moviesApi"];
 const started = new Date().toISOString();
 
 async function call<T>(params: Record<string, string>) {
   const store: Trace = { requests: 0, statuses: {}, errors: new Set(), providerLogs: 0, webViewCalls: 0 };
-  const url = new URL("/api/proxy/providers", "http://localhost");
+  const url = new URL("/api/proxy/providers", remote?.origin || "http://localhost");
   url.search = new URLSearchParams(params).toString();
   const begin = performance.now();
-  const response = await trace.run(store, () => GET(new Request(url, {
-    signal: AbortSignal.timeout(65_000),
-  })));
-  const data = await response.json();
+  let response: Response;
+  try {
+    const request = new Request(url, {
+      signal: AbortSignal.timeout(65_000), redirect: "error",
+      headers: clientCookie ? { Cookie: clientCookie } : undefined,
+    });
+    response = localRoutes ? await trace.run(store, () => localRoutes[0].GET(request)) : await fetch(request);
+    clientCookie ??= response.headers.getSetCookie().find((item) => item.startsWith("k45-provider-client="))?.split(";")[0];
+  } catch (error) {
+    return { data: undefined, outcome: { state: "fail", ms: Math.round(performance.now() - begin), error: safe(error) } satisfies Outcome };
+  }
+  const data = await response.json().catch(() => null);
+  const usable = response.ok && data !== null;
   const count = Array.isArray(data) ? data.length : undefined;
   const outcome: Outcome = {
-    state: response.ok ? count === 0 ? "empty" : "pass" : "fail",
+    state: usable ? count === 0 ? "empty" : "pass" : "fail",
     ms: Math.round(performance.now() - begin), http: response.status, count,
-    error: response.ok ? undefined : safe(data.error),
-    details: response.ok ? undefined : data.details,
-    trace: { ...store, errors: [...store.errors] },
+    error: usable ? undefined : safe(data?.error ?? "Server returned a non-JSON response."),
+    details: usable ? undefined : data?.details,
+    trace: localRoutes ? { ...store, errors: [...store.errors] } : undefined,
   };
-  return { data: response.ok ? data as T : undefined, outcome };
+  return { data: usable ? data as T : undefined, outcome };
 }
 
 const manifest = await call<Provider[]>({ op: "manifest" });
@@ -119,7 +136,7 @@ async function media(source: Source) {
   try {
     const response = baseUrl
       ? await fetch(url, { headers, signal })
-      : await mediaGET(new Request(url, { headers, signal }), { params: Promise.resolve({ token: url.pathname.split("/").at(-1)! }) });
+      : await localRoutes![1].GET(new Request(url, { headers, signal }), { params: Promise.resolve({ token: url.pathname.split("/").at(-1)! }) });
     const reader = response.body?.getReader();
     const prefix = (await reader?.read())?.value?.slice(0, 4096) ?? new Uint8Array();
     await reader?.cancel();
@@ -186,4 +203,4 @@ await Promise.all(Array.from({ length: 4 }, async () => {
     rows[index] = await smoke(providerIds[index]);
   }
 }));
-await writeFile(output, JSON.stringify({ started, finished: new Date().toISOString(), query, manifest: manifest.outcome, manifestIds, manifestSources: manifest.data.map(({ id, bundleSource }) => ({ id, bundleSource })), rows }, null, 2) + "\n");
+await writeFile(output, JSON.stringify({ started, target: remote?.origin ?? "in-process", finished: new Date().toISOString(), query, manifest: manifest.outcome, manifestIds, manifestSources: manifest.data.map(({ id, bundleSource }) => ({ id, bundleSource })), rows }, null, 2) + "\n");
