@@ -1,0 +1,229 @@
+// GENERATED FILE — do not edit by hand.
+// Regenerate with: npm run build:providers
+//
+// Metro resolves require() statically, so `require(`./bundles/${id}.js`)` is
+// impossible. Every provider therefore gets a literal require, wrapped in an
+// arrow function so its module factory only runs the first time it is used.
+
+const PROVIDERS = [
+  {
+    id: "1flex",
+    modules: ["catalog","posts","meta","stream","episodes"],
+    load: () => require("./bundles/1flex.js"),
+  },
+  {
+    id: "1tamilblasters",
+    modules: ["catalog","posts","meta","stream","episodes"],
+    load: () => require("./bundles/1tamilblasters.js"),
+  },
+  {
+    id: "1tamilmv",
+    modules: ["catalog","posts","meta","stream","episodes"],
+    load: () => require("./bundles/1tamilmv.js"),
+  },
+  {
+    id: "4khdhub",
+    modules: ["catalog","posts","meta","stream"],
+    load: () => require("./bundles/4khdhub.js"),
+  },
+  {
+    id: "Joya9tv",
+    modules: ["catalog","posts","meta","stream","episodes"],
+    load: () => require("./bundles/Joya9tv.js"),
+  },
+  {
+    id: "anikoto",
+    modules: ["catalog","posts","meta","stream"],
+    load: () => require("./bundles/anikoto.js"),
+  },
+  {
+    id: "animesalt",
+    modules: ["catalog","posts","meta","stream","episodes"],
+    load: () => require("./bundles/animesalt.js"),
+  },
+  {
+    id: "animesub",
+    modules: ["catalog","posts","meta","stream"],
+    load: () => require("./bundles/animesub.js"),
+  },
+  {
+    id: "animeworld",
+    modules: ["catalog","posts","meta","stream","episodes"],
+    load: () => require("./bundles/animeworld.js"),
+  },
+  {
+    id: "autoEmbed",
+    modules: ["catalog","posts","meta","stream"],
+    load: () => require("./bundles/autoEmbed.js"),
+  },
+  {
+    id: "castle",
+    modules: ["catalog","posts","meta","stream","episodes"],
+    load: () => require("./bundles/castle.js"),
+  },
+  {
+    id: "disneyMirror",
+    modules: ["catalog","posts","meta","stream","episodes"],
+    load: () => require("./bundles/disneyMirror.js"),
+  },
+  {
+    id: "drive",
+    modules: ["catalog","posts","meta","stream","episodes"],
+    load: () => require("./bundles/drive.js"),
+  },
+  {
+    id: "dvdplay",
+    modules: ["catalog","posts","meta","stream","episodes"],
+    load: () => require("./bundles/dvdplay.js"),
+  },
+  {
+    id: "gokuHD",
+    modules: ["catalog","posts","meta","stream","episodes"],
+    load: () => require("./bundles/gokuHD.js"),
+  },
+  {
+    id: "hdhub4u",
+    modules: ["catalog","posts","meta","stream"],
+    load: () => require("./bundles/hdhub4u.js"),
+  },
+  {
+    id: "hdmovieslife",
+    modules: ["catalog","posts","meta","stream","episodes"],
+    load: () => require("./bundles/hdmovieslife.js"),
+  },
+  {
+    id: "hiAnime",
+    modules: ["catalog","posts","meta","stream"],
+    load: () => require("./bundles/hiAnime.js"),
+  },
+  {
+    id: "kickAssAnime",
+    modules: ["catalog","posts","meta","stream"],
+    load: () => require("./bundles/kickAssAnime.js"),
+  },
+  {
+    id: "kissKh",
+    modules: ["catalog","posts","meta","stream"],
+    load: () => require("./bundles/kissKh.js"),
+  },
+  {
+    id: "kmMovies",
+    modules: ["catalog","posts","meta","stream","episodes"],
+    load: () => require("./bundles/kmMovies.js"),
+  },
+  {
+    id: "luxMovies",
+    modules: ["catalog","posts","meta","stream","episodes"],
+    load: () => require("./bundles/luxMovies.js"),
+  },
+  {
+    id: "movieBoxWeb",
+    modules: ["catalog","posts","meta","stream","episodes"],
+    load: () => require("./bundles/movieBoxWeb.js"),
+  },
+  {
+    id: "movielinkdb",
+    modules: ["catalog","posts","meta","stream","episodes"],
+    load: () => require("./bundles/movielinkdb.js"),
+  },
+  {
+    id: "movies4u",
+    modules: ["catalog","posts","meta","stream","episodes"],
+    load: () => require("./bundles/movies4u.js"),
+  },
+  {
+    id: "moviesda",
+    modules: ["catalog","posts","meta","stream","episodes"],
+    load: () => require("./bundles/moviesda.js"),
+  },
+  {
+    id: "movieswood",
+    modules: ["catalog","posts","meta","stream","episodes"],
+    load: () => require("./bundles/movieswood.js"),
+  },
+  {
+    id: "moviezwap",
+    modules: ["catalog","posts","meta","stream","episodes"],
+    load: () => require("./bundles/moviezwap.js"),
+  },
+  {
+    id: "multi",
+    modules: ["catalog","posts","meta","stream","episodes"],
+    load: () => require("./bundles/multi.js"),
+  },
+  {
+    id: "mxplayer",
+    modules: ["catalog","posts","meta","stream","episodes"],
+    load: () => require("./bundles/mxplayer.js"),
+  },
+  {
+    id: "netflixMirror",
+    modules: ["catalog","posts","meta","stream","episodes"],
+    load: () => require("./bundles/netflixMirror.js"),
+  },
+  {
+    id: "primeMirror",
+    modules: ["catalog","posts","meta","stream","episodes"],
+    load: () => require("./bundles/primeMirror.js"),
+  },
+  {
+    id: "showbox",
+    modules: ["catalog","posts","meta","stream","episodes"],
+    load: () => require("./bundles/showbox.js"),
+  },
+  {
+    id: "torrentio",
+    modules: ["catalog","posts","meta","stream"],
+    load: () => require("./bundles/torrentio.js"),
+  },
+  {
+    id: "uhd",
+    modules: ["catalog","posts","meta","stream"],
+    load: () => require("./bundles/uhd.js"),
+  },
+  {
+    id: "uniquestream",
+    modules: ["catalog","posts","meta","stream","episodes"],
+    load: () => require("./bundles/uniquestream.js"),
+  },
+  {
+    id: "vega",
+    modules: ["catalog","posts","meta","stream","episodes"],
+    load: () => require("./bundles/vega.js"),
+  },
+  {
+    id: "youtube",
+    modules: ["catalog","posts","meta","stream"],
+    load: () => require("./bundles/youtube.js"),
+  },
+  {
+    id: "zeefliz",
+    modules: ["catalog","posts","meta","stream","episodes"],
+    load: () => require("./bundles/zeefliz.js"),
+  },
+];
+
+const BY_ID = new Map(PROVIDERS.map((provider) => [provider.id, provider]));
+
+function ids() {
+  return PROVIDERS.map((provider) => provider.id);
+}
+
+function has(id) {
+  return BY_ID.has(id);
+}
+
+function modulesOf(id) {
+  const provider = BY_ID.get(id);
+  return provider ? provider.modules.slice() : [];
+}
+
+function load(id) {
+  const provider = BY_ID.get(id);
+  if (!provider) {
+    throw new Error('Provider "' + id + '" is not in the static registry');
+  }
+  return provider.load();
+}
+
+module.exports = { ids, has, modulesOf, load };
