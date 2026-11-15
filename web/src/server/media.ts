@@ -10,9 +10,7 @@ function publicMediaUrl(value: string, base?: string) {
   } catch { return undefined; }
 }
 
-export function createMediaLink(value: string, rawHeaders: unknown, kind: MediaTarget["kind"] = "media", base?: string) {
-  const url = publicMediaUrl(value, base);
-  if (!url) return undefined;
+export function mediaHeaders(rawHeaders: unknown) {
   const headers: Record<string, string> = {};
   if (rawHeaders && typeof rawHeaders === "object") {
     for (const [key, value] of Object.entries(rawHeaders)) {
@@ -21,11 +19,18 @@ export function createMediaLink(value: string, rawHeaders: unknown, kind: MediaT
           typeof value === "string" && value.length < 3000 && !/[\r\n]/.test(value)) headers[name] = value;
     }
   }
+  return headers;
+}
+
+export function createMediaLink(value: string, rawHeaders: unknown, kind: MediaTarget["kind"] = "media", base?: string, format?: MediaTarget["format"]) {
+  const url = publicMediaUrl(value, base);
+  if (!url) return undefined;
+  const headers = mediaHeaders(rawHeaders);
   if (base && publicMediaUrl(base)?.origin !== url.origin) {
     delete headers.cookie;
     delete headers.authorization;
   }
-  return mediaUrl({ url: url.href, kind, origin: url.origin, headers, expires: Date.now() + 6 * 60 * 60_000 });
+  return mediaUrl({ url: url.href, kind, origin: url.origin, headers, format, expires: Date.now() + 6 * 60 * 60_000 });
 }
 
 export function rewritePlaylist(body: string, finalUrl: string, target: MediaTarget) {
@@ -35,7 +40,7 @@ export function rewritePlaylist(body: string, finalUrl: string, target: MediaTar
     const headers = url.origin === target.origin ? target.headers : Object.fromEntries(
       Object.entries(target.headers ?? {}).filter(([name]) => name !== "cookie" && name !== "authorization"),
     );
-    return mediaUrl({ ...target, url: url.href, kind, headers });
+    return mediaUrl({ ...target, url: url.href, kind, headers, format: undefined });
   };
   return body.split(/\r?\n/).map((line) => {
     const value = line.trim();

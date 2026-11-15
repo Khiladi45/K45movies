@@ -5,14 +5,16 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import * as cheerio from "cheerio";
 import { z } from "zod";
-import type { Category, Episode, Post, Provider, ProviderDetail, Source } from "@/lib/catalog-types";
-import { providerNetwork } from "./provider-network";
+import type { Category, Episode, Post, Provider, ProviderDetail, QualityPreference, Source } from "@/lib/catalog-types";
+import { providerNetwork, streamUpstream } from "./provider-network";
 import { decodeReference, encodeReference } from "./references";
-import { createMediaLink } from "./media";
+import { createMediaLink, mediaHeaders } from "./media";
 import { HttpError } from "./http";
 import { providerStore } from "./provider-store";
 import { providerResult } from "./provider-cache";
 import { ProviderError, providerMessage } from "./provider-errors";
+import { normalizeStreams, preferredStreams } from "@/lib/streams";
+import { probeCandidates, probePlayback } from "@/lib/stream-probe";
 
 const defaultBase = "https://raw.githubusercontent.com/Khiladi45/K45movies-api/fce60ad0758822f734f505ef08661f837a450cbb/";
 const androidHeaders = { "User-Agent": "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36" };
@@ -124,7 +126,7 @@ export const providerRequest = z.discriminatedUnion("op", [
   z.object({ op: z.literal("search"), id: providerId, q: z.string().trim().min(2).max(120) }),
   z.object({ op: z.literal("title"), id: providerId, ref: z.string().min(1).max(8000) }),
   z.object({ op: z.literal("episodes"), id: providerId, ref: z.string().min(1).max(8000) }),
-  z.object({ op: z.literal("sources"), id: providerId, ref: z.string().min(1).max(8000), type: z.enum(["movie", "series"]).default("movie") }),
+  z.object({ op: z.literal("sources"), id: providerId, ref: z.string().min(1).max(8000), type: z.enum(["movie", "series"]).default("movie"), quality: z.enum(["auto", "highest", "lowest"]).default("auto") }),
 ]);
 
 let activeExecutions = 0;
@@ -255,28 +257,38 @@ function details(provider: string, ref: string, value: unknown): ProviderDetail 
   };
 }
 
-function sources(value: unknown): Source[] {
-  return list(Array.isArray(value) ? value : [value]).flatMap((entry) => {
-    const raw = item(entry);
-    const link = text(raw.link);
-    if (!link || raw.downloadOnly === true || /\bdownload[\s-]*only\b/i.test(text(raw.server) ?? "") || raw.kind === "audio" || raw.kind === "video") return [];
-    const url = createMediaLink(link, raw.headers);
-    if (!url) return [];
+async function sources(value: unknown, preference: QualityPreference, signal: AbortSignal) {
+  const streams = preferredStreams(normalizeStreams(value), preference);
+  return probeCandidates(streams, async (stream, deadline): Promise<Source | undefined> => {
+    const { raw, server, serverKey, quality } = stream;
+    const headers = { "user-agent": androidHeaders["User-Agent"], ...mediaHeaders(raw.headers) };
+    if (stream.url.length > 5500) return;
+    const probe = await probePlayback(async (method, abort) => {
+      const outgoing = new Headers(headers);
+      outgoing.set("accept-encoding", "identity");
+      if (method === "GET") outgoing.set("range", "bytes=0-8191");
+      const { response } = await streamUpstream(stream.url, method, outgoing, abort);
+      return response as unknown as Response;
+    }, stream.format, deadline);
+    if (probe.status !== "ok") return;
+    const format = probe.format ?? stream.format;
+    const url = createMediaLink(stream.url, headers, "media", undefined, format);
+    if (!url) return;
     const subtitles = list(raw.subtitles).flatMap((entry) => {
       const subtitle = item(entry);
       const uri = text(subtitle.uri);
-      const subtitleUrl = uri && createMediaLink(uri, raw.headers, "subtitle", link);
-      return subtitleUrl ? [{
-        url: subtitleUrl, language: text(subtitle.language) ?? "und",
+      const output = uri && createMediaLink(uri, headers, "subtitle", stream.url);
+      return output ? [{
+        url: output, language: text(subtitle.language) ?? "und",
         label: text(subtitle.title) ?? text(subtitle.language) ?? "Subtitles",
       }] : [];
     }).slice(0, 40);
-    return [{
-      url, subtitles, hls: /hls|m3u8/i.test(text(raw.type) ?? "") || /\.m3u8(?:[?#]|$)/i.test(link),
-      server: text(raw.server) ?? "Stream", quality: text(raw.quality), type: text(raw.type),
-      label: text(raw.tag), languages: [...strings(raw.languages), ...strings(raw.audioLanguages), ...strings(raw.tags)],
-    }];
-  }).slice(0, 100);
+    return {
+      url, subtitles, server, serverKey, quality, format, probe, hls: format === "hls",
+      type: stream.type || undefined, label: text(raw.tag),
+      languages: [...strings(raw.languages), ...strings(raw.audioLanguages), ...strings(raw.tags)],
+    };
+  }, signal);
 }
 
 const cacheTtl = { catalog: 300_000, title: 180_000, episodes: 90_000 };
@@ -308,6 +320,6 @@ async function resolveProvider(input: z.infer<typeof providerRequest>, signal: A
     case "episodes":
       return episodes(id, await execute(input, { url: decodeReference(id, "episodes", input.ref) }, signal));
     case "sources":
-      return sources(await execute(input, { link: decodeReference(id, "source", input.ref), type: input.type }, signal));
+      return sources(await execute(input, { link: decodeReference(id, "source", input.ref), type: input.type }, signal), input.quality, signal);
   }
 }

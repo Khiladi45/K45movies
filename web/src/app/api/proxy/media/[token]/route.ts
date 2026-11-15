@@ -21,13 +21,15 @@ async function serve(request: Request, token: string) {
     const { response, url } = await streamUpstream(target.url, request.method, headers, request.signal);
     const bodyStream = response.body as unknown as ReadableStream<Uint8Array> | null;
     const type = response.headers.get("content-type") ?? "";
-    const playlist = /mpegurl/i.test(type) || /\.m3u8$/i.test(url.pathname);
+    const playlist = target.format === "hls" || /mpegurl/i.test(type) || /\.m3u8$/i.test(url.pathname);
     const subtitle = target.kind === "subtitle" || /^text\/vtt/i.test(type) || /\.vtt$/i.test(url.pathname);
+    const containerType = target.format === "mkv" ? "video/x-matroska" : target.format === "mp4" ? "video/mp4" :
+      target.format === "webm" ? "video/webm" : undefined;
     const output = new Headers({
       "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff",
       "Content-Security-Policy": "default-src 'none'; sandbox",
       "Content-Type": playlist ? "application/vnd.apple.mpegurl" : subtitle ? "text/vtt; charset=utf-8" :
-        safeType.test(type) && target.kind !== "key" ? type : "application/octet-stream",
+        target.kind === "key" ? "application/octet-stream" : containerType ?? (safeType.test(type) ? type : "application/octet-stream"),
     });
     if (response.status === 416) {
       await response.body?.cancel();

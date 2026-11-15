@@ -10,6 +10,7 @@ export type MediaTarget = {
   kind: MediaKind;
   headers?: Record<string, string>;
   origin?: string;
+  format?: "hls" | "mp4" | "mkv" | "webm" | "dash" | "avi" | "other";
   expires: number;
 };
 

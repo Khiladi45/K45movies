@@ -1,4 +1,4 @@
-import type { Category, Episode, MediaType, Post, Provider, ProviderDetail, ProviderHealth, ProviderIssue, Source, Title, TitleDetail, TitleEpisode } from "./catalog-types";
+import type { Category, Episode, MediaType, Post, Provider, ProviderDetail, ProviderHealth, ProviderIssue, QualityPreference, Source, Title, TitleDetail, TitleEpisode } from "./catalog-types";
 
 export class CatalogError extends Error {
   constructor(public status: number, message: string, public details?: ProviderIssue) { super(message); }
@@ -22,8 +22,8 @@ export const providers = {
   search: (id: string, q: string, signal?: AbortSignal) => get<Post[]>("providers", { op: "search", id, q }, signal),
   title: (id: string, ref: string, signal?: AbortSignal) => get<ProviderDetail>("providers", { op: "title", id, ref }, signal),
   episodes: (id: string, ref: string, signal?: AbortSignal) => get<Episode[]>("providers", { op: "episodes", id, ref }, signal),
-  sources: (id: string, ref: string, type: "movie" | "series", signal?: AbortSignal) =>
-    get<Source[]>("providers", { op: "sources", id, ref, type }, signal),
+  sources: (id: string, ref: string, type: "movie" | "series", signal?: AbortSignal, quality: QualityPreference = "auto") =>
+    get<Source[]>("providers", { op: "sources", id, ref, type, quality }, signal),
 };
 
 export type MovieRow = "trending" | "popular" | "top" | "now" | "air" | "discover" | "language";
