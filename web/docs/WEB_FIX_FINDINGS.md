@@ -131,9 +131,9 @@ Run npm ci and npm run build from web, then npm run start with --hostname 127.0.
 
 ~~~sh
 node --conditions=react-server --import tsx scripts/provider-smoke/baseline.mts
-node --conditions=react-server --import tsx scripts/provider-smoke/run.mts ../docs/web-phase-0/provider-smoke.json
-node scripts/provider-smoke/screenshots.mjs ../docs/web-phase-0 PATH_TO_PLAYWRIGHT_INSTALL PATH_TO_CHROME
-node scripts/provider-smoke/ui-observations.mjs ../docs/web-phase-0/ui-observations.json PATH_TO_PLAYWRIGHT_INSTALL PATH_TO_CHROME
+node --conditions=react-server --import tsx scripts/provider-smoke/run.mts docs/web-phase-0/provider-smoke.json
+node scripts/provider-smoke/screenshots.mjs docs/web-phase-0 PATH_TO_PLAYWRIGHT_INSTALL PATH_TO_CHROME
+node scripts/provider-smoke/ui-observations.mjs docs/web-phase-0/ui-observations.json PATH_TO_PLAYWRIGHT_INSTALL PATH_TO_CHROME
 ~~~
 
 The last two commands use Playwright installed separately from the application. K45_SMOKE_WIDTHS optionally selects a comma-separated subset for a screenshot rerun. The diagnostic process observes provider exception messages, upstream status and console activity and strips URLs from error evidence. When a bundle catches an upstream error and returns an empty array, the report includes the observed status and recorded diagnostics where available.
