@@ -1,0 +1,286 @@
+{
+  "browser": "157.0.8103.51",
+  "rows": [
+    {
+      "provider": "anikoto",
+      "title": "Solo Leveling Season 2: Arise from the Shadow",
+      "group": "Solo Leveling Season 2: Arise from the Shadow",
+      "server": "Vidstream-2 (SUB)",
+      "requests": [
+        {
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "upstreamHost": "fetch.nexabloom.top",
+          "kind": "media"
+        },
+        {
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "upstreamHost": "fetch.nexabloom.top",
+          "kind": "media"
+        },
+        {
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "upstreamHost": "35b55.stellarfrontier.space",
+          "kind": "segment"
+        },
+        {
+          "status": 200,
+          "contentType": "video/mp2t",
+          "upstreamHost": "35b55.stellarfrontier.space",
+          "kind": "segment"
+        },
+        {
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "upstreamHost": "35b55.stellarfrontier.space",
+          "kind": "segment"
+        },
+        {
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "upstreamHost": "35b55.stellarfrontier.space",
+          "kind": "segment"
+        }
+      ],
+      "currentGroup": "Solo Leveling Season 2: Arise from the Shadow",
+      "currentServer": "Vidstream-2 (SUB)",
+      "sameSelection": true,
+      "played": true,
+      "failures": [],
+      "untypedResponse": {
+        "upstreamHost": "35b55.stellarfrontier.space",
+        "status": 200,
+        "contentType": "image/jpeg",
+        "finalHost": "35b55.stellarfrontier.space",
+        "range": null,
+        "signature": "MPEG-TS sync at 0/188/376"
+      }
+    },
+    {
+      "provider": "autoEmbed",
+      "title": "Heart of the Beast",
+      "group": "Heart of the Beast",
+      "server": "Cinejoy - Nebula",
+      "requests": [
+        {
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "upstreamHost": "nebula.bright67.online",
+          "kind": "media"
+        },
+        {
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "upstreamHost": "nebula.bright67.online",
+          "kind": "media"
+        },
+        {
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "upstreamHost": "nebula.bright67.online",
+          "kind": "segment"
+        },
+        {
+          "status": 200,
+          "contentType": "video/mp4",
+          "upstreamHost": "nebula.bright67.online",
+          "kind": "segment"
+        },
+        {
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "upstreamHost": "nebula.bright67.online",
+          "kind": "segment"
+        },
+        {
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "upstreamHost": "nebula.bright67.online",
+          "kind": "segment"
+        }
+      ],
+      "currentGroup": "Heart of the Beast",
+      "currentServer": "Cinejoy - Nebula",
+      "sameSelection": true,
+      "played": true,
+      "failures": [],
+      "untypedResponse": {
+        "upstreamHost": "nebula.bright67.online",
+        "status": 200,
+        "contentType": "image/jpeg",
+        "finalHost": "nebula.bright67.online",
+        "range": null
+      }
+    },
+    {
+      "provider": "autoEmbed",
+      "title": "Resident Evil",
+      "group": "Resident Evil",
+      "server": "Cinejoy - Nebula",
+      "requests": [
+        {
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "upstreamHost": "nebula.bright67.online",
+          "kind": "media"
+        },
+        {
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "upstreamHost": "nebula.bright67.online",
+          "kind": "media"
+        },
+        {
+          "status": 200,
+          "contentType": "video/mp4",
+          "upstreamHost": "nebula.bright67.online",
+          "kind": "segment"
+        },
+        {
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "upstreamHost": "nebula.bright67.online",
+          "kind": "segment"
+        },
+        {
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "upstreamHost": "nebula.bright67.online",
+          "kind": "segment"
+        },
+        {
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "upstreamHost": "nebula.bright67.online",
+          "kind": "segment"
+        }
+      ],
+      "currentGroup": "Resident Evil",
+      "currentServer": "Cinejoy - Nebula",
+      "sameSelection": true,
+      "played": true,
+      "failures": [],
+      "untypedResponse": {
+        "upstreamHost": "nebula.bright67.online",
+        "status": 200,
+        "contentType": "image/jpeg",
+        "finalHost": "nebula.bright67.online",
+        "range": null
+      }
+    },
+    {
+      "provider": "1flex",
+      "title": "Resident Evil",
+      "group": "Movie",
+      "server": "Cinejoy - Nebula",
+      "requests": [
+        {
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "upstreamHost": "nebula.bright67.online",
+          "kind": "media"
+        },
+        {
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "upstreamHost": "nebula.bright67.online",
+          "kind": "media"
+        },
+        {
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "upstreamHost": "nebula.bright67.online",
+          "kind": "segment"
+        },
+        {
+          "status": 200,
+          "contentType": "video/mp4",
+          "upstreamHost": "nebula.bright67.online",
+          "kind": "segment"
+        },
+        {
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "upstreamHost": "nebula.bright67.online",
+          "kind": "segment"
+        },
+        {
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "upstreamHost": "nebula.bright67.online",
+          "kind": "segment"
+        }
+      ],
+      "currentGroup": "Movie",
+      "currentServer": "Cinejoy - Nebula",
+      "sameSelection": true,
+      "played": true,
+      "failures": [],
+      "untypedResponse": {
+        "upstreamHost": "nebula.bright67.online",
+        "status": 200,
+        "contentType": "image/jpeg",
+        "finalHost": "nebula.bright67.online",
+        "range": null
+      }
+    },
+    {
+      "provider": "1flex",
+      "title": "Heart of the Beast",
+      "group": "Movie",
+      "server": "Cinejoy - Nebula",
+      "requests": [
+        {
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "upstreamHost": "nebula.bright67.online",
+          "kind": "media"
+        },
+        {
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "upstreamHost": "nebula.bright67.online",
+          "kind": "media"
+        },
+        {
+          "status": 200,
+          "contentType": "video/mp4",
+          "upstreamHost": "nebula.bright67.online",
+          "kind": "segment"
+        },
+        {
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "upstreamHost": "nebula.bright67.online",
+          "kind": "segment"
+        },
+        {
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "upstreamHost": "nebula.bright67.online",
+          "kind": "segment"
+        },
+        {
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "upstreamHost": "nebula.bright67.online",
+          "kind": "segment"
+        }
+      ],
+      "currentGroup": "Movie",
+      "currentServer": "Cinejoy - Nebula",
+      "sameSelection": true,
+      "played": true,
+      "failures": [],
+      "untypedResponse": {
+        "upstreamHost": "nebula.bright67.online",
+        "status": 200,
+        "contentType": "image/jpeg",
+        "finalHost": "nebula.bright67.online",
+        "range": null
+      }
+    }
+  ]
+}
