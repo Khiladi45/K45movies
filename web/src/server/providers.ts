@@ -34,9 +34,9 @@ let vendoredIds: Promise<string[]> | undefined;
 
 function localProviders() {
   vendoredIds ??= readFile(resolve(vendorDir, "registry.js"), "utf8").then((source) => {
-    const module = { exports: {} as { ids: () => unknown } };
-    new Script(source, { filename: "android-provider-registry.js" }).runInNewContext({ module }, { timeout: 500 });
-    return z.array(providerId).parse(module.exports.ids());
+    const registryModule = { exports: {} as { ids: () => unknown } };
+    new Script(source, { filename: "android-provider-registry.js" }).runInNewContext({ module: registryModule }, { timeout: 500 });
+    return z.array(providerId).parse(registryModule.exports.ids());
   });
   return vendoredIds;
 }
