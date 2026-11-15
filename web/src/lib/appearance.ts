@@ -3,7 +3,7 @@ import { createJSONStorage, persist } from "zustand/middleware";
 
 import { defaultAccent, isAccent } from "./accents";
 
-export type CatalogLayout = "provider" | "movie";
+export type CatalogLayout = "provider" | "movie" | "youtube";
 
 type Appearance = {
   layout: CatalogLayout;
@@ -32,7 +32,7 @@ export const useAppearance = create<Appearance>()(
         const preferences = saved as Partial<Appearance> | null;
         return {
           ...current,
-          layout: preferences?.layout === "movie" ? "movie" : "provider",
+          layout: (preferences?.layout === "movie" || preferences?.layout === "youtube") ? preferences.layout : "provider",
           sidebarCollapsed: preferences?.sidebarCollapsed === true,
           accent: isAccent(preferences?.accent) ? preferences.accent : defaultAccent,
         };

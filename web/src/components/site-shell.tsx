@@ -36,7 +36,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
           <PanelLeft size={20} aria-hidden="true" />
         </button>
         <Link href="/" className="brand">
-          <Image src="/brand.png" alt="" width={32} height={32} priority />
+          <Image src="/brand.png" alt="" width={36} height={36} priority />
           <span>K45movies</span>
         </Link>
         <SearchDialog>

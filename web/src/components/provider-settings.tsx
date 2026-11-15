@@ -55,7 +55,7 @@ export function ProviderSettings() {
   ];
 
   return <>
-    <div className="mb-4 flex max-w-xl gap-2">
+    <div className="search-form">
       <input className="field min-w-0 flex-1" type="search" aria-label="Filter providers" placeholder="Filter providers"
         value={filter} onChange={(event) => setFilter(event.target.value)} />
       <button type="button" className="secondary-button" disabled={manifest.isFetching} onClick={() => void manifest.refetch()}>
@@ -65,7 +65,7 @@ export function ProviderSettings() {
     <div role="status" className="mb-3 text-sm text-muted">{notice}</div>
     {missing.map((id) => <div key={id} className="list-row mb-2"><span className="flex-1">{id} is no longer listed.</span>
       <button type="button" className="secondary-button" onClick={() => remove(id)}>Remove</button></div>)}
-    {groups.map((group) => <section key={group.title} className="mt-6 max-w-4xl">
+    {groups.map((group) => <section key={group.title} className="mt-6 min-w-0">
       <h2 className="mb-3 text-xl font-semibold">{group.title}</h2>
       {group.entries.length ? <ul className="grid gap-2">{group.entries.map((provider) => <li key={provider.id} className="list-row flex-wrap">
         {provider.icon ? <Artwork src={provider.icon} className="size-10 rounded-lg" /> : <Puzzle className="text-accent" size={23} />}
@@ -75,7 +75,7 @@ export function ProviderSettings() {
           {provider.description && <p className="text-sm text-muted">{provider.description}</p>}
           {health.data?.[provider.id]?.issue && <p className="text-sm text-muted">{health.data[provider.id].issue?.message}</p>}
         </div>
-        <span className="chip capitalize">{health.data?.[provider.id]?.state ?? "unchecked"}</span>
+        <span className="chip capitalize" data-health={health.data?.[provider.id]?.state}>{health.data?.[provider.id]?.state ?? "unchecked"}</span>
         <button type="button" className="secondary-button" disabled={!!checking} onClick={() => void check(provider)}>
           {checking === provider.id ? "Checking…" : "Check catalog"}
         </button>

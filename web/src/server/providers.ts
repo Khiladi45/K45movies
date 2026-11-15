@@ -102,7 +102,7 @@ export function getProviders() {
 }
 
 async function compiled(id: string) {
-  const match = (await getProviders()).find((provider) => provider.id === id);
+  const match = id === "youtube" ? { bundleSource: "vendored" } : (await getProviders()).find((provider) => provider.id === id);
   if (!match) throw new ProviderError(404, "Provider is unavailable.", "registry");
   const cached = bundles.get(id);
   if (cached && cached.expires > Date.now()) return cached.task;
@@ -222,6 +222,13 @@ function categories(value: unknown): Category[] {
   }).slice(0, 100);
 }
 
+function youtubeId(value: unknown) {
+  const raw = text(value);
+  const url = raw ? URL.parse(raw) : null;
+  const id = url?.hostname === "www.youtube.com" ? url.searchParams.get("v") ?? /^\/shorts\/([\w-]{11})$/.exec(url.pathname)?.[1] : raw;
+  return id && /^[\w-]{11}$/.test(id) ? id : undefined;
+}
+
 function post(provider: string, value: unknown): Post[] {
   const raw = item(value);
   const title = text(raw.title);
@@ -229,7 +236,7 @@ function post(provider: string, value: unknown): Post[] {
   if (!title || !link || link.length > 5000) return [];
   return [{
     title, ref: encodeReference(provider, "title", link), image: image(raw.image),
-    type: text(raw.type), tag: text(raw.tag),
+    type: text(raw.type), tag: text(raw.tag), videoId: provider === "youtube" ? youtubeId(link) : undefined,
   }];
 }
 
@@ -250,7 +257,7 @@ function details(provider: string, ref: string, value: unknown): ProviderDetail 
   const title = text(raw.title);
   if (!title) throw new ProviderError(404, "This title is unavailable from the provider.", "normalize");
   return {
-    title, ref, image: image(raw.image), poster: image(raw.poster), type: text(raw.type), synopsis: text(raw.synopsis),
+    title, ref, videoId: provider === "youtube" ? youtubeId(raw.videoId) ?? youtubeId(raw.webUrl) : undefined, image: image(raw.image), poster: image(raw.poster), type: text(raw.type), synopsis: text(raw.synopsis),
     tags: strings(raw.tags), cast: strings(raw.cast), rating: text(raw.rating),
     groups: list(raw.linkList).flatMap((entry) => {
       const group = item(entry);
@@ -312,6 +319,9 @@ export function runProvider(input: z.infer<typeof providerRequest>, signal: Abor
 
 async function resolveProvider(input: z.infer<typeof providerRequest>, signal: AbortSignal): Promise<Category[] | Post[] | ProviderDetail | Episode[] | Source[]> {
   const id = input.id;
+  if (id === "youtube" && (input.op === "sources" || input.op === "episodes")) {
+    throw new ProviderError(422, "YouTube playback uses the embedded video player.", "request");
+  }
   switch (input.op) {
     case "catalog": {
       const result = categories(await execute(input, {}, signal));

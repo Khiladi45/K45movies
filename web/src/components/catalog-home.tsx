@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Play, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useQueries, useQuery } from "@tanstack/react-query";
+import { YouTubeHome } from "./youtube";
+import { BrowseModes } from "./layout-choice";
 import { useCatalogReady } from "./catalog-context";
 import { Artwork, CardGrid, CatalogSkeleton, QueryMessage, Rail, type Card } from "./catalog-ui";
 import { resumePlayback } from "@/lib/player-actions";
@@ -17,7 +19,7 @@ export function CatalogHome() {
   const layout = useAppearance((state) => state.layout);
   const ready = useCatalogReady();
   if (!ready) return <HomeSkeleton />;
-  return layout === "movie" ? <MovieHome /> : <ProviderHome />;
+  return <><BrowseModes />{layout === "movie" ? <MovieHome /> : layout === "youtube" ? <YouTubeHome /> : <ProviderHome />}</>;
 }
 
 function HeroSkeleton() {
@@ -80,11 +82,11 @@ function ContinueWatching() {
 function Hero({ item, subtitle, change }: { item: Card; subtitle?: string; change?: (offset: number) => void }) {
   return <section className="catalog-hero">
     <Artwork src={item.image} className="catalog-hero-art" priority />
-    <div className="relative max-w-xl">
-      <h2 className="text-3xl font-bold tracking-tight sm:text-5xl">{item.title}</h2>
+    <div className="hero-copy">
+      <h2>{item.title}</h2>
       {subtitle && <p className="mt-3 line-clamp-3 text-sm text-muted sm:text-base">{subtitle}</p>}
       <div className="mt-5 flex flex-wrap gap-2">
-        <Link className="primary-button" href={item.href}>View details</Link>
+        <Link className="primary-button" href={item.href}><Play size={17} aria-hidden="true" /> View details</Link>
         {change && <>
           <button type="button" className="secondary-button" aria-label="Previous featured title" onClick={() => change(-1)}><ChevronLeft size={18} /></button>
           <button type="button" className="secondary-button" aria-label="Next featured title" onClick={() => change(1)}><ChevronRight size={18} /></button>
@@ -119,6 +121,7 @@ function ProviderHome() {
   const activate = useLibrary((state) => state.activate);
   const manifest = useQuery({ queryKey: ["manifest"], queryFn: ({ signal }) => providers.manifest(signal) });
   const catalog = useQuery({ queryKey: ["catalog", active], queryFn: ({ signal }) => providers.catalog(active!, signal), enabled: !!active });
+  const health = useQuery({ queryKey: ["provider-health"], queryFn: ({ signal }) => providers.health(signal) });
   const [index, setIndex] = useState(0);
   const featured = useQueries({ queries: (active ? catalog.data?.slice(0, 4) ?? [] : []).map(({ filter }) => ({
     queryKey: ["posts", active, filter, 1],
@@ -131,11 +134,14 @@ function ProviderHome() {
   const item = rotation[index % rotation.length];
 
   return <>
-    <div className="mb-5 flex flex-wrap items-center gap-2" aria-label="Installed providers">
-      {installed.map((id) => <button type="button" className="chip" aria-pressed={id === active} key={id} onClick={() => { activate(id); setIndex(0); }}>
-        {manifest.data?.find((entry) => entry.id === id)?.name ?? id}
-      </button>)}
-      <Link href="/providers" className="chip">Manage providers</Link>
+    <div className="provider-toolbar">
+      {!!installed.length && <label>Provider
+        <select className="field" value={active ?? ""} onChange={(event) => { activate(event.target.value); setIndex(0); }}>
+          {installed.map((id) => <option value={id} key={id}>{manifest.data?.find((entry) => entry.id === id)?.name ?? id}</option>)}
+        </select>
+      </label>}
+      {active && health.data?.[active] && <span className="chip capitalize" data-health={health.data[active].state}>{health.data[active].state}</span>}
+      <Link href="/providers" className="secondary-button">Manage providers</Link>
     </div>
     {active && (item ? <Hero item={{ ...item, href: providerLink(active, item.ref) }} subtitle={item.tag} change={rotation.length > 1 ? (offset) => setIndex((current) => (current + offset + rotation.length) % rotation.length) : undefined} /> : <HeroSkeleton />)}
     <ContinueWatching />

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { useLibrary, type SavedTitle } from "@/lib/library";
 
-export type Card = { href: string; title: string; image?: string; note?: string };
+export type Card = { href: string; title: string; image?: string; note?: string; wide?: boolean };
 
 export function Artwork({ src, className = "", priority = false }: { src?: string; className?: string; priority?: boolean }) {
   return (
@@ -21,13 +21,13 @@ export function Artwork({ src, className = "", priority = false }: { src?: strin
   );
 }
 
-export function CardGrid({ items, rail = false }: { items: Card[]; rail?: boolean }) {
+export function CardGrid({ items, rail = false, wide = false }: { items: Card[]; rail?: boolean; wide?: boolean }) {
   return (
-    <ul className={rail ? "poster-rail" : "poster-grid"}>
+    <ul className={rail ? "poster-rail" : wide ? "poster-grid video-grid" : "poster-grid"}>
       {items.map((item) => (
         <li key={item.href} className="min-w-0">
           <Link href={item.href} className="poster-card" prefetch={false}>
-            <Artwork src={item.image} className="aspect-[2/3] rounded-xl" />
+            <Artwork src={item.image} className={item.wide ? "aspect-video rounded-xl" : "aspect-[2/3] rounded-xl"} />
             <span className="mt-2 block truncate text-sm font-semibold" title={item.title}>{item.title}</span>
             {item.note && <span className="mt-0.5 block truncate text-xs text-muted">{item.note}</span>}
           </Link>
@@ -37,11 +37,11 @@ export function CardGrid({ items, rail = false }: { items: Card[]; rail?: boolea
   );
 }
 
-export function CatalogSkeleton({ rail = false }: { rail?: boolean } = {}) {
+export function CatalogSkeleton({ rail = false, wide = false }: { rail?: boolean; wide?: boolean } = {}) {
   return (
     <div className={(rail ? "poster-rail" : "poster-grid") + " motion-safe:animate-pulse"} role="status" aria-label="Loading titles">
       {Array.from({ length: 6 }, (_, i) => <div key={i}>
-          <div className="aspect-[2/3] rounded-xl bg-surface" />
+          <div className={(wide ? "aspect-video" : "aspect-[2/3]") + " rounded-xl bg-surface"} />
           {rail && <div className="mt-2 h-5 w-3/4 rounded bg-surface" />}
         </div>)}
     </div>

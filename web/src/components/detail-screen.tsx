@@ -24,8 +24,8 @@ function DetailHero({ title, image, backdrop, synopsis, tags, children }: {
   return <section className="detail-hero">
     {backdrop && <Artwork src={backdrop} className="detail-backdrop" />}
     <Artwork src={image} className="detail-poster" />
-    <div className="relative min-w-0">
-      <h1 className="text-3xl font-bold tracking-tight sm:text-5xl">{title}</h1>
+    <div className="detail-copy">
+      <h1>{title}</h1>
       {!!tags.length && <p className="mt-3 text-sm font-medium text-accent">{tags.join(" · ")}</p>}
       {synopsis && <p className="mt-4 max-w-2xl text-sm leading-6 text-muted sm:text-base">{synopsis}</p>}
       <div className="mt-5 flex flex-wrap gap-2">{children}</div>
@@ -96,7 +96,7 @@ function ProviderEpisodes({ id, detail }: { id: string; detail: ProviderDetail }
   }
 
   return <div className="min-w-0 space-y-4">
-    <div className="flex min-w-0 flex-wrap items-end gap-3">
+    <div className="playback-form flex flex-wrap items-end gap-3">
       {detail.groups.length > 1 && <label className="grid min-w-0 max-w-full gap-1 text-sm font-medium">{series ? "Season or quality" : "Quality"}
         <select className="field w-full min-w-0 truncate" value={groupIndex}
           onChange={(event) => { setGroupIndex(Number(event.target.value)); playback.cancel(); setFilter(""); }}>
@@ -118,9 +118,9 @@ function ProviderEpisodes({ id, detail }: { id: string; detail: ProviderDetail }
     {group.episodesRef && episodes.isPending && !items.length ? <p role="status">Loading episodes…</p> :
       group.episodesRef && episodes.isError && !items.length ? <QueryMessage retry={() => void episodes.refetch()}>{episodes.error.message}</QueryMessage> :
       !visible.length ? <QueryMessage>No matching {series ? "episodes" : "sources"}.</QueryMessage> :
-      (series || visible.length > 1) && <ul className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+      (series || visible.length > 1) && <ul className="episode-grid">
         {visible.map((item,i) => <li key={item.ref + i}>
-          <button type="button" className="list-row w-full text-left" disabled={playback.pending} onClick={() => choose(item)}>
+          <button type="button" className="list-row episode-row" disabled={playback.pending} onClick={() => choose(item)}>
             <Play size={16} className="shrink-0 text-accent" aria-hidden="true" /> <span>{item.title}</span>
           </button>
         </li>)}
@@ -141,8 +141,8 @@ export function ProviderTitle({ provider, reference }: { provider: string; refer
       synopsis={data.synopsis} tags={[...data.tags, ...(data.rating ? [data.rating] : [])]}>
       <SaveButton entry={{ href: providerLink(provider, reference), title: data.title, image: data.poster ?? data.image, layout: "provider" }} />
     </DetailHero>
-    {data.cast.length > 0 && <Rail title="Cast"><p className="text-muted">{data.cast.join(" · ")}</p></Rail>}
     <Rail title="Sources"><ProviderEpisodes key={data.ref} id={provider} detail={data} /></Rail>
+    {data.cast.length > 0 && <Rail title="Cast"><p className="text-muted">{data.cast.join(" · ")}</p></Rail>}
   </>;
 }
 
