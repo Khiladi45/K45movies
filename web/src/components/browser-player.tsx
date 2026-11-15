@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Captions, ChevronDown, Expand, ListVideo, Lock, Maximize, Minimize2, Pause, PictureInPicture2, Play, Settings2, SkipForward, Unlock, Volume2, VolumeX, X } from "lucide-react";
-import { providers } from "@/lib/catalog-api";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { Captions, ChevronDown, Expand, ListVideo, Lock, Maximize, Minimize2, Pause, PictureInPicture2, Play, Server, Settings2, SlidersHorizontal, SkipForward, Unlock, Volume2, VolumeX, X } from "lucide-react";
 import { usePlayback, type PlaybackItem } from "@/lib/playback";
 import { usePlayerPreferences } from "@/lib/player-preferences";
 import { useLibrary } from "@/lib/library";
 import { attachMedia, emptyTracks, type MediaTracks } from "@/lib/media-engine";
-import { checkSource } from "@/lib/player-actions";
+import { episodeNumberOf, findNextEpisode } from "@/lib/episodes";
+import { fallbackQualities, playbackSources, playerQualityOptions, switchQuality } from "@/lib/player-switch";
 import { normalizeLangCode } from "@/lib/languages";
 import { parseCues } from "@/lib/video-cues";
 import { CaptionSettings, textStyle } from "./player-caption-settings";
@@ -15,7 +15,10 @@ import { formatTime, SeekControl } from "./seek-control";
 
 type Session = NonNullable<ReturnType<typeof usePlayback.getState>["session"]>;
 type Cue = ReturnType<typeof parseCues>[number];
-type Panel = "episodes" | "settings" | null;
+type Panel = "episodes" | "settings" | "quality" | "servers" | null;
+const savedTimestamp = Date.now;
+const paintClock = performance.now.bind(performance);
+const panelNames = { episodes: "Episodes", settings: "Playback settings", quality: "Quality", servers: "Servers" };
 
 export function BrowserPlayer({ session }: { session: Session }) {
   const { target, sources } = session;
@@ -36,7 +39,7 @@ export function BrowserPlayer({ session }: { session: Session }) {
   const lastCue = useRef("");
   const changingMedia = useRef(false);
   const tried = useRef(new Set<number>());
-  const bad = useRef(new Set<number>());
+  const failedQualities = useRef(new Set<number>());
   const launchFocus = useRef<HTMLElement | null>(null);
   const resumePlay = useRef(true);
   const retrying = useRef<AbortController>(null);
@@ -68,8 +71,8 @@ export function BrowserPlayer({ session }: { session: Session }) {
   const [awake, setAwake] = useState(true);
   const hideTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const source = sources[i] ?? sources[0];
-  const episodeIndex = target.episodes.findIndex(({ ref }) => ref === target.item.ref);
-  const next = episodeIndex >= 0 ? target.episodes[episodeIndex + 1] : undefined;
+  const next = target.item.series ? findNextEpisode(target.episodes, target.episodeNumber ?? episodeNumberOf(target.item), target.item.ref) : undefined;
+  const qualities = playerQualityOptions(target);
   const externalTrack = captions.startsWith("file:") ? source.subtitles[Number(captions.slice(5))] : undefined;
   const controls = awake || !play || panel || locked || minimized;
   const video = () => videoRef.current;
@@ -84,57 +87,6 @@ export function BrowserPlayer({ session }: { session: Session }) {
     clearTimeout(hideTimer.current);
     clearTimeout(stalled.current);
   }, []);
-
-  useEffect(() => {
-    const abort = new AbortController();
-    const results = bad.current;
-    for (const [index, candidate] of sources.slice(0, 6).entries()) {
-      if (index !== session.index) void checkSource(candidate, abort.signal).then((status) => {
-        if (status === "failed" && !abort.signal.aborted) results.add(index);
-      });
-    }
-    return () => abort.abort();
-  }, [sources, session.index]);
-
-  useEffect(() => {
-    const element = videoRef.current;
-    if (!element || !source) return;
-    const preferred = target.preferredLanguage;
-    preferredApplied.current = false;
-    qualityChosen.current = false;
-    captionChosen.current = false;
-    changingMedia.current = true;
-    clearTimeout(stalled.current);
-    const current = attachMedia(element, source, {
-      tracks: (nextTracks) => {
-        setTracks(nextTracks);
-        if (!preferredApplied.current && preferred && preferred !== "none") {
-          const best = nextTracks.audio.findIndex((track) => normalizeLangCode(track.language || track.label) === preferred);
-          if (best >= 0) { preferredApplied.current = true; current.audio(best); setAudio(best); }
-        }
-      },
-      failed: () => {
-        clearTimeout(stalled.current);
-        changingMedia.current = true;
-        tried.current.add(i);
-        const replacement = sources.findIndex((_, index) => !tried.current.has(index) && !bad.current.has(index));
-        if (replacement >= 0) {
-          setWaiting(true);
-          setNote("Trying another server…");
-          setTracks(emptyTracks);
-          setQuality(-1);
-          setAudio(-1);
-          setCaptions("off");
-          setIndex(replacement);
-        } else {
-          setWaiting(false);
-          setError("Playback failed on the available servers.");
-        }
-      },
-    });
-    engine.current = current;
-    return () => current.destroy();
-  }, [i, revision, source, sources, target.preferredLanguage]);
 
   useEffect(() => {
     if (!externalTrack) return;
@@ -196,7 +148,7 @@ export function BrowserPlayer({ session }: { session: Session }) {
     if (changingMedia.current || !element || !Number.isFinite(element.duration)) return;
     useLibrary.getState().saveProgress({
       ...target.title, position: element.currentTime, duration: element.duration,
-      updatedAt: Date.now(), playback: target, source: { server: source.server, quality: source.quality },
+      updatedAt: savedTimestamp(), playback: target, source: { server: source.server, quality: source.quality },
     });
   }
 
@@ -219,7 +171,7 @@ export function BrowserPlayer({ session }: { session: Session }) {
     if (!element) return;
     if (changingMedia.current) return;
     positionRef.current = element.currentTime;
-    const now = performance.now();
+    const now = paintClock();
     if (force || now - lastPaint.current >= 225) {
       lastPaint.current = now;
       setPosition(element.currentTime);
@@ -320,24 +272,32 @@ export function BrowserPlayer({ session }: { session: Session }) {
     setIndex(index);
   }
 
-  async function resolve(item: PlaybackItem, refresh = false) {
+  async function resolve(item: PlaybackItem, options: { refresh?: boolean; qualityIndex?: number; fallback?: boolean } = {}) {
     retrying.current?.abort();
     const controller = new AbortController();
     retrying.current = controller;
-    const resume = refresh ? positionRef.current : 0;
+    const qualitySwitch = options.qualityIndex !== undefined;
+    const resume = options.refresh || qualitySwitch ? positionRef.current : 0;
+    const shouldPlay = options.refresh || options.fallback || !qualitySwitch || !video()?.paused;
+    const option = qualities.find(({ index }) => index === options.qualityIndex);
+    if (!options.fallback) failedQualities.current.clear();
     setSwitching(true);
-    setNote(refresh ? "Refreshing sources…" : "Loading episode…");
+    setNote(options.fallback ? "This format cannot play in your browser. Trying " + (option?.label ?? "another quality") + "…" :
+      options.refresh ? "Refreshing sources…" : qualitySwitch ? "Switching quality…" : "Loading episode…");
     try {
-      const list = await providers.sources(item.provider, item.ref, item.series ? "series" : "movie", controller.signal);
+      const updated = qualitySwitch ? await switchQuality(target, options.qualityIndex!, controller.signal) : {
+        ...target, item, episodeNumber: item.series ?
+          (item.ref === target.item.ref ? target.episodeNumber : undefined) ?? episodeNumberOf(item) ?? undefined : undefined,
+      };
+      const list = await playbackSources(updated.item, controller.signal, updated.preferredLanguage);
       if (controller.signal.aborted) return;
-      if (!list.length) throw new Error("No servers are available for this selection.");
+      if (!list.length) throw new Error("No healthy streams were found for this selection.");
       save();
-      const match = refresh ? list.findIndex(({ server, quality }) => server === source.server && quality === source.quality) : 0;
+      const match = options.refresh ? list.findIndex(({ server, quality }) => server === source.server && quality === source.quality) : 0;
       tried.current.clear();
-      bad.current.clear();
       changingMedia.current = true;
       positionRef.current = resume;
-      resumePlay.current = true;
+      resumePlay.current = shouldPlay;
       setIndex(Math.max(0, match));
       setRevision((previous) => previous + 1);
       setPosition(resume);
@@ -351,12 +311,27 @@ export function BrowserPlayer({ session }: { session: Session }) {
       setCaption("off");
       setError("");
       setNote("");
-      usePlayback.getState().replace({
-        target: { ...target, item, episodeNumber: item.ref === target.item.ref ? target.episodeNumber : undefined }, sources: list, index: Math.max(0, match), position: resume,
-      });
+      usePlayback.getState().replace({ target: updated, sources: list, index: Math.max(0, match), position: resume });
+      return true;
     } catch (failure) {
-      if (!controller.signal.aborted) setNote(failure instanceof Error ? failure.message : "Could not load this selection.");
+      if (controller.signal.aborted) return;
+      if (!options.fallback) setNote(failure instanceof Error ? failure.message : "Could not load this selection.");
+      return false;
     } finally { if (!controller.signal.aborted) setSwitching(false); }
+  }
+
+  async function tryFallback(formatFailure: boolean) {
+    failedQualities.current.add(target.qualityIndex ?? 0);
+    const alternatives = fallbackQualities(target, failedQualities.current);
+    for (const option of alternatives) {
+      failedQualities.current.add(option.index);
+      const result = await resolve(target.item, { qualityIndex: option.index, fallback: true });
+      if (result !== false) return;
+    }
+    setNote("");
+    setWaiting(false);
+    setError(formatFailure ? "This format cannot play in your browser." +
+      (alternatives.length ? " The alternate qualities could not be played." : "") : "Playback failed on the available servers.");
   }
 
   function retry() {
@@ -364,7 +339,7 @@ export function BrowserPlayer({ session }: { session: Session }) {
     if (!error) {
       setWaiting(true);
       setRevision((previous) => previous + 1);
-    } else void resolve(target.item, true);
+    } else void resolve(target.item, { refresh: true });
   }
 
   function close() {
@@ -394,6 +369,47 @@ export function BrowserPlayer({ session }: { session: Session }) {
     event.preventDefault();
     wake();
   }
+
+  const onMediaFailure = useEffectEvent((reason?: "format") => {
+    clearTimeout(stalled.current);
+    changingMedia.current = true;
+    tried.current.add(i);
+    const replacement = sources.findIndex((_, index) => !tried.current.has(index));
+    if (replacement >= 0) {
+      setWaiting(true);
+      setNote("Trying another server…");
+      setTracks(emptyTracks);
+      setQuality(-1);
+      setAudio(-1);
+      setCaptions("off");
+      setIndex(replacement);
+    } else {
+      void tryFallback(reason === "format");
+    }
+  });
+
+  useEffect(() => {
+    const element = videoRef.current;
+    if (!element || !source) return;
+    const preferred = target.preferredLanguage;
+    preferredApplied.current = false;
+    qualityChosen.current = false;
+    captionChosen.current = false;
+    changingMedia.current = true;
+    clearTimeout(stalled.current);
+    const current = attachMedia(element, source, {
+      tracks: (nextTracks) => {
+        setTracks(nextTracks);
+        if (!preferredApplied.current && preferred && preferred !== "none") {
+          const best = nextTracks.audio.findIndex((track) => normalizeLangCode(track.language || track.label) === preferred);
+          if (best >= 0) { preferredApplied.current = true; current.audio(best); setAudio(best); }
+        }
+      },
+      failed: (reason) => onMediaFailure(reason),
+    });
+    engine.current = current;
+    return () => current.destroy();
+  }, [i, revision, source, sources, target.preferredLanguage]);
 
   return <div className="player-layer" data-minimized={minimized}>
     <section ref={frame} tabIndex={0} aria-label={"Player for " + target.title.title}
@@ -474,6 +490,8 @@ export function BrowserPlayer({ session }: { session: Session }) {
                   <span className="flex-1" />
                   <PlayerButton title="Captions" click={toggleCaptions} pressed={captions !== "off"}><Captions size={20} /></PlayerButton>
                   {target.episodes.length > 1 && <PlayerButton title="Episodes" click={() => setPanel(panel === "episodes" ? null : "episodes")} pressed={panel === "episodes"}><ListVideo size={20} /></PlayerButton>}
+                  {(qualities.length > 1 || !!tracks.levels.length) && <PlayerButton title="Quality" click={() => setPanel(panel === "quality" ? null : "quality")} pressed={panel === "quality"}><SlidersHorizontal size={19} /></PlayerButton>}
+                  <PlayerButton title="Servers" click={() => setPanel(panel === "servers" ? null : "servers")} pressed={panel === "servers"}><Server size={18} /></PlayerButton>
                   <PlayerButton title="Playback settings" click={() => setPanel(panel === "settings" ? null : "settings")} pressed={panel === "settings"}><Settings2 size={19} /></PlayerButton>
                   <PlayerButton title="Lock controls" click={() => { setPanel(null); setLocked(true); }}><Lock size={19} /></PlayerButton>
                   {typeof document !== "undefined" && document.pictureInPictureEnabled &&
@@ -485,21 +503,31 @@ export function BrowserPlayer({ session }: { session: Session }) {
             </>}
         </div>
       </div>
-      {panel && !minimized && <aside className="player-panel" aria-label={panel === "episodes" ? "Episodes" : "Playback settings"}>
+      {panel && !minimized && <aside className="player-panel" aria-label={panelNames[panel]}>
         <div className="mb-4 flex items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold">{panel === "episodes" ? "Episodes" : "Playback settings"}</h2>
+          <h2 className="text-lg font-semibold">{panelNames[panel]}</h2>
           <PlayerButton title="Close panel" click={() => setPanel(null)}><X size={19} /></PlayerButton>
         </div>
         {panel === "episodes" ? <ul className="grid gap-2">{target.episodes.map((item) => <li key={item.ref}>
           <button className="list-row w-full text-left" type="button" disabled={switching} aria-pressed={target.item.ref === item.ref}
             onClick={() => { if (target.item.ref === item.ref) setPanel(null); else void resolve(item); }}>{item.title}</button>
-        </li>)}</ul> : <div className="grid gap-4">
+        </li>)}</ul> : panel === "servers" ? <ul className="grid gap-3">{[...new Set(sources.map((entry) => entry.serverKey ?? entry.server))].map((key) => (
+          <li key={key}><ul className="grid gap-2">{sources.map((entry, index) => (entry.serverKey ?? entry.server) === key &&
+            <li key={entry.url}><button className="list-row w-full text-left" type="button" aria-pressed={i === index} onClick={() => changeSource(index)}>
+              {[entry.server, entry.quality, entry.format?.toUpperCase()].filter(Boolean).join(" · ")}
+            </button></li>)}</ul></li>
+        ))}</ul> : panel === "quality" ? <div className="grid min-w-0 gap-4">
+          {qualities.length > 1 && <Picker label="Title quality" value={target.qualityIndex ?? 0} disabled={switching}
+            change={(index) => { if (index !== target.qualityIndex) void resolve(target.item, { qualityIndex: index }); }}
+            options={qualities.map(({ index, label }) => ({ value: index, label }))} />}
+          {!!tracks.levels.length && <details open>
+            <summary className="mb-2 text-sm">HLS levels</summary>
+            <Picker label="HLS level" value={quality} change={(value) => { qualityChosen.current = true; setQuality(value); engine.current?.quality(value); }}
+              options={[{value:-1,label:"Auto"}, ...tracks.levels.map((track,index) => ({ value:index,label:track.label }))]} />
+          </details>}
+        </div> : <div className="grid gap-4">
           <Picker label="Speed" value={speed} change={(value) => { setSpeed(value); if (video()) video()!.playbackRate = value; }}
             options={[.25,.5,.75,1,1.25,1.5,1.75,2].map((rate) => ({ value: rate, label: rate + "×" }))} />
-          <Picker label="Server" value={i} change={changeSource}
-            options={sources.map((item,index) => ({ value:index, label:[item.server,item.quality].filter(Boolean).join(" · ") }))} />
-          {!!tracks.levels.length && <Picker label="Quality" value={quality} change={(value) => { qualityChosen.current = true; setQuality(value); engine.current?.quality(value); }}
-            options={[{value:-1,label:"Auto"}, ...tracks.levels.map((track,index) => ({ value:index,label:track.label }))]} />}
           {!!tracks.audio.length && <Picker label="Audio track" value={audio} change={(value) => { setAudio(value); engine.current?.audio(value); }}
             options={[{value:-1,label:"Default"}, ...tracks.audio.map((track,index) => ({ value:index,label:track.label }))]} />}
           <label className="grid gap-1 text-sm">Subtitle track
@@ -534,11 +562,11 @@ function PlayerButton({ title, click, children, pressed, disabled }: {
     onClick={click}>{children}</button>;
 }
 
-function Picker({ label, value, change, options }: {
-  label: string; value: number; change: (value: number) => void; options: { value: number; label: string }[];
+function Picker({ label, value, change, options, disabled }: {
+  disabled?: boolean; label: string; value: number; change: (value: number) => void; options: { value: number; label: string }[];
 }) {
-  return <label className="grid gap-1 text-sm">{label}
-    <select className="field" aria-label={label} value={value} onChange={(event) => change(Number(event.target.value))}>
+  return <label className="grid min-w-0 gap-1 text-sm">{label}
+    <select className="field w-full min-w-0 truncate" disabled={disabled} aria-label={label} value={value} onChange={(event) => change(Number(event.target.value))}>
       {options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
     </select>
   </label>;

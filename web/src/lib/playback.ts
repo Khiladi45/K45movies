@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Source } from "./catalog-types";
+import type { LinkGroup, Source } from "./catalog-types";
 import type { SavedTitle } from "./library";
 
 export type PlaybackItem = { provider: string; ref: string; title: string; series: boolean };
@@ -8,6 +8,9 @@ export type PlaybackTarget = {
   item: PlaybackItem;
   episodes: PlaybackItem[];
   episodeNumber?: number;
+  qualities?: LinkGroup[];
+  qualityIndex?: number;
+  itemIndex?: number;
   seasonNumber?: number;
   preferredLanguage?: string;
 };

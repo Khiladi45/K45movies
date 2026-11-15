@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { ArrowUpDown, ExternalLink, Play } from "lucide-react";
 import { providers, tmdb } from "@/lib/catalog-api";
@@ -10,7 +10,9 @@ import type { Episode, MediaType, ProviderDetail, TitleDetail } from "@/lib/cata
 import { usePlayerPreferences } from "@/lib/player-preferences";
 import { usePlayback, type PlaybackTarget } from "@/lib/playback";
 import { useLibrary } from "@/lib/library";
-import { choicesFor, episodeNumber, groupEpisodes, matchProvider, streamLanguages, type Choice } from "@/lib/title-bridge";
+import { choicesFor, groupEpisodes, matchProvider } from "@/lib/title-bridge";
+import { orderEpisodes, parseEpisodeNumber, parseSeasonNumber } from "@/lib/episodes";
+import { playbackSources, qualityLabel } from "@/lib/player-switch";
 import { languageName } from "@/lib/languages";
 import { Artwork, BackLink, CardGrid, CatalogSkeleton, QueryMessage, Rail, SaveButton } from "./catalog-ui";
 import { useCatalogReady } from "./catalog-context";
@@ -31,89 +33,98 @@ function DetailHero({ title, image, backdrop, synopsis, tags, children }: {
   </section>;
 }
 
-function SourceList({ choice, series, language, target }: { choice: Choice; series: boolean; language: string; target: PlaybackTarget }) {
-  const query = useQuery({ queryKey: ["sources", choice.provider, choice.episode.ref, series],
-    queryFn: ({ signal }) => providers.sources(choice.provider, choice.episode.ref, series ? "series" : "movie", signal),
-    staleTime: 60_000, gcTime: 120_000,
-  });
-  if (query.isPending) return <p className="text-muted" role="status">Resolving playback sources…</p>;
-  if (query.isError) return <QueryMessage retry={() => void query.refetch()}>{query.error.message}</QueryMessage>;
-  if (!query.data.length) return <QueryMessage>No sources were returned for this selection.</QueryMessage>;
-  const hasLanguage = (values: string[]) => streamLanguages(values).includes(language);
-  const list = [...query.data].sort((a,b) => Number(hasLanguage(b.languages)) - Number(hasLanguage(a.languages)));
-  return <section aria-label="Available servers">
-    <h3 className="mb-3 font-semibold">{choice.label} servers</h3>
-    {language !== "none" && !choice.languages.includes(language) && !list.some((entry) => hasLanguage(entry.languages)) &&
-      <p className="mb-3 text-sm text-muted">{languageName(language)} audio could not be confirmed from source metadata.</p>}
-    <ul className="grid gap-2">
-      {list.map((entry,i) => <li className="list-row" key={entry.server + i}>
-        <button type="button" className="primary-button" onClick={() => {
-          const resume = useLibrary.getState().progress.find((item) => item.href === target.title.href && item.playback?.item.ref === target.item.ref);
-          usePlayback.getState().open({ target, sources: list, index: i, position: usePlayerPreferences.getState().resume ? resume?.position ?? 0 : 0 });
-        }}><Play size={16} aria-hidden="true" /> Play {entry.server}</button>
-        {(entry.quality || entry.type) && <span className="text-sm text-muted">{[entry.quality, entry.type].filter(Boolean).join(" · ")}</span>}
-        {entry.languages.length > 0 && <span className="text-sm text-muted">{streamLanguages(entry.languages).map(languageName).join(", ")}</span>}
-      </li>)}
-    </ul>
-  </section>;
+function useStartPlayback() {
+  const active = useRef<AbortController>(null);
+  const [status, setStatus] = useState<{ pending?: boolean; error?: string }>({});
+  useEffect(() => () => active.current?.abort(), []);
+
+  function cancel() {
+    active.current?.abort();
+    setStatus({});
+  }
+
+  async function start(target: PlaybackTarget) {
+    active.current?.abort();
+    const controller = new AbortController();
+    active.current = controller;
+    setStatus({ pending: true });
+    try {
+      const sources = await playbackSources(target.item, controller.signal, target.preferredLanguage);
+      if (controller.signal.aborted) return;
+      if (!sources.length) throw new Error("No healthy streams were found for this selection.");
+      const saved = useLibrary.getState().progress.find((item) => item.href === target.title.href && item.playback?.item.ref === target.item.ref);
+      usePlayback.getState().open({
+        target, sources, index: 0, position: usePlayerPreferences.getState().resume ? saved?.position ?? 0 : 0,
+      });
+      setStatus({});
+    } catch (error) {
+      if (!controller.signal.aborted) setStatus({ error: error instanceof Error ? error.message : "Could not start playback." });
+    }
+  }
+
+  return { ...status, start, cancel };
 }
 
 function ProviderEpisodes({ id, detail }: { id: string; detail: ProviderDetail }) {
   const [groupIndex, setGroupIndex] = useState(0);
   const [filter, setFilter] = useState("");
-  const [choice, select] = useState<Choice | null>(null);
+  const playback = useStartPlayback();
   const sortKey = id + ":" + detail.ref;
   const order = useLibrary((state) => state.episodeOrder[sortKey] ?? "asc");
   const setOrder = useLibrary((state) => state.setEpisodeOrder);
   const group = detail.groups[groupIndex];
-  const series = /series|tv|show/i.test(detail.type ?? "") || detail.groups.some((entry) => !!entry.episodesRef);
+  const series = /series|tv|show/i.test(detail.type ?? "") ||
+    (!/movie/i.test(detail.type ?? "") && detail.groups.some((entry) => !!entry.episodesRef));
   const episodes = useQuery({ queryKey: ["episodes", id, group?.episodesRef],
     queryFn: ({ signal }) => groupEpisodes(id, group, signal), enabled: !!group?.episodesRef });
   if (!group) return <QueryMessage>No sources are listed for this title.</QueryMessage>;
 
-  const items = group.episodesRef ? episodes.data ?? [] : group.directLinks;
-  const visible = items.filter((item) => item.title.toLowerCase().includes(filter.toLowerCase()));
-  if (series && visible.every((item) => episodeNumber(item.title) !== undefined)) {
-    visible.sort((a,b) => episodeNumber(a.title)! - episodeNumber(b.title)!);
-  }
+  const items = episodes.data?.length ? episodes.data : group.directLinks;
+  const ordered = series ? orderEpisodes(items) : items;
+  const visible = ordered.filter((item) => item.title.toLowerCase().includes(filter.toLowerCase()));
   if (order === "desc") visible.reverse();
 
   function choose(episode: Episode) {
-    select({ provider: id, episode, episodes: items, label: group.quality || group.title, languages: [] });
+    const make = ({ ref, title }: Episode) => ({ provider: id, ref, title, series });
+    void playback.start({
+      title: { href: providerLink(id, detail.ref), title: detail.title, image: detail.poster ?? detail.image, layout: "provider" },
+      item: make(episode), episodes: series ? ordered.map(make) : [],
+      qualities: detail.groups, qualityIndex: groupIndex, itemIndex: items.indexOf(episode),
+      episodeNumber: series ? parseEpisodeNumber(episode.title) ?? undefined : undefined,
+      seasonNumber: series ? parseSeasonNumber(group.title) ?? undefined : undefined,
+    });
   }
 
-  return <div className="space-y-4">
-    <div className="flex flex-wrap items-end gap-3">
-      <label className="grid gap-1 text-sm font-medium">{series ? "Season or quality" : "Quality"}
-        <select className="field" value={groupIndex} onChange={(event) => { setGroupIndex(Number(event.target.value)); select(null); setFilter(""); }}>
-          {detail.groups.map((entry,i) => <option key={i} value={i}>{entry.title}{entry.quality && !entry.title.includes(entry.quality) ? " · " + entry.quality : ""}</option>)}
+  return <div className="min-w-0 space-y-4">
+    <div className="flex min-w-0 flex-wrap items-end gap-3">
+      {detail.groups.length > 1 && <label className="grid min-w-0 max-w-full gap-1 text-sm font-medium">{series ? "Season or quality" : "Quality"}
+        <select className="field w-full min-w-0 truncate" value={groupIndex}
+          onChange={(event) => { setGroupIndex(Number(event.target.value)); playback.cancel(); setFilter(""); }}>
+          {detail.groups.map((entry,i) => <option key={i} value={i}>{qualityLabel(entry)}</option>)}
         </select>
-      </label>
+      </label>}
       {series && <>
-        <label className="grid gap-1 text-sm font-medium">Filter episodes
-          <input className="field" type="search" value={filter} onChange={(event) => setFilter(event.target.value)} />
+        <label className="grid min-w-0 max-w-full gap-1 text-sm font-medium">Filter episodes
+          <input className="field min-w-0" type="search" value={filter} onChange={(event) => setFilter(event.target.value)} />
         </label>
         <button className="secondary-button" type="button" onClick={() => setOrder(sortKey, order === "asc" ? "desc" : "asc")}>
           <ArrowUpDown size={16} /> {order === "asc" ? "Ascending" : "Descending"}
         </button>
       </>}
+      <button className="primary-button" type="button" disabled={!ordered.length || playback.pending}
+        onClick={() => choose(ordered[0])}><Play size={16} aria-hidden="true" /> {playback.pending ? "Resolving streams…" : "Watch Now"}</button>
     </div>
-    {group.episodesRef && episodes.isPending ? <p role="status">Loading episodes…</p> :
-      group.episodesRef && episodes.isError ? <QueryMessage retry={() => void episodes.refetch()}>{episodes.error.message}</QueryMessage> :
+    {playback.error && <p role="alert" className="text-sm text-muted">{playback.error}</p>}
+    {group.episodesRef && episodes.isPending && !items.length ? <p role="status">Loading episodes…</p> :
+      group.episodesRef && episodes.isError && !items.length ? <QueryMessage retry={() => void episodes.refetch()}>{episodes.error.message}</QueryMessage> :
       !visible.length ? <QueryMessage>No matching {series ? "episodes" : "sources"}.</QueryMessage> :
-      <ul className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+      (series || visible.length > 1) && <ul className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
         {visible.map((item,i) => <li key={item.ref + i}>
-          <button type="button" className="list-row w-full text-left" aria-pressed={choice?.episode.ref === item.ref} onClick={() => choose(item)}>
-            <Play size={16} className="shrink-0 text-accent" /> <span>{item.title}</span>
+          <button type="button" className="list-row w-full text-left" disabled={playback.pending} onClick={() => choose(item)}>
+            <Play size={16} className="shrink-0 text-accent" aria-hidden="true" /> <span>{item.title}</span>
           </button>
         </li>)}
       </ul>}
-    {choice && <SourceList choice={choice} series={series} language="none" target={{
-      title: { href: providerLink(id, detail.ref), title: detail.title, image: detail.poster ?? detail.image, layout: "provider" },
-      item: { provider: id, ref: choice.episode.ref, title: choice.episode.title, series },
-      episodes: series ? [...items].sort((a, b) => (episodeNumber(a.title) ?? Infinity) - (episodeNumber(b.title) ?? Infinity))
-        .map((episode) => ({ provider: id, ref: episode.ref, title: episode.title, series })) : [],
-    }} />}
   </div>;
 }
 
@@ -140,7 +151,8 @@ const subscribeToShareCapability = () => () => {};
 function MovieChoices({ title, season, episode }: { title: TitleDetail; season: number; episode: number }) {
   const installed = useLibrary((state) => state.installed);
   const language = useLibrary((state) => state.language);
-  const [selected, setSelected] = useState<Choice | null>(null);
+  const [selection, setSelection] = useState("");
+  const playback = useStartPlayback();
   const manifest = useQuery({ queryKey: ["manifest"], queryFn: ({ signal }) => providers.manifest(signal) });
   const matching = useQueries({ queries: installed.map((provider) => ({
     queryKey: ["title-match", provider, title.mediaType, title.id],
@@ -153,6 +165,7 @@ function MovieChoices({ title, season, episode }: { title: TitleDetail; season: 
   })) });
   const items = choices.flatMap((entry) => entry.data ?? []).sort((a,b) =>
     Number(b.languages.includes(language)) - Number(a.languages.includes(language)));
+  const selected = items.find((item) => item.provider + ":" + item.episode.ref === selection) ?? items[0];
   const pending = matching.some((entry, i) => entry.isPending || (entry.isSuccess && choices[i].isPending));
 
 
@@ -171,24 +184,30 @@ function MovieChoices({ title, season, episode }: { title: TitleDetail; season: 
         </li>;
       })}
     </ul>
-    {!!items.length && <ul className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-      {items.map((choice) => <li key={choice.provider + choice.episode.ref}>
-        <button type="button" className="list-row w-full text-left" aria-pressed={selected?.episode.ref === choice.episode.ref}
-          onClick={() => setSelected(choice)}>
-          <Play size={16} className="shrink-0 text-accent" />
-          <span><strong className="block">{choice.label}</strong>
-          <span className="text-sm text-muted">{manifest.data?.find((e) => e.id === choice.provider)?.name ?? choice.provider}
-            {choice.languages.length ? " · " + choice.languages.map(languageName).join(", ") : ""}</span></span>
-        </button>
-      </li>)}
-    </ul>}
+    {!!items.length && <div className="flex min-w-0 flex-wrap items-end gap-3">
+      {items.length > 1 && <label className="grid min-w-0 max-w-full gap-1 text-sm font-medium">Quality
+        <select className="field w-full min-w-0 truncate" value={selected ? items.indexOf(selected) : 0} onChange={(event) => {
+          const item = items[Number(event.target.value)];
+          setSelection(item.provider + ":" + item.episode.ref);
+          playback.cancel();
+        }}>
+          {items.map((choice, index) => <option key={choice.provider + choice.episode.ref} value={index}>
+            {manifest.data?.find((entry) => entry.id === choice.provider)?.name ?? choice.provider} · {choice.label}
+            {choice.languages.length ? " · " + choice.languages.map(languageName).join(", ") : ""}
+          </option>)}
+        </select>
+      </label>}
+      {selected && <button type="button" className="primary-button" disabled={playback.pending} onClick={() => void playback.start({
+        title: { href: titleLink(title), title: title.title, image: title.image, layout: "movie" },
+        item: { provider: selected.provider, ref: selected.episode.ref, title: selected.episode.title, series: title.mediaType === "tv" },
+        episodes: selected.episodes.map((item) => ({ provider: selected.provider, ref: item.ref, title: item.title, series: true })),
+        qualities: selected.groups, qualityIndex: selected.groupIndex,
+        itemIndex: Math.max(0, selected.groups[selected.groupIndex].directLinks.findIndex(({ ref }) => ref === selected.episode.ref)),
+        episodeNumber: episode || undefined, seasonNumber: season || undefined, preferredLanguage: language,
+      })}><Play size={16} aria-hidden="true" /> {playback.pending ? "Resolving streams…" : "Watch Now"}</button>}
+    </div>}
+    {playback.error && <p role="alert" className="text-sm text-muted">{playback.error}</p>}
     {!items.length && <p role="status" className="text-muted">{pending ? "Checking installed providers…" : "No matching sources found."}</p>}
-    {selected && <SourceList choice={selected} series={title.mediaType === "tv"} language={language} target={{
-      title: { href: titleLink(title), title: title.title, image: title.image, layout: "movie" },
-      item: { provider: selected.provider, ref: selected.episode.ref, title: selected.episode.title, series: title.mediaType === "tv" },
-      episodes: selected.episodes.map((item) => ({ provider: selected.provider, ref: item.ref, title: item.title, series: true })),
-      episodeNumber: episode || undefined, seasonNumber: season || undefined, preferredLanguage: language,
-    }} />}
   </div>;
 }
 

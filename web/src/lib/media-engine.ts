@@ -11,7 +11,7 @@ type NativeMedia = HTMLVideoElement & { audioTracks?: NativeAudioTracks };
 
 export function attachMedia(video: HTMLVideoElement, source: Source, events: {
   tracks: (tracks: MediaTracks) => void;
-  failed: () => void;
+  failed: (reason?: "format") => void;
 }) {
   let engine: Hls | undefined;
   let disposed = false;
@@ -22,8 +22,8 @@ export function attachMedia(video: HTMLVideoElement, source: Source, events: {
   const textTracks = () => Array.from(video.textTracks).filter((track) => track.kind === "subtitles" || track.kind === "captions");
   let working = true;
 
-  function fail() {
-    if (!disposed && working) { working = false; events.failed(); }
+  function fail(reason?: "format") {
+    if (!disposed && working) { working = false; events.failed(reason); }
   }
 
   function update() {
@@ -37,7 +37,8 @@ export function attachMedia(video: HTMLVideoElement, source: Source, events: {
     });
   }
 
-  video.addEventListener("error", fail);
+  const nativeFailed = () => fail(video.error?.code === 3 || video.error?.code === 4 ? "format" : undefined);
+  video.addEventListener("error", nativeFailed);
   video.addEventListener("loadedmetadata", update);
   video.textTracks.addEventListener("addtrack", update);
 
@@ -65,13 +66,13 @@ export function attachMedia(video: HTMLVideoElement, source: Source, events: {
         } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR && !mediaRecovered) {
           mediaRecovered = true;
           engine.recoverMediaError();
-        } else fail();
+        } else fail(data.type === Hls.ErrorTypes.MEDIA_ERROR ? "format" : undefined);
       });
       engine.attachMedia(video);
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) video.src = source.url;
-    else fail();
+    else fail("format");
   }
-  void load().catch(fail);
+  void load().catch(() => fail());
 
   return {
     fail,
@@ -97,7 +98,7 @@ export function attachMedia(video: HTMLVideoElement, source: Source, events: {
     },
     destroy() {
       disposed = true;
-      video.removeEventListener("error", fail);
+      video.removeEventListener("error", nativeFailed);
       video.removeEventListener("loadedmetadata", update);
       video.textTracks.removeEventListener("addtrack", update);
       engine?.destroy();

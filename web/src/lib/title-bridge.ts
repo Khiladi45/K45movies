@@ -1,10 +1,11 @@
 import { providers } from "./catalog-api";
+import { parseEpisodeNumber, parseSeasonNumber } from "./episodes";
 import { queueProviderRequest } from "./provider-queue";
 import type { Episode, LinkGroup, Post, ProviderDetail, TitleDetail } from "./catalog-types";
 import { fuzzyTitleScore, normalizeTitle, searchVariants } from "./fuzzy";
 import { normalizeLangCode, TEXT_LANGUAGE_ABBREVIATIONS, TEXT_LANGUAGE_NAMES } from "./languages";
 
-export type Choice = { provider: string; episode: Episode; episodes: Episode[]; label: string; languages: string[] };
+export type Choice = { provider: string; episode: Episode; episodes: Episode[]; label: string; languages: string[]; groups: LinkGroup[]; groupIndex: number };
 export type Match = { post: Post; detail: ProviderDetail };
 const noise = new Set("download watch movie series season episode web dl hd fhd uhd webrip bluray hevc x264 x265 multi dual audio dubbed esub aac hdr complete".split(" "));
 
@@ -68,15 +69,9 @@ export const streamLanguages = (values: string[]) => [...new Set(values.flatMap(
   return code ? [code] : detectAudio(value);
 }))];
 
-export function episodeNumber(title: string) {
-  const match = /(?:s\d{1,2}\s*[-._]?)?\be(?:p(?:isode)?)?\s*[-._:#]?\s*(\d{1,4})\b|s\d{1,2}e(\d{1,4})\b|^\s*#?(\d{1,4})\b/i.exec(title);
-  return match ? Number(match[1] || match[2] || match[3]) : undefined;
-}
+export function episodeNumber(title: string) { return parseEpisodeNumber(title) ?? undefined; }
 
-export function seasonNumber(title: string) {
-  const match = /\bs(?:eason)?\s*[-._]?\s*(\d{1,2})(?:\b|e\d)/i.exec(title);
-  return match ? Number(match[1]) : undefined;
-}
+export function seasonNumber(title: string) { return parseSeasonNumber(title) ?? undefined; }
 
 export async function groupEpisodes(provider: string, group: LinkGroup, signal: AbortSignal) {
   return group.episodesRef ? providers.episodes(provider, group.episodesRef, signal) : group.directLinks;
@@ -86,7 +81,7 @@ export async function choicesFor(provider: string, matches: Match[], season: num
   const output = new Map<string, Choice>();
   let failure: unknown;
   for (const match of matches) {
-    for (const group of match.detail.groups) {
+    for (const [groupIndex, group] of match.detail.groups.entries()) {
       const groupSeason = seasonNumber(group.title) ?? seasonNumber(match.post.title);
       if (season && (groupSeason !== undefined ? groupSeason !== season : season !== 1 && seasons > 1)) continue;
       signal.throwIfAborted();
@@ -106,7 +101,7 @@ export async function choicesFor(provider: string, matches: Match[], season: num
       for (const item of items) {
         const label = group.quality || group.title || item.title;
         const languages = detectAudio([label, item.title, match.post.title].join(" "));
-        if (!output.has(item.ref)) output.set(item.ref, { provider, episode: item, episodes, label, languages });
+        if (!output.has(item.ref)) output.set(item.ref, { provider, episode: item, episodes, label, languages, groups: match.detail.groups, groupIndex });
       }
     }
   }
