@@ -272,17 +272,17 @@ export function BrowserPlayer({ session }: { session: Session }) {
     setIndex(index);
   }
 
-  async function resolve(item: PlaybackItem, options: { refresh?: boolean; qualityIndex?: number; fallback?: boolean } = {}) {
+  async function resolve(item: PlaybackItem, options: { refresh?: boolean; qualityIndex?: number; fallback?: "format" | "network" } = {}) {
     retrying.current?.abort();
     const controller = new AbortController();
     retrying.current = controller;
     const qualitySwitch = options.qualityIndex !== undefined;
     const resume = options.refresh || qualitySwitch ? positionRef.current : 0;
-    const shouldPlay = options.refresh || options.fallback || !qualitySwitch || !video()?.paused;
+    const shouldPlay = options.refresh || !!options.fallback || !qualitySwitch || !video()?.paused;
     const option = qualities.find(({ index }) => index === options.qualityIndex);
     if (!options.fallback) failedQualities.current.clear();
     setSwitching(true);
-    setNote(options.fallback ? "This format cannot play in your browser. Trying " + (option?.label ?? "another quality") + "…" :
+    setNote(options.fallback ? (options.fallback === "format" ? "This format cannot play in your browser. Trying " : "Trying ") + (option?.label ?? "another quality") + "…" :
       options.refresh ? "Refreshing sources…" : qualitySwitch ? "Switching quality…" : "Loading episode…");
     try {
       const updated = qualitySwitch ? await switchQuality(target, options.qualityIndex!, controller.signal) : {
@@ -325,7 +325,7 @@ export function BrowserPlayer({ session }: { session: Session }) {
     const alternatives = fallbackQualities(target, failedQualities.current);
     for (const option of alternatives) {
       failedQualities.current.add(option.index);
-      const result = await resolve(target.item, { qualityIndex: option.index, fallback: true });
+      const result = await resolve(target.item, { qualityIndex: option.index, fallback: formatFailure ? "format" : "network" });
       if (result !== false) return;
     }
     setNote("");
