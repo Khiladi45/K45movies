@@ -1,0 +1,19 @@
+{
+  "browser": "157.0.8103.51",
+  "fixture": {
+    "installedByDefault": [
+      "Vega",
+      "Fixture Provider"
+    ],
+    "activatedWithoutCatalog": true,
+    "catalogCalls": [
+      "fixture"
+    ],
+    "health": "needs verification",
+    "error": "Fixture requested interactive verification.",
+    "uninstallPersisted": true
+  },
+  "live": {
+    "diagnostics": "Search\nDVDPlay search failed: Search is unavailable. Browse the categories.\ndvdplay · search · runtime\nFailed · 16 Ms"
+  }
+}

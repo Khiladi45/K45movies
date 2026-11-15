@@ -8,7 +8,7 @@ import * as cheerio from "cheerio";
 import { providerNetwork } from "../../src/server/provider-network";
 
 const require = createRequire(import.meta.url);
-const output = process.argv[2];
+const [output, ...ids] = process.argv.slice(2);
 if (!output) throw new Error("Usage: node --conditions=react-server --import tsx scripts/provider-smoke/compare-android.mts OUTPUT.json");
 const baseline = require("../../docs/web-phase-0/provider-smoke.json");
 const ref = "a77aa81c9ae068e747d3c8b7b40809e895db0188";
@@ -16,7 +16,7 @@ const apiRef = "02f2b0e96ea822cc68b2d18609418501534283ca";
 const urls = JSON.parse(execFileSync("git", ["-C", "../../K45movies-api", "show", apiRef + ":urls.json"], { encoding: "utf8" }));
 const ua = "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36";
 const checkerUA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
-const targetRows = baseline.rows.filter((row) => Object.values(row.results).some((op) => ["fail", "empty"].includes(op.state)));
+const targetRows = baseline.rows.filter((row) => ids.length ? ids.includes(row.id) : Object.values(row.results).some((op) => ["fail", "empty"].includes(op.state)));
 const safe = (message) => String(message).split(" | {")[0]
   .replace(/https?:\/\/[^\s"'<>]+/gi, "[url]").slice(0, 180);
 const log = console.log.bind(console);
@@ -29,7 +29,10 @@ async function invoke(bundle, values, id, op, args) {
   const { http } = providerNetwork(abort.signal);
   const events = [];
   http.interceptors.response.use((response) => {
-    events.push({ host: new URL(response.request.responseURL).hostname, status: response.status });
+    const player = typeof response.data === "object" && response.data !== null &&
+      new URL(response.request.responseURL).pathname.endsWith("/player.php") ?
+      { videoLink: typeof response.data.video_link === "string", playerReady: response.data.status === "ok" } : undefined;
+    events.push({ host: new URL(response.request.responseURL).hostname, status: response.status, player });
     return response;
   }, (error) => {
     const code = error.cause?.code || error.code || error.name;
@@ -91,12 +94,14 @@ async function probe(row) {
   const items = [...posts.value ?? [], ...search.value ?? []];
   const first = items.find(({ title }) => title === row.title) ?? items.find(({ type }) => /series|tv|show/i.test(type ?? "")) ?? items[0];
   const result = { id, title: first?.title, operations: {} };
-  if (first && ["meta", "episodes", "stream"].some((op) => ["fail", "empty"].includes(row.results[op].state))) {
+  if (first && (ids.length || ["meta", "episodes", "stream"].some((op) => ["fail", "empty"].includes(row.results[op].state)))) {
     const meta = await call("getMeta", { link: first.link });
     const group = meta.value?.linkList?.find(({ episodesLink }) => episodesLink) ?? meta.value?.linkList?.[0];
     const episodes = group?.episodesLink ? await call("getEpisodes", { url: group.episodesLink }) : { state: "skipped" };
     const source = episodes.value?.[0] ?? group?.directLinks?.[0] ?? meta.value?.linkList?.find(({ directLinks }) => directLinks?.length)?.directLinks[0];
     const stream = source ? await call("getStream", { link: source.link, type: group?.episodesLink ? "series" : (meta.value.type || "movie") }) : { state: "skipped" };
+    const records = Array.isArray(stream.value) ? stream.value : stream.value ? [stream.value] : [];
+    result.sourceRecords = { total: records.length, http: records.filter(({ link }) => /^https?:\/\//i.test(link ?? "")).length };
     Object.assign(result.operations, { meta, episodes, stream });
   }
   Object.assign(result.operations, { catalog, posts, search });

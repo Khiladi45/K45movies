@@ -1,0 +1,972 @@
+{
+  "started": "2026-11-15T07:40:46.778Z",
+  "finished": "2026-11-15T07:41:41.664Z",
+  "query": "Batman",
+  "manifest": {
+    "state": "pass",
+    "ms": 498,
+    "http": 200,
+    "count": 42,
+    "trace": {
+      "requests": 1,
+      "statuses": {
+        "200": 1
+      },
+      "errors": [],
+      "providerLogs": 0,
+      "webViewCalls": 0
+    }
+  },
+  "manifestIds": [
+    "1flex",
+    "1tamilblasters",
+    "1tamilmv",
+    "4khdhub",
+    "Joya9tv",
+    "anikoto",
+    "animesalt",
+    "animesub",
+    "animeworld",
+    "autoEmbed",
+    "castle",
+    "disneyPlus",
+    "drive",
+    "dvdplay",
+    "gokuHD",
+    "hdhub4u",
+    "hdmovieslife",
+    "hiAnime",
+    "hotstar",
+    "kickAssAnime",
+    "kissKh",
+    "kmMovies",
+    "luxMovies",
+    "marvel",
+    "movieBoxWeb",
+    "movielinkdb",
+    "movies4u",
+    "moviesda",
+    "movieswood",
+    "moviezwap",
+    "multi",
+    "mxplayer",
+    "netflix",
+    "pixar",
+    "primeVideo",
+    "showbox",
+    "starWars",
+    "torrentio",
+    "uhd",
+    "uniquestream",
+    "vega",
+    "zeefliz"
+  ],
+  "manifestSources": [
+    {
+      "id": "1flex",
+      "bundleSource": "api"
+    },
+    {
+      "id": "1tamilblasters",
+      "bundleSource": "api"
+    },
+    {
+      "id": "1tamilmv",
+      "bundleSource": "api"
+    },
+    {
+      "id": "4khdhub",
+      "bundleSource": "api"
+    },
+    {
+      "id": "Joya9tv",
+      "bundleSource": "api"
+    },
+    {
+      "id": "anikoto",
+      "bundleSource": "api"
+    },
+    {
+      "id": "animesalt",
+      "bundleSource": "api"
+    },
+    {
+      "id": "animesub",
+      "bundleSource": "api"
+    },
+    {
+      "id": "animeworld",
+      "bundleSource": "api"
+    },
+    {
+      "id": "autoEmbed",
+      "bundleSource": "api"
+    },
+    {
+      "id": "castle",
+      "bundleSource": "api"
+    },
+    {
+      "id": "disneyPlus",
+      "bundleSource": "api"
+    },
+    {
+      "id": "drive",
+      "bundleSource": "api"
+    },
+    {
+      "id": "dvdplay",
+      "bundleSource": "api"
+    },
+    {
+      "id": "gokuHD",
+      "bundleSource": "api"
+    },
+    {
+      "id": "hdhub4u",
+      "bundleSource": "api"
+    },
+    {
+      "id": "hdmovieslife",
+      "bundleSource": "api"
+    },
+    {
+      "id": "hiAnime",
+      "bundleSource": "api"
+    },
+    {
+      "id": "hotstar",
+      "bundleSource": "api"
+    },
+    {
+      "id": "kickAssAnime",
+      "bundleSource": "api"
+    },
+    {
+      "id": "kissKh",
+      "bundleSource": "api"
+    },
+    {
+      "id": "kmMovies",
+      "bundleSource": "api"
+    },
+    {
+      "id": "luxMovies",
+      "bundleSource": "api"
+    },
+    {
+      "id": "marvel",
+      "bundleSource": "api"
+    },
+    {
+      "id": "movieBoxWeb",
+      "bundleSource": "api"
+    },
+    {
+      "id": "movielinkdb",
+      "bundleSource": "api"
+    },
+    {
+      "id": "movies4u",
+      "bundleSource": "api"
+    },
+    {
+      "id": "moviesda",
+      "bundleSource": "api"
+    },
+    {
+      "id": "movieswood",
+      "bundleSource": "api"
+    },
+    {
+      "id": "moviezwap",
+      "bundleSource": "api"
+    },
+    {
+      "id": "multi",
+      "bundleSource": "api"
+    },
+    {
+      "id": "mxplayer",
+      "bundleSource": "api"
+    },
+    {
+      "id": "netflix",
+      "bundleSource": "api"
+    },
+    {
+      "id": "pixar",
+      "bundleSource": "api"
+    },
+    {
+      "id": "primeVideo",
+      "bundleSource": "api"
+    },
+    {
+      "id": "showbox",
+      "bundleSource": "api"
+    },
+    {
+      "id": "starWars",
+      "bundleSource": "api"
+    },
+    {
+      "id": "torrentio",
+      "bundleSource": "api"
+    },
+    {
+      "id": "uhd",
+      "bundleSource": "api"
+    },
+    {
+      "id": "uniquestream",
+      "bundleSource": "api"
+    },
+    {
+      "id": "vega",
+      "bundleSource": "api"
+    },
+    {
+      "id": "zeefliz",
+      "bundleSource": "api"
+    }
+  ],
+  "rows": [
+    {
+      "id": "1tamilblasters",
+      "title": "The Beast (2026) [Tam + Tel + Hin + Mal + Kan + Eng]",
+      "group": "Watch Online",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 737,
+          "http": 200,
+          "count": 9,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 811,
+          "http": 200,
+          "count": 30,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "pass",
+          "ms": 701,
+          "http": 200,
+          "count": 3,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 387,
+          "http": 200,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 1173,
+          "http": 200,
+          "count": 1,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        }
+      },
+      "samples": [
+        {
+          "server": "1TamilBlasters 1",
+          "hint": "m3u8",
+          "hls": true,
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "range": null,
+          "signature": "HLS",
+          "ms": 764
+        }
+      ]
+    },
+    {
+      "id": "1tamilmv",
+      "title": "Maaya Oviyan (2026) 1080p",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 673,
+          "http": 200,
+          "count": 4,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 1006,
+          "http": 200,
+          "count": 25,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "pass",
+          "ms": 1409,
+          "http": 200,
+          "count": 25,
+          "trace": {
+            "requests": 3,
+            "statuses": {
+              "200": 3
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 203,
+          "http": 200,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "animesalt",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 789,
+          "http": 200,
+          "count": 3,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "empty",
+          "ms": 1122,
+          "http": 200,
+          "count": 0,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "empty",
+          "ms": 1027,
+          "http": 200,
+          "count": 0,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "skipped",
+          "error": "No title from posts or search"
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "animesub",
+      "title": "Steel Ball Run: JoJo no Kimyou na Bouken",
+      "group": "Season 6",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 866,
+          "http": 200,
+          "count": 4,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 935,
+          "http": 200,
+          "count": 50,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "pass",
+          "ms": 1029,
+          "http": 200,
+          "count": 9,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 2340,
+          "http": 200,
+          "trace": {
+            "requests": 13,
+            "statuses": {
+              "200": 11,
+              "404": 2
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "empty",
+          "ms": 1711,
+          "http": 200,
+          "count": 0,
+          "trace": {
+            "requests": 3,
+            "statuses": {
+              "200": 3
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "kissKh",
+      "title": "Blossom in Darkness",
+      "group": "Blossom in Darkness",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 402,
+          "http": 200,
+          "count": 4,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 711,
+          "http": 200,
+          "count": 10,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "pass",
+          "ms": 619,
+          "http": 200,
+          "count": 2,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 301,
+          "http": 200,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "empty",
+          "ms": 938,
+          "http": 200,
+          "count": 0,
+          "trace": {
+            "requests": 6,
+            "statuses": {
+              "200": 6
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "movieswood",
+      "title": "DNK",
+      "group": "⬇ Download",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 317,
+          "http": 200,
+          "count": 5,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 795,
+          "http": 200,
+          "count": 9,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "fail",
+          "ms": 16,
+          "http": 422,
+          "error": "MoviesWood search failed: Search is unavailable. Browse the categories.",
+          "details": {
+            "provider": "movieswood",
+            "operation": "search",
+            "stage": "runtime",
+            "message": "MoviesWood search failed: Search is unavailable. Browse the categories."
+          },
+          "trace": {
+            "requests": 0,
+            "statuses": {},
+            "errors": [
+              "MoviesWood search failed: Search is unavailable. Browse the categories."
+            ],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 433,
+          "http": 200,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 2660,
+          "http": 200,
+          "count": 1,
+          "trace": {
+            "requests": 6,
+            "statuses": {
+              "200": 4,
+              "206": 1,
+              "302": 1
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        }
+      },
+      "samples": [
+        {
+          "server": "MoviesWood Direct",
+          "hint": "mkv",
+          "hls": false,
+          "status": 206,
+          "contentType": "application/octet-stream",
+          "range": "bytes 0-4095/1377851783",
+          "signature": "EBML",
+          "ms": 521
+        }
+      ]
+    },
+    {
+      "id": "zeefliz",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 345,
+          "http": 200,
+          "count": 2,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "fail",
+          "ms": 84,
+          "http": 502,
+          "error": "Upstream request failed (ERR_INVALID_URL).",
+          "details": {
+            "provider": "zeefliz",
+            "operation": "posts",
+            "stage": "upstream",
+            "message": "Upstream request failed (ERR_INVALID_URL)."
+          },
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [
+              "ZeeFliz posts failed: {\"code\":\"ERR_INVALID_URL\",\"input\":\"\"}"
+            ],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "fail",
+          "ms": 81,
+          "http": 502,
+          "error": "Upstream request failed (ERR_INVALID_URL).",
+          "details": {
+            "provider": "zeefliz",
+            "operation": "search",
+            "stage": "upstream",
+            "message": "Upstream request failed (ERR_INVALID_URL)."
+          },
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [
+              "ZeeFliz search posts failed: {\"code\":\"ERR_INVALID_URL\",\"input\":\"/?s=Batman\"}"
+            ],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "skipped",
+          "error": "No title from posts or search"
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "hiAnime",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 339,
+          "http": 200,
+          "count": 4,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "fail",
+          "ms": 57,
+          "http": 502,
+          "error": "Upstream request failed (ERR_INVALID_URL).",
+          "details": {
+            "provider": "hiAnime",
+            "operation": "posts",
+            "stage": "upstream",
+            "message": "Upstream request failed (ERR_INVALID_URL)."
+          },
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [
+              "Invalid URL"
+            ],
+            "providerLogs": 2,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "fail",
+          "ms": 54,
+          "http": 502,
+          "error": "Upstream request failed (ERR_INVALID_URL).",
+          "details": {
+            "provider": "hiAnime",
+            "operation": "search",
+            "stage": "upstream",
+            "message": "Upstream request failed (ERR_INVALID_URL)."
+          },
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [
+              "Invalid URL"
+            ],
+            "providerLogs": 2,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "skipped",
+          "error": "No title from posts or search"
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "disneyPlus",
+      "results": {
+        "catalog": {
+          "state": "fail",
+          "ms": 25078,
+          "http": 504,
+          "error": "The provider exceeded the operation deadline.",
+          "details": {
+            "provider": "disneyPlus",
+            "operation": "catalog",
+            "stage": "runtime",
+            "message": "The provider exceeded the operation deadline."
+          },
+          "trace": {
+            "requests": 11,
+            "statuses": {
+              "200": 10,
+              "301": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "skipped",
+          "error": "No category returned"
+        },
+        "search": {
+          "state": "fail",
+          "ms": 25004,
+          "http": 504,
+          "error": "The provider exceeded the operation deadline.",
+          "details": {
+            "provider": "disneyPlus",
+            "operation": "search",
+            "stage": "runtime",
+            "message": "The provider exceeded the operation deadline."
+          },
+          "trace": {
+            "requests": 10,
+            "statuses": {
+              "200": 9,
+              "301": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "skipped",
+          "error": "No title from posts or search"
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    }
+  ]
+}

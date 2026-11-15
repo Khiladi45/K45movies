@@ -1,0 +1,307 @@
+{
+  "search": {
+    "term": "Batman",
+    "count": 20
+  },
+  "title": {
+    "id": 414906,
+    "title": "The Batman",
+    "year": "2022"
+  },
+  "matches": [
+    {
+      "provider": "1flex",
+      "ms": 3134,
+      "state": "available",
+      "matches": 1,
+      "choices": 1
+    },
+    {
+      "provider": "1tamilblasters",
+      "ms": 18767,
+      "state": "no match",
+      "matches": 0,
+      "choices": 0
+    },
+    {
+      "provider": "1tamilmv",
+      "ms": 2812,
+      "state": "no match",
+      "matches": 0,
+      "choices": 0
+    },
+    {
+      "provider": "4khdhub",
+      "ms": 1895,
+      "state": "available",
+      "matches": 1,
+      "choices": 6
+    },
+    {
+      "provider": "Joya9tv",
+      "ms": 22038,
+      "state": "failed",
+      "error": "The upstream catalog is unavailable. Try again.",
+      "http": 502
+    },
+    {
+      "provider": "anikoto",
+      "ms": 2551,
+      "state": "available",
+      "matches": 1,
+      "choices": 1
+    },
+    {
+      "provider": "animesalt",
+      "ms": 3074,
+      "state": "failed",
+      "error": "This title is unavailable from the provider.",
+      "http": 404
+    },
+    {
+      "provider": "animesub",
+      "ms": 3948,
+      "state": "available",
+      "matches": 1,
+      "choices": 1
+    },
+    {
+      "provider": "animeworld",
+      "ms": 1549,
+      "state": "no match",
+      "matches": 0,
+      "choices": 0
+    },
+    {
+      "provider": "autoEmbed",
+      "ms": 4828,
+      "state": "available",
+      "matches": 1,
+      "choices": 1
+    },
+    {
+      "provider": "castle",
+      "ms": 1960,
+      "state": "available",
+      "matches": 1,
+      "choices": 1
+    },
+    {
+      "provider": "disneyPlus",
+      "ms": 50332,
+      "state": "failed",
+      "error": "The provider took too long to respond.",
+      "http": 504
+    },
+    {
+      "provider": "drive",
+      "ms": 3004,
+      "state": "available",
+      "matches": 1,
+      "choices": 10
+    },
+    {
+      "provider": "dvdplay",
+      "ms": 300,
+      "state": "failed",
+      "error": "The upstream catalog is unavailable. Try again.",
+      "http": 502
+    },
+    {
+      "provider": "gokuHD",
+      "ms": 21717,
+      "state": "failed",
+      "error": "The upstream catalog is unavailable. Try again.",
+      "http": 502
+    },
+    {
+      "provider": "hdhub4u",
+      "ms": 1464,
+      "state": "no match",
+      "matches": 0,
+      "choices": 0
+    },
+    {
+      "provider": "hdmovieslife",
+      "ms": 1652,
+      "state": "no match",
+      "matches": 0,
+      "choices": 0
+    },
+    {
+      "provider": "hiAnime",
+      "ms": 479,
+      "state": "no match",
+      "matches": 0,
+      "choices": 0
+    },
+    {
+      "provider": "hotstar",
+      "ms": 50339,
+      "state": "failed",
+      "error": "The provider took too long to respond.",
+      "http": 504
+    },
+    {
+      "provider": "kickAssAnime",
+      "ms": 3444,
+      "state": "no match",
+      "matches": 0,
+      "choices": 0
+    },
+    {
+      "provider": "kissKh",
+      "ms": 1550,
+      "state": "available",
+      "matches": 1,
+      "choices": 1
+    },
+    {
+      "provider": "kmMovies",
+      "ms": 2265,
+      "state": "available",
+      "matches": 1,
+      "choices": 12
+    },
+    {
+      "provider": "luxMovies",
+      "ms": 1594,
+      "state": "no match",
+      "matches": 0,
+      "choices": 0
+    },
+    {
+      "provider": "marvel",
+      "ms": 50444,
+      "state": "failed",
+      "error": "The provider took too long to respond.",
+      "http": 504
+    },
+    {
+      "provider": "movieBoxWeb",
+      "ms": 1560,
+      "state": "no match",
+      "matches": 0,
+      "choices": 0
+    },
+    {
+      "provider": "movielinkdb",
+      "ms": 5792,
+      "state": "available",
+      "matches": 1,
+      "choices": 3
+    },
+    {
+      "provider": "movies4u",
+      "ms": 21768,
+      "state": "failed",
+      "error": "The upstream catalog is unavailable. Try again.",
+      "http": 502
+    },
+    {
+      "provider": "moviesda",
+      "ms": 2710,
+      "state": "no match",
+      "matches": 0,
+      "choices": 0
+    },
+    {
+      "provider": "movieswood",
+      "ms": 374,
+      "state": "failed",
+      "error": "The upstream catalog is unavailable. Try again.",
+      "http": 502
+    },
+    {
+      "provider": "moviezwap",
+      "ms": 1169,
+      "state": "no match",
+      "matches": 0,
+      "choices": 0
+    },
+    {
+      "provider": "multi",
+      "ms": 2363,
+      "state": "no match",
+      "matches": 1,
+      "choices": 0
+    },
+    {
+      "provider": "mxplayer",
+      "ms": 4478,
+      "state": "no match",
+      "matches": 0,
+      "choices": 0
+    },
+    {
+      "provider": "netflix",
+      "ms": 50331,
+      "state": "failed",
+      "error": "The provider took too long to respond.",
+      "http": 504
+    },
+    {
+      "provider": "pixar",
+      "ms": 50351,
+      "state": "failed",
+      "error": "The provider took too long to respond.",
+      "http": 504
+    },
+    {
+      "provider": "primeVideo",
+      "ms": 50383,
+      "state": "failed",
+      "error": "The provider took too long to respond.",
+      "http": 504
+    },
+    {
+      "provider": "showbox",
+      "ms": 5932,
+      "state": "available",
+      "matches": 1,
+      "choices": 6
+    },
+    {
+      "provider": "starWars",
+      "ms": 50342,
+      "state": "failed",
+      "error": "The provider took too long to respond.",
+      "http": 504
+    },
+    {
+      "provider": "torrentio",
+      "ms": 5547,
+      "state": "available",
+      "matches": 1,
+      "choices": 1
+    },
+    {
+      "provider": "uhd",
+      "ms": 21749,
+      "state": "failed",
+      "error": "The upstream catalog is unavailable. Try again.",
+      "http": 502
+    },
+    {
+      "provider": "uniquestream",
+      "ms": 21225,
+      "state": "no match",
+      "matches": 0,
+      "choices": 0
+    },
+    {
+      "provider": "vega",
+      "ms": 2750,
+      "state": "available",
+      "matches": 1,
+      "choices": 10
+    },
+    {
+      "provider": "zeefliz",
+      "ms": 744,
+      "state": "failed",
+      "error": "The upstream catalog is unavailable. Try again.",
+      "http": 502
+    }
+  ]
+}

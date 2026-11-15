@@ -1,0 +1,555 @@
+{
+  "ref": "a77aa81c9ae068e747d3c8b7b40809e895db0188",
+  "apiRef": "02f2b0e96ea822cc68b2d18609418501534283ca",
+  "urlChecks": {
+    "kissKh": {
+      "host": "kisskh.is",
+      "finalHost": "kisskh.is",
+      "status": 200,
+      "ms": 446
+    },
+    "animesalt": {
+      "host": "animesalt.in",
+      "finalHost": "animesalt.in",
+      "status": 200,
+      "ms": 1021
+    },
+    "nfMirror": {
+      "host": "net77.cc",
+      "finalHost": "net77.cc",
+      "status": 403,
+      "ms": 4576
+    },
+    "UhdMovies": {
+      "host": "uhdmovies.beauty",
+      "error": "TimeoutError",
+      "ms": 10007
+    }
+  },
+  "results": [
+    {
+      "id": "animesalt",
+      "operations": {
+        "catalog": {
+          "state": "pass",
+          "count": 3,
+          "ms": 36,
+          "events": []
+        },
+        "posts": {
+          "state": "empty",
+          "count": 0,
+          "ms": 1138,
+          "events": [
+            {
+              "host": "animesalt.in",
+              "status": 200
+            }
+          ]
+        },
+        "search": {
+          "state": "empty",
+          "count": 0,
+          "ms": 1157,
+          "events": [
+            {
+              "host": "animesalt.in",
+              "status": 200
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "animesub",
+      "title": "Steel Ball Run: JoJo no Kimyou na Bouken",
+      "operations": {
+        "meta": {
+          "state": "pass",
+          "count": 1,
+          "ms": 2171,
+          "events": [
+            {
+              "host": "kitsu.io",
+              "status": 200
+            },
+            {
+              "host": "anime-kitsu.strem.fun",
+              "status": 200
+            },
+            {
+              "host": "api.aniskip.com",
+              "status": 200
+            },
+            {
+              "host": "api.aniskip.com",
+              "status": 200
+            },
+            {
+              "host": "api.aniskip.com",
+              "status": 200
+            },
+            {
+              "host": "api.aniskip.com",
+              "status": 200
+            },
+            {
+              "host": "api.aniskip.com",
+              "code": "ERR_BAD_RESPONSE",
+              "status": 404
+            },
+            {
+              "host": "api.aniskip.com",
+              "status": 200
+            },
+            {
+              "host": "api.aniskip.com",
+              "status": 200
+            },
+            {
+              "host": "api.aniskip.com",
+              "status": 200
+            },
+            {
+              "host": "api.aniskip.com",
+              "code": "ERR_BAD_RESPONSE",
+              "status": 404
+            },
+            {
+              "host": "api.theintrodb.org",
+              "status": 200
+            },
+            {
+              "host": "api.theintrodb.org",
+              "status": 200
+            }
+          ]
+        },
+        "episodes": {
+          "state": "skipped"
+        },
+        "stream": {
+          "state": "pass",
+          "count": 35,
+          "ms": 1631,
+          "events": [
+            {
+              "host": "animesub.duckdns.org",
+              "status": 200
+            },
+            {
+              "host": "torrentio.strem.fun",
+              "status": 200
+            }
+          ]
+        },
+        "catalog": {
+          "state": "pass",
+          "count": 4,
+          "ms": 20,
+          "events": []
+        },
+        "posts": {
+          "state": "pass",
+          "count": 50,
+          "ms": 984,
+          "events": [
+            {
+              "host": "myanimelist.net",
+              "status": 200
+            }
+          ]
+        },
+        "search": {
+          "state": "pass",
+          "count": 9,
+          "ms": 890,
+          "events": [
+            {
+              "host": "myanimelist.net",
+              "status": 200
+            }
+          ]
+        }
+      },
+      "sourceRecords": {
+        "total": 35,
+        "http": 0
+      }
+    },
+    {
+      "id": "kissKh",
+      "title": "Blossom in Darkness",
+      "operations": {
+        "meta": {
+          "state": "pass",
+          "count": 1,
+          "ms": 327,
+          "events": [
+            {
+              "host": "kisskh.is",
+              "status": 200
+            }
+          ]
+        },
+        "episodes": {
+          "state": "skipped"
+        },
+        "stream": {
+          "state": "pass",
+          "count": 1,
+          "ms": 1090,
+          "events": [
+            {
+              "host": "kisskh.is",
+              "status": 200
+            },
+            {
+              "host": "kisskh.is",
+              "status": 200
+            },
+            {
+              "host": "kisskh.is",
+              "status": 200
+            },
+            {
+              "host": "kisskh.is",
+              "status": 200
+            },
+            {
+              "host": "kisskh.is",
+              "status": 200
+            },
+            {
+              "code": "ERR_INVALID_URL"
+            }
+          ]
+        },
+        "catalog": {
+          "state": "pass",
+          "count": 4,
+          "ms": 11,
+          "events": []
+        },
+        "posts": {
+          "state": "pass",
+          "count": 10,
+          "ms": 896,
+          "events": [
+            {
+              "host": "kisskh.is",
+              "status": 200
+            }
+          ]
+        },
+        "search": {
+          "state": "pass",
+          "count": 2,
+          "ms": 656,
+          "events": [
+            {
+              "host": "kisskh.is",
+              "status": 200
+            }
+          ]
+        }
+      },
+      "sourceRecords": {
+        "total": 1,
+        "http": 0
+      }
+    },
+    {
+      "id": "torrentio",
+      "title": "Heart of the Beast",
+      "operations": {
+        "meta": {
+          "state": "pass",
+          "count": 1,
+          "ms": 72,
+          "events": [
+            {
+              "host": "v3-cinemeta.strem.io",
+              "status": 200
+            }
+          ]
+        },
+        "episodes": {
+          "state": "skipped"
+        },
+        "stream": {
+          "state": "pass",
+          "count": 218,
+          "ms": 558,
+          "events": [
+            {
+              "host": "torrentio.strem.fun",
+              "status": 200
+            }
+          ]
+        },
+        "catalog": {
+          "state": "pass",
+          "count": 4,
+          "ms": 1,
+          "events": []
+        },
+        "posts": {
+          "state": "pass",
+          "count": 50,
+          "ms": 358,
+          "events": [
+            {
+              "host": "cinemeta-catalogs.strem.io",
+              "status": 200
+            }
+          ]
+        },
+        "search": {
+          "state": "pass",
+          "count": 40,
+          "ms": 466,
+          "events": [
+            {
+              "host": "v3-cinemeta.strem.io",
+              "status": 200
+            },
+            {
+              "host": "v3-cinemeta.strem.io",
+              "status": 200
+            }
+          ]
+        }
+      },
+      "sourceRecords": {
+        "total": 218,
+        "http": 0
+      }
+    },
+    {
+      "id": "disneyMirror",
+      "title": "Batman: Knightfall Part 1: Knightfall",
+      "operations": {
+        "meta": {
+          "state": "pass",
+          "count": 1,
+          "ms": 278,
+          "events": [
+            {
+              "host": "tv.imgcdn.kim",
+              "status": 200
+            }
+          ]
+        },
+        "episodes": {
+          "state": "skipped"
+        },
+        "stream": {
+          "state": "empty",
+          "count": 0,
+          "ms": 258,
+          "events": [
+            {
+              "host": "tv.imgcdn.kim",
+              "status": 200,
+              "player": {
+                "videoLink": true,
+                "playerReady": false
+              }
+            }
+          ]
+        },
+        "catalog": {
+          "state": "pass",
+          "count": 4,
+          "ms": 0,
+          "events": []
+        },
+        "posts": {
+          "state": "empty",
+          "count": 0,
+          "ms": 1418,
+          "events": [
+            {
+              "host": "mobiledetects.com",
+              "status": 200
+            },
+            {
+              "host": "tv.imgcdn.kim",
+              "status": 200
+            }
+          ]
+        },
+        "search": {
+          "state": "pass",
+          "count": 8,
+          "ms": 1583,
+          "events": [
+            {
+              "host": "mobiledetects.com",
+              "status": 200
+            },
+            {
+              "host": "tv.imgcdn.kim",
+              "status": 200
+            }
+          ]
+        }
+      },
+      "sourceRecords": {
+        "total": 0,
+        "http": 0
+      }
+    },
+    {
+      "id": "netflixMirror",
+      "title": "Batman Ninja",
+      "operations": {
+        "meta": {
+          "state": "pass",
+          "count": 1,
+          "ms": 269,
+          "events": [
+            {
+              "host": "tv.imgcdn.kim",
+              "status": 200
+            }
+          ]
+        },
+        "episodes": {
+          "state": "skipped"
+        },
+        "stream": {
+          "state": "empty",
+          "count": 0,
+          "ms": 266,
+          "events": [
+            {
+              "host": "tv.imgcdn.kim",
+              "status": 200,
+              "player": {
+                "videoLink": true,
+                "playerReady": false
+              }
+            }
+          ]
+        },
+        "catalog": {
+          "state": "pass",
+          "count": 4,
+          "ms": 0,
+          "events": []
+        },
+        "posts": {
+          "state": "empty",
+          "count": 0,
+          "ms": 1580,
+          "events": [
+            {
+              "host": "mobiledetects.com",
+              "status": 200
+            },
+            {
+              "host": "tv.imgcdn.kim",
+              "status": 200
+            }
+          ]
+        },
+        "search": {
+          "state": "pass",
+          "count": 5,
+          "ms": 1575,
+          "events": [
+            {
+              "host": "mobiledetects.com",
+              "status": 200
+            },
+            {
+              "host": "tv.imgcdn.kim",
+              "status": 200
+            }
+          ]
+        }
+      },
+      "sourceRecords": {
+        "total": 0,
+        "http": 0
+      }
+    },
+    {
+      "id": "primeMirror",
+      "title": "Batman",
+      "operations": {
+        "meta": {
+          "state": "pass",
+          "count": 1,
+          "ms": 287,
+          "events": [
+            {
+              "host": "tv.imgcdn.kim",
+              "status": 200
+            }
+          ]
+        },
+        "episodes": {
+          "state": "skipped"
+        },
+        "stream": {
+          "state": "empty",
+          "count": 0,
+          "ms": 315,
+          "events": [
+            {
+              "host": "tv.imgcdn.kim",
+              "status": 200,
+              "player": {
+                "videoLink": true,
+                "playerReady": false
+              }
+            }
+          ]
+        },
+        "catalog": {
+          "state": "pass",
+          "count": 4,
+          "ms": 0,
+          "events": []
+        },
+        "posts": {
+          "state": "empty",
+          "count": 0,
+          "ms": 584,
+          "events": [
+            {
+              "host": "mobiledetects.com",
+              "status": 200
+            },
+            {
+              "host": "tv.imgcdn.kim",
+              "status": 200
+            }
+          ]
+        },
+        "search": {
+          "state": "pass",
+          "count": 13,
+          "ms": 578,
+          "events": [
+            {
+              "host": "mobiledetects.com",
+              "status": 200
+            },
+            {
+              "host": "tv.imgcdn.kim",
+              "status": 200
+            }
+          ]
+        }
+      },
+      "sourceRecords": {
+        "total": 0,
+        "http": 0
+      }
+    }
+  ]
+}

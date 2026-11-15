@@ -1,0 +1,1 @@
+{"coalescedCalls":1,"emptyCalls":2,"kvRoundTrip":true,"providerScopesIsolated":true,"kvExpired":true,"redisRestProtocol":true,"queuePeak":4,"queuedCancellation":true,"perClient429":true,"ingressIsolation":true,"blockedDestinations":3}

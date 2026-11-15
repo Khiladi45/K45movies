@@ -1,0 +1,425 @@
+{
+  "search": {
+    "term": "Batman",
+    "count": 20
+  },
+  "title": {
+    "id": 414906,
+    "title": "The Batman",
+    "year": "2022"
+  },
+  "matches": [
+    {
+      "provider": "1flex",
+      "ms": 824,
+      "state": "available",
+      "matches": 1,
+      "choices": 1
+    },
+    {
+      "provider": "1tamilblasters",
+      "ms": 880,
+      "state": "no match",
+      "matches": 0,
+      "choices": 0
+    },
+    {
+      "provider": "1tamilmv",
+      "ms": 1689,
+      "state": "no match",
+      "matches": 0,
+      "choices": 0
+    },
+    {
+      "provider": "4khdhub",
+      "ms": 1570,
+      "state": "available",
+      "matches": 1,
+      "choices": 6
+    },
+    {
+      "provider": "Joya9tv",
+      "ms": 21347,
+      "state": "failed",
+      "error": "Upstream request timed out.",
+      "http": 504,
+      "details": {
+        "provider": "Joya9tv",
+        "operation": "search",
+        "stage": "upstream",
+        "message": "Upstream request timed out."
+      }
+    },
+    {
+      "provider": "anikoto",
+      "ms": 2106,
+      "state": "available",
+      "matches": 1,
+      "choices": 1
+    },
+    {
+      "provider": "animesalt",
+      "ms": 1875,
+      "state": "no match",
+      "matches": 0,
+      "choices": 0
+    },
+    {
+      "provider": "animesub",
+      "ms": 2988,
+      "state": "available",
+      "matches": 1,
+      "choices": 1
+    },
+    {
+      "provider": "animeworld",
+      "ms": 1883,
+      "state": "no match",
+      "matches": 0,
+      "choices": 0
+    },
+    {
+      "provider": "autoEmbed",
+      "ms": 4161,
+      "state": "available",
+      "matches": 1,
+      "choices": 1
+    },
+    {
+      "provider": "castle",
+      "ms": 2329,
+      "state": "available",
+      "matches": 1,
+      "choices": 1
+    },
+    {
+      "provider": "disneyPlus",
+      "ms": 50125,
+      "state": "failed",
+      "error": "The provider exceeded the operation deadline.",
+      "http": 504,
+      "details": {
+        "provider": "disneyPlus",
+        "operation": "search",
+        "stage": "runtime",
+        "message": "The provider exceeded the operation deadline."
+      }
+    },
+    {
+      "provider": "drive",
+      "ms": 2011,
+      "state": "available",
+      "matches": 1,
+      "choices": 11
+    },
+    {
+      "provider": "dvdplay",
+      "ms": 22,
+      "state": "failed",
+      "error": "DVDPlay search failed: Search is unavailable. Browse the categories.",
+      "http": 422,
+      "details": {
+        "provider": "dvdplay",
+        "operation": "search",
+        "stage": "runtime",
+        "message": "DVDPlay search failed: Search is unavailable. Browse the categories."
+      }
+    },
+    {
+      "provider": "gokuHD",
+      "ms": 21582,
+      "state": "failed",
+      "error": "Upstream returned HTTP 403.",
+      "http": 502,
+      "details": {
+        "provider": "gokuHD",
+        "operation": "search",
+        "stage": "upstream",
+        "upstreamStatus": 403,
+        "message": "Upstream returned HTTP 403."
+      }
+    },
+    {
+      "provider": "hdhub4u",
+      "ms": 945,
+      "state": "no match",
+      "matches": 0,
+      "choices": 0
+    },
+    {
+      "provider": "hdmovieslife",
+      "ms": 974,
+      "state": "no match",
+      "matches": 0,
+      "choices": 0
+    },
+    {
+      "provider": "hiAnime",
+      "ms": 134,
+      "state": "failed",
+      "error": "Upstream request failed (ERR_INVALID_URL).",
+      "http": 502,
+      "details": {
+        "provider": "hiAnime",
+        "operation": "search",
+        "stage": "upstream",
+        "message": "Upstream request failed (ERR_INVALID_URL)."
+      }
+    },
+    {
+      "provider": "hotstar",
+      "ms": 50100,
+      "state": "failed",
+      "error": "The provider exceeded the operation deadline.",
+      "http": 504,
+      "details": {
+        "provider": "hotstar",
+        "operation": "search",
+        "stage": "runtime",
+        "message": "The provider exceeded the operation deadline."
+      }
+    },
+    {
+      "provider": "kickAssAnime",
+      "ms": 4709,
+      "state": "no match",
+      "matches": 0,
+      "choices": 0
+    },
+    {
+      "provider": "kissKh",
+      "ms": 1144,
+      "state": "available",
+      "matches": 1,
+      "choices": 1
+    },
+    {
+      "provider": "kmMovies",
+      "ms": 2103,
+      "state": "available",
+      "matches": 1,
+      "choices": 12
+    },
+    {
+      "provider": "luxMovies",
+      "ms": 2851,
+      "state": "no match",
+      "matches": 0,
+      "choices": 0
+    },
+    {
+      "provider": "marvel",
+      "ms": 50108,
+      "state": "failed",
+      "error": "The provider exceeded the operation deadline.",
+      "http": 504,
+      "details": {
+        "provider": "marvel",
+        "operation": "search",
+        "stage": "runtime",
+        "message": "The provider exceeded the operation deadline."
+      }
+    },
+    {
+      "provider": "movieBoxWeb",
+      "ms": 943,
+      "state": "no match",
+      "matches": 0,
+      "choices": 0
+    },
+    {
+      "provider": "movielinkdb",
+      "ms": 5578,
+      "state": "available",
+      "matches": 1,
+      "choices": 3
+    },
+    {
+      "provider": "movies4u",
+      "ms": 21401,
+      "state": "failed",
+      "error": "Upstream request timed out.",
+      "http": 504,
+      "details": {
+        "provider": "movies4u",
+        "operation": "search",
+        "stage": "upstream",
+        "message": "Upstream request timed out."
+      }
+    },
+    {
+      "provider": "moviesda",
+      "ms": 2444,
+      "state": "no match",
+      "matches": 0,
+      "choices": 0
+    },
+    {
+      "provider": "movieswood",
+      "ms": 46,
+      "state": "failed",
+      "error": "MoviesWood search failed: Search is unavailable. Browse the categories.",
+      "http": 422,
+      "details": {
+        "provider": "movieswood",
+        "operation": "search",
+        "stage": "runtime",
+        "message": "MoviesWood search failed: Search is unavailable. Browse the categories."
+      }
+    },
+    {
+      "provider": "moviezwap",
+      "ms": 996,
+      "state": "no match",
+      "matches": 0,
+      "choices": 0
+    },
+    {
+      "provider": "multi",
+      "ms": 2204,
+      "state": "no match",
+      "matches": 1,
+      "choices": 0
+    },
+    {
+      "provider": "mxplayer",
+      "ms": 3947,
+      "state": "no match",
+      "matches": 0,
+      "choices": 0
+    },
+    {
+      "provider": "netflix",
+      "ms": 50155,
+      "state": "failed",
+      "error": "The provider exceeded the operation deadline.",
+      "http": 504,
+      "details": {
+        "provider": "netflix",
+        "operation": "search",
+        "stage": "runtime",
+        "message": "The provider exceeded the operation deadline."
+      }
+    },
+    {
+      "provider": "pixar",
+      "ms": 50180,
+      "state": "failed",
+      "error": "The provider exceeded the operation deadline.",
+      "http": 504,
+      "details": {
+        "provider": "pixar",
+        "operation": "search",
+        "stage": "runtime",
+        "message": "The provider exceeded the operation deadline."
+      }
+    },
+    {
+      "provider": "primeVideo",
+      "ms": 50125,
+      "state": "failed",
+      "error": "The provider exceeded the operation deadline.",
+      "http": 504,
+      "details": {
+        "provider": "primeVideo",
+        "operation": "search",
+        "stage": "runtime",
+        "message": "The provider exceeded the operation deadline."
+      }
+    },
+    {
+      "provider": "showbox",
+      "ms": 5390,
+      "state": "available",
+      "matches": 1,
+      "choices": 6
+    },
+    {
+      "provider": "starWars",
+      "ms": 50078,
+      "state": "failed",
+      "error": "The provider exceeded the operation deadline.",
+      "http": 504,
+      "details": {
+        "provider": "starWars",
+        "operation": "search",
+        "stage": "runtime",
+        "message": "The provider exceeded the operation deadline."
+      }
+    },
+    {
+      "provider": "torrentio",
+      "ms": 3472,
+      "state": "available",
+      "matches": 1,
+      "choices": 1
+    },
+    {
+      "provider": "uhd",
+      "ms": 21275,
+      "state": "failed",
+      "error": "Upstream request timed out.",
+      "http": 504,
+      "details": {
+        "provider": "uhd",
+        "operation": "search",
+        "stage": "upstream",
+        "message": "Upstream request timed out."
+      }
+    },
+    {
+      "provider": "uniquestream",
+      "ms": 21083,
+      "state": "failed",
+      "error": "Upstream request timed out.",
+      "http": 504,
+      "details": {
+        "provider": "uniquestream",
+        "operation": "search",
+        "stage": "upstream",
+        "message": "Upstream request timed out."
+      }
+    },
+    {
+      "provider": "vega",
+      "ms": 3676,
+      "state": "available",
+      "matches": 1,
+      "choices": 10
+    },
+    {
+      "provider": "zeefliz",
+      "ms": 156,
+      "state": "failed",
+      "error": "Upstream request failed (ERR_INVALID_URL).",
+      "http": 502,
+      "details": {
+        "provider": "zeefliz",
+        "operation": "search",
+        "stage": "upstream",
+        "message": "Upstream request failed (ERR_INVALID_URL)."
+      }
+    },
+    {
+      "provider": "disneyMirror",
+      "ms": 3001,
+      "state": "available",
+      "matches": 2,
+      "choices": 2
+    },
+    {
+      "provider": "netflixMirror",
+      "ms": 1566,
+      "state": "available",
+      "matches": 1,
+      "choices": 1
+    },
+    {
+      "provider": "primeMirror",
+      "ms": 2591,
+      "state": "available",
+      "matches": 2,
+      "choices": 2
+    }
+  ]
+}

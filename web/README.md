@@ -9,13 +9,14 @@ npm run dev
 
 Copy `.env.example` to `.env.local` and set `TMDB_API_KEY` to a TMDB API key or read access token to enable Movie Based. `NEXT_PUBLIC_TMDB_KEY` is available as a fallback for a key intended to be public. The browser uses same-origin handlers for both catalogs.
 
-- `K45MOVIES_API_BASE_URL` points to the trusted provider release containing `manifest.json` and `bundled/`. The default pins an upstream commit. Provider bundles are trusted application code. The VM adapts their mobile runtime and is not a security boundary for arbitrary code.
+- The vendored Android registry and bundles supply the default provider code. `K45MOVIES_API_BASE_URL` configures the trusted API manifest and fallback bundles. `K45_PROVIDER_SOURCE=api` selects the API-only comparison mode. Treat both bundle sources as trusted application code. The VM adapts the provider runtime.
 - `K45_REFERENCE_SECRET` should be a shared random secret of at least 32 characters in a deployment. Local development generates an ignored key file for stable title links. Keep this key stable for saved title links.
-- `K45_TRUSTED_CLIENT_IP_HEADER` can identify clients behind ingress that overwrites the named header. Otherwise each API uses a shared, per-process rate budget. Apply a shared ingress limit for scaled deployments.
+- `K45_TRUSTED_CLIENT_IP_HEADER` identifies clients behind ingress that overwrites the named header. The provider API gives each trusted IP or signed anonymous client 360 requests per minute. The anonymous fallback also has a shared 2,400-request ceiling. The limits are per process. Use shared ingress limits for multi-instance deployments.
+- Set both `K45_KV_REST_URL` and `K45_KV_REST_TOKEN` for an [HTTPS Redis REST adapter](https://upstash.com/docs/redis/features/restapi). By default, provider state lives in process-global memory. Both implementations scope keys by provider and expire them after 24 hours.
 
 TanStack Query handles catalog data, cancellation, retry and cache freshness. Zustand persists local profiles, provider selections, preferences, search history and layout-specific watchlists in localStorage. Provider Based supports category browsing, title details and source selection. Movie Based searches TMDB and matches titles and episodes to installed providers. Choose a source to open the custom player. HLS uses hls.js with MSE where available. MP4 uses native HTML video. Short-lived encrypted media links keep upstream headers and URLs server-side. The media handler forwards byte ranges and rewrites nested HLS references through the same-origin gateway. Continue Watching resolves a fresh source from the saved title and episode before restoring position.
 
-Provider results depend on upstream availability and supported requests. Live Vega browsing, title details and source resolution were verified. Interactive challenges that rely on the Android WebView require a supported upstream alternative.
+Provider settings initialize all listed providers in a new profile and let users uninstall them. Catalog checks are independent of activation. Diagnostics show observed operation failures and upstream status where available. See the [Phase 2 measurements](docs/WEB_PROVIDER_PARITY.md).
 
 Run `npm test`, `npm run lint`, `npm run build`, and `npm run typecheck` to verify the app. The tests cover local persistence, provider title and episode matching, media event cleanup, server probes, resume and subtitle parsing.
 
