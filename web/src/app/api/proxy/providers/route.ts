@@ -1,19 +1,36 @@
 import { getProviders, providerRequest, runProvider } from "@/server/providers";
-import { HttpError, jsonResponse } from "@/server/http";
+import { getProviderHealth, ProviderError, providerIssue, recordProviderHealth } from "@/server/provider-errors";
 import { providerRateLimit } from "@/server/provider-rate-limit";
+import type { ProviderStage } from "@/lib/catalog-types";
 
 export const runtime = "nodejs";
 
 export async function GET(request: Request) {
+  const params = new URL(request.url).searchParams;
+  const suppliedOperation = params.get("op");
+  const operation = /^(manifest|health|catalog|posts|search|title|episodes|sources)$/.test(suppliedOperation ?? "")
+    ? suppliedOperation! : "invalid";
+  const suppliedProvider = params.get("id");
+  const id = /^[\w-]{1,65}$/.test(suppliedProvider ?? "") ? suppliedProvider! : undefined;
+  let stage: ProviderStage = "rate-limit";
   let cookie: string | undefined;
-  const response = await jsonResponse(async () => {
-    const params = new URL(request.url).searchParams;
+  let response: Response;
+  try {
     cookie = providerRateLimit(request);
-    if (params.get("op") === "manifest") return getProviders();
-    const input = providerRequest.safeParse(Object.fromEntries(params));
-    if (!input.success) throw new HttpError(400, "Invalid provider request.");
-    return runProvider(input.data, request.signal);
-  });
+    stage = operation === "manifest" ? "registry" : "request";
+    let value;
+    if (operation === "manifest") value = await getProviders();
+    else if (operation === "health") value = getProviderHealth();
+    else {
+      const input = providerRequest.safeParse(Object.fromEntries(params));
+      if (!input.success) throw new ProviderError(400, "Invalid provider request.", "request");
+      value = await runProvider(input.data, request.signal);
+      if (!Array.isArray(value) || value.length) recordProviderHealth(input.data.id, operation);
+    }
+    response = Response.json(value, { headers: { "Cache-Control": "no-store" } });
+  } catch (error) {
+    response = providerIssue(error, id, operation, stage);
+  }
   if (cookie) response.headers.append("Set-Cookie", cookie);
   return response;
 }

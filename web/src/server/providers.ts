@@ -10,6 +10,7 @@ import { createMediaLink } from "./media";
 import { HttpError } from "./http";
 import { providerStore } from "./provider-store";
 import { providerResult } from "./provider-cache";
+import { ProviderError, providerMessage } from "./provider-errors";
 
 const defaultBase = "https://raw.githubusercontent.com/Khiladi45/K45movies-api/fce60ad0758822f734f505ef08661f837a450cbb/";
 const androidHeaders = { "User-Agent": "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36" };
@@ -47,7 +48,7 @@ function image(value: unknown) {
 async function artifact(path: string) {
   const { request } = providerNetwork(AbortSignal.timeout(8_000));
   const res = await request(new URL(path, base()));
-  if (!res.ok) throw new HttpError(502, "Could not load the provider registry.");
+  if (!res.ok) throw new ProviderError(502, "Provider registry request failed with HTTP " + res.status + ".", "registry", res.status);
   return res;
 }
 
@@ -70,7 +71,7 @@ export function getProviders() {
 
 async function compiled(id: string) {
   const match = (await getProviders()).find((provider) => provider.id === id);
-  if (!match) throw new HttpError(404, "Provider is unavailable.");
+  if (!match) throw new ProviderError(404, "Provider is unavailable.", "registry");
   const cached = bundles.get(id);
   if (cached && cached.expires > Date.now()) return cached.task;
 
@@ -100,41 +101,70 @@ export const providerRequest = z.discriminatedUnion("op", [
 let activeExecutions = 0;
 
 async function execute(input: z.infer<typeof providerRequest>, args: Record<string, unknown>, requestSignal: AbortSignal) {
-  if (activeExecutions >= 24) throw new HttpError(503, "Provider service is busy. Try again shortly.", "2");
+  if (activeExecutions >= 24) throw new ProviderError(503, "Provider service is busy. Try again shortly.", "runtime", undefined, "2");
   activeExecutions++;
   try {
-    const bundle = await compiled(input.id);
+    const bundle = await compiled(input.id).catch((error) => {
+      if (error instanceof ProviderError) throw error;
+      throw new ProviderError(502, providerMessage(error) || "Provider bundle could not be loaded.", "bundle");
+    });
     const signal = AbortSignal.any([requestSignal, AbortSignal.timeout(25_000)]);
     signal.throwIfAborted();
-    const { request, http } = providerNetwork(signal, androidHeaders);
+    let upstream: ProviderError | undefined;
+    let verification: ProviderError | undefined;
+    let logged = "";
+    const { request, http } = providerNetwork(signal, androidHeaders, ({ message, status, timeout }) => {
+      const issue = new ProviderError(timeout ? 504 : 502, message, "upstream", status);
+      if (status || !upstream?.upstreamStatus) upstream = issue;
+    });
+    const observe = (...values: unknown[]) => {
+      logged = values.map(providerMessage).find(Boolean) || logged;
+    };
     const exports: Record<string, unknown> = {};
     const context = createContext({
       exports, module: { exports }, Buffer, URL, URLSearchParams, TextEncoder, TextDecoder, atob, btoa,
       AbortController, AbortSignal, Headers, Request, Response, FormData, Blob, performance,
       crypto: webcrypto, process: { env: { NODE_ENV: process.env.NODE_ENV } }, setTimeout, clearTimeout,
       fetch: request, require: (name: string) => { if (name === "crypto") return {}; throw new Error("Module unavailable."); },
-      console: { log() {}, info() {}, warn() {}, error() {}, debug() {} },
+      console: { log: observe, info: observe, warn: observe, error: observe, debug: observe },
       options: {
         ...args, provider: input.id, providerValue: input.id, signal,
         providerContext: {
           axios: http, cheerio, commonHeaders: { ...androidHeaders },
           Aes: { sha1: async (value: string) => createHash("sha1").update(String(value)).digest("hex") },
-          openWebView: async () => { throw new Error("Interactive provider access is unavailable."); },
+          openWebView: async () => {
+            verification = new ProviderError(503, "The provider requested interactive browser verification.", "verification", upstream?.upstreamStatus);
+            throw verification;
+          },
           kvStore: providerStore(input.id),
         },
       },
     });
-    bundle.runInContext(context, { timeout: 500 });
+    try { bundle.runInContext(context, { timeout: 500 }); }
+    catch (error) { throw new ProviderError(502, providerMessage(error) || "Provider bundle initialization failed.", "bundle"); }
     const operation = JSON.stringify(operations[input.op]);
     const invoke = new Script("(() => { const value = module.exports[" + operation +
-      "]; return typeof value === 'function' ? value(options) : value; })()");
+      "]; if (value === undefined) throw Error('The provider does not support this operation.'); return typeof value === 'function' ? value(options) : value; })()");
     let cancel: (() => void) | undefined;
     try {
+      signal.throwIfAborted();
       const expiration = new Promise<never>((_, reject) => {
-        cancel = () => reject(new HttpError(504, "The provider took too long to respond."));
+        cancel = () => reject(new ProviderError(504, "The provider exceeded the operation deadline.", "runtime"));
         signal.addEventListener("abort", cancel, { once: true });
       });
-      return await Promise.race([Promise.resolve(invoke.runInContext(context, { timeout: 1000 })), expiration]);
+      const result = await Promise.race([Promise.resolve(invoke.runInContext(context, { timeout: 1000 })), expiration]);
+      if (result == null || (Array.isArray(result) && result.length === 0)) {
+        if (verification || upstream) throw verification ?? upstream;
+        if (logged && /invalid url/i.test(logged)) throw new ProviderError(502, logged, "runtime");
+      }
+      return result;
+    } catch (error) {
+      if (verification) throw verification;
+      if (error instanceof ProviderError) throw error;
+      const message = providerMessage(error) || logged;
+      if (/search is unavailable|does not support this operation/i.test(message)) throw new ProviderError(422, message, "runtime");
+      if (upstream) throw upstream;
+      throw new ProviderError(502, message || "Provider operation failed without an error message.", "runtime");
     } finally {
       if (cancel) signal.removeEventListener("abort", cancel);
     }
@@ -178,7 +208,7 @@ function episodes(provider: string, value: unknown): Episode[] {
 function details(provider: string, ref: string, value: unknown): ProviderDetail {
   const raw = item(value);
   const title = text(raw.title);
-  if (!title) throw new HttpError(404, "This title is unavailable from the provider.");
+  if (!title) throw new ProviderError(404, "This title is unavailable from the provider.", "normalize");
   return {
     title, ref, image: image(raw.image), poster: image(raw.poster), type: text(raw.type), synopsis: text(raw.synopsis),
     tags: strings(raw.tags), cast: strings(raw.cast), rating: text(raw.rating),
@@ -232,8 +262,11 @@ export function runProvider(input: z.infer<typeof providerRequest>, signal: Abor
 async function resolveProvider(input: z.infer<typeof providerRequest>, signal: AbortSignal): Promise<Category[] | Post[] | ProviderDetail | Episode[] | Source[]> {
   const id = input.id;
   switch (input.op) {
-    case "catalog":
-      return categories(await execute(input, {}, signal));
+    case "catalog": {
+      const result = categories(await execute(input, {}, signal));
+      if (!result.length) throw new ProviderError(502, "The provider returned no usable catalog categories.", "normalize");
+      return result;
+    }
     case "posts": {
       const allowed = await runProvider({ id, op: "catalog" }, signal) as Category[];
       if (!allowed.some(({ filter }) => filter === input.filter)) throw new HttpError(400, "Unknown provider category.");

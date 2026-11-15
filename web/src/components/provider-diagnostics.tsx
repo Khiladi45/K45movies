@@ -2,18 +2,19 @@
 
 import { useRef, useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { providers } from "@/lib/catalog-api";
-import type { Episode, Source } from "@/lib/catalog-types";
+import { CatalogError, providers } from "@/lib/catalog-api";
+import type { Episode, ProviderIssue, Source } from "@/lib/catalog-types";
 import { checkSource } from "@/lib/player-actions";
 import { parseCues } from "@/lib/video-cues";
 import { QueryMessage } from "./catalog-ui";
 
 const labels = ["Manifest", "Initialize and catalog", "Search", "Metadata", "Streams", "Subtitles"] as const;
-type Result = { state: "pending" | "running" | "passed" | "failed" | "skipped"; message?: string; ms?: number };
+type Result = { state: "pending" | "running" | "passed" | "failed" | "skipped"; message?: string; ms?: number; issue?: ProviderIssue };
 
 export function ProviderDiagnostics() {
   const query = useQuery({ queryKey: ["manifest"], queryFn: ({ signal }) => providers.manifest(signal) });
   const [id, setId] = useState("vega");
+  const health = useQuery({ queryKey: ["provider-health"], queryFn: ({ signal }) => providers.health(signal), staleTime: 0 });
   const selected = query.data?.some((provider) => provider.id === id) ? id : query.data?.[0]?.id;
   const [term, setTerm] = useState("Batman");
   const [running, setRunning] = useState(false);
@@ -48,7 +49,7 @@ export function ProviderDiagnostics() {
         const message = await check(signal);
         update(current, { state: message === undefined ? "skipped" : "passed", message: message ?? "Unavailable for this title", ms: Math.round(performance.now() - start) });
       } catch (error) {
-        update(current, { state: "failed", message: error instanceof Error ? error.message : "Check failed", ms: Math.round(performance.now() - start) });
+        update(current, { state: "failed", message: error instanceof Error ? error.message : "Check failed", ms: Math.round(performance.now() - start), issue: error instanceof CatalogError ? error.details : undefined });
         throw error;
       }
     }
@@ -101,12 +102,13 @@ export function ProviderDiagnostics() {
     } catch {
       for (let i = stage; i < labels.length; i++) update(i, { state: "skipped", message: "Previous check failed" });
     } finally {
-      if (!run.signal.aborted) setRunning(false);
+      if (!run.signal.aborted) { setRunning(false); void health.refetch(); }
     }
   }
 
   if (query.isError) return <QueryMessage retry={() => void query.refetch()}>{query.error.message}</QueryMessage>;
   if (query.isPending) return <p role="status">Loading providers…</p>;
+  const latest = selected ? health.data?.[selected] : undefined;
   return <div className="max-w-2xl">
     <form className="mb-5 flex flex-wrap items-end gap-3" onSubmit={(event) => { event.preventDefault(); void start(); }}>
       <label className="grid gap-1 text-sm">Provider
@@ -120,10 +122,14 @@ export function ProviderDiagnostics() {
       {running ? <button type="button" className="secondary-button" onClick={stop}>Cancel</button> :
         <button type="submit" className="primary-button" disabled={!selected || term.trim().length < 2}>Run diagnostics</button>}
     </form>
+    {latest?.issue && <p className="mb-4 text-sm text-muted">{latest.state} · {latest.issue.operation} · {latest.issue.stage}
+      {latest.issue.upstreamStatus && " · upstream HTTP " + latest.issue.upstreamStatus} · {latest.issue.message}</p>}
     <ol className="grid gap-2" aria-live="polite">{labels.map((label, i) => {
       const result = results[i];
       return <li key={label} className="list-row flex-wrap justify-between">
-        <span><strong className="block">{label}</strong>{result?.message && <span className="text-sm text-muted">{result.message}</span>}</span>
+        <span><strong className="block">{label}</strong>{result?.message && <span className="text-sm text-muted">{result.message}</span>}
+          {result?.issue && <span className="block text-sm text-muted">{[result.issue.provider, result.issue.operation, result.issue.stage,
+            result.issue.upstreamStatus && "upstream HTTP " + result.issue.upstreamStatus].filter(Boolean).join(" · ")}</span>}</span>
         <span className="chip capitalize">{result?.state ?? "Pending"}{result?.ms !== undefined && " · " + result.ms + " ms"}</span>
       </li>;
     })}</ol>

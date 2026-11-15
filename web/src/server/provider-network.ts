@@ -38,10 +38,12 @@ function destination(input: string | URL) {
 
 const maxBody = 8 * 1024 * 1024;
 
-export function providerNetwork(signal: AbortSignal, defaultHeaders?: HeadersInit) {
+type NetworkIssue = { message: string; status?: number; timeout?: boolean };
+
+export function providerNetwork(signal: AbortSignal, defaultHeaders?: HeadersInit, onIssue?: (issue: NetworkIssue) => void) {
   const jar = new CookieJar();
   let requests = 0;
-  const request = async (input: string | URL, options?: RequestInit, maxRedirects = 5): Promise<Response> => {
+  const networkRequest = async (input: string | URL, options?: RequestInit, maxRedirects = 5): Promise<Response> => {
     let url = destination(input);
     let method = (options?.method || "GET").toUpperCase();
     let body = options?.body;
@@ -80,6 +82,7 @@ export function providerNetwork(signal: AbortSignal, defaultHeaders?: HeadersIni
         continue;
       }
 
+      if (res.status >= 400) onIssue?.({ status: res.status, message: "Upstream returned HTTP " + res.status + "." });
       const parts: Uint8Array[] = [];
       let size = 0;
       const reader = res.body?.getReader();
@@ -106,6 +109,20 @@ export function providerNetwork(signal: AbortSignal, defaultHeaders?: HeadersIni
       return response;
     }
     throw new Error("Too many upstream redirects.");
+  };
+
+  const request: typeof networkRequest = async (...args) => {
+    try { return await networkRequest(...args); }
+    catch (error) {
+      const value = error as Error & { cause?: { code?: string }; code?: string };
+      const code = value.cause?.code ?? value.code;
+      const timeout = value.name === "TimeoutError" || code === "UND_ERR_CONNECT_TIMEOUT";
+      const message = timeout ? "Upstream request timed out." :
+        value.name === "AbortError" ? "Upstream request was canceled." :
+        typeof code === "string" ? "Upstream request failed (" + code + ")." : value.message;
+      onIssue?.({ message, timeout });
+      throw error;
+    }
   };
 
   const http = axios.create({

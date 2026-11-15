@@ -1,20 +1,21 @@
-import type { Category, Episode, MediaType, Post, Provider, ProviderDetail, Source, Title, TitleDetail, TitleEpisode } from "./catalog-types";
+import type { Category, Episode, MediaType, Post, Provider, ProviderDetail, ProviderHealth, ProviderIssue, Source, Title, TitleDetail, TitleEpisode } from "./catalog-types";
 
 export class CatalogError extends Error {
-  constructor(public status: number, message: string) { super(message); }
+  constructor(public status: number, message: string, public details?: ProviderIssue) { super(message); }
 }
 
 async function get<T>(service: "providers" | "tmdb", params: Record<string, string>, signal?: AbortSignal): Promise<T> {
   const res = await fetch("/api/proxy/" + service + "?" + new URLSearchParams(params), { signal });
   if (!res.ok) {
     const payload = await res.json().catch(() => null);
-    throw new CatalogError(res.status, payload?.error || "Catalog request failed.");
+    throw new CatalogError(res.status, payload?.error || "Catalog request failed.", payload?.details);
   }
   return res.json();
 }
 
 export const providers = {
   manifest: (signal?: AbortSignal) => get<Provider[]>("providers", { op: "manifest" }, signal),
+  health: (signal?: AbortSignal) => get<Record<string, ProviderHealth>>("providers", { op: "health" }, signal),
   catalog: (id: string, signal?: AbortSignal) => get<Category[]>("providers", { op: "catalog", id }, signal),
   posts: (id: string, filter: string, page: number, signal?: AbortSignal) =>
     get<Post[]>("providers", { op: "posts", id, filter, page: String(page) }, signal),
