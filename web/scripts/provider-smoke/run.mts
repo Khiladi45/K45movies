@@ -6,10 +6,10 @@ import { promisify } from "node:util";
 import { Script } from "node:vm";
 import { GET } from "../../src/app/api/proxy/providers/route";
 import { GET as mediaGET } from "../../src/app/api/proxy/media/[token]/route";
-import type { Category, Episode, Post, Provider, ProviderDetail, Source } from "../../src/lib/catalog-types";
+import type { Category, Episode, Post, Provider, ProviderDetail, ProviderIssue, Source } from "../../src/lib/catalog-types";
 
 type Trace = { requests: number; statuses: Record<string, number>; errors: Set<string>; providerLogs: number; webViewCalls: number };
-type Outcome = { state: "pass" | "fail" | "empty" | "skipped"; ms?: number; http?: number; count?: number; error?: string; trace?: Omit<Trace, "errors"> & { errors: string[] } };
+type Outcome = { state: "pass" | "fail" | "empty" | "skipped"; ms?: number; http?: number; count?: number; error?: string; details?: ProviderIssue; trace?: Omit<Trace, "errors"> & { errors: string[] } };
 
 const trace = new AsyncLocalStorage<Trace>();
 const safe = (message: unknown) => String(message)
@@ -51,7 +51,9 @@ Script.prototype.runInContext = function (context, options) {
       });
     };
     for (const method of Object.keys(context.console)) {
+      const original = context.console[method];
       context.console[method] = (...args: unknown[]) => {
+        original(...args);
         active.providerLogs++;
         // Bundle log strings can contain credentials or provider tokens.
         for (const value of args) {
@@ -96,6 +98,7 @@ async function call<T>(params: Record<string, string>) {
     state: response.ok ? count === 0 ? "empty" : "pass" : "fail",
     ms: Math.round(performance.now() - begin), http: response.status, count,
     error: response.ok ? undefined : safe(data.error),
+    details: response.ok ? undefined : data.details,
     trace: { ...store, errors: [...store.errors] },
   };
   return { data: response.ok ? data as T : undefined, outcome };
@@ -183,4 +186,4 @@ await Promise.all(Array.from({ length: 4 }, async () => {
     rows[index] = await smoke(providerIds[index]);
   }
 }));
-await writeFile(output, JSON.stringify({ started, finished: new Date().toISOString(), query, manifest: manifest.outcome, manifestIds, rows }, null, 2) + "\n");
+await writeFile(output, JSON.stringify({ started, finished: new Date().toISOString(), query, manifest: manifest.outcome, manifestIds, manifestSources: manifest.data.map(({ id, bundleSource }) => ({ id, bundleSource })), rows }, null, 2) + "\n");

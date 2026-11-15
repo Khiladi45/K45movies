@@ -1,6 +1,8 @@
 import "server-only";
 import { createContext, Script } from "node:vm";
 import { createHash, webcrypto } from "node:crypto";
+import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
 import * as cheerio from "cheerio";
 import { z } from "zod";
 import type { Category, Episode, Post, Provider, ProviderDetail, Source } from "@/lib/catalog-types";
@@ -24,6 +26,19 @@ const manifestShape = z.object({
 
 function base() {
   return (process.env.K45MOVIES_API_BASE_URL || defaultBase).replace(/\/+$/, "") + "/";
+}
+
+const vendorDir = resolve("vendor/android/src/providers");
+const mirrorNames: Record<string, string> = { disneyMirror: "Disney Mirror", netflixMirror: "Netflix Mirror", primeMirror: "Prime Mirror" };
+let vendoredIds: Promise<string[]> | undefined;
+
+function localProviders() {
+  vendoredIds ??= readFile(resolve(vendorDir, "registry.js"), "utf8").then((source) => {
+    const module = { exports: {} as { ids: () => unknown } };
+    new Script(source, { filename: "android-provider-registry.js" }).runInNewContext({ module }, { timeout: 500 });
+    return z.array(providerId).parse(module.exports.ids());
+  });
+  return vendoredIds;
 }
 
 type Cached<T> = { expires: number; task: Promise<T> };
@@ -55,14 +70,29 @@ async function artifact(path: string) {
 export function getProviders() {
   if (cachedManifest && cachedManifest.expires > Date.now()) return cachedManifest.task;
   const task = (async () => {
-    const res = await artifact("manifest.json");
-    const data = await res.json();
-    const parsed = manifestShape.parse(Array.isArray(data) ? { providers: data } : data);
-    return parsed.providers.filter(({ id }) => !["moviesApi", "youtube"].includes(id)).map((entry) => ({
-      id: entry.id, name: entry.name, version: entry.version ?? undefined,
-      description: entry.description ?? undefined, type: entry.type ?? undefined,
-      icon: image(entry.icon),
-    }));
+    const apiOnly = process.env.K45_PROVIDER_SOURCE === "api";
+    const local = apiOnly ? [] : await localProviders();
+    const remote = await artifact("manifest.json").then(async (res) => {
+      const data = await res.json();
+      const parsed = manifestShape.parse(Array.isArray(data) ? { providers: data } : data);
+      return parsed.providers;
+    }).catch((error) => {
+      if (apiOnly) throw error;
+      console.warn("Provider API manifest unavailable", { stage: "registry", message: providerMessage(error) });
+      return [];
+    });
+    const metadata = new Map(remote.map((entry) => [entry.id, entry]));
+    const builtIn = new Set(local);
+    return [...new Set([...remote.map(({ id }) => id), ...local])]
+      .filter((id) => !["moviesApi", "youtube"].includes(id))
+      .map((id): Provider => {
+        const entry = metadata.get(id);
+        return {
+          id, name: entry?.name ?? (Object.hasOwn(mirrorNames, id) ? mirrorNames[id] : id),
+          version: entry?.version ?? undefined, description: entry?.description ?? undefined,
+          type: entry?.type ?? undefined, icon: image(entry?.icon), bundleSource: builtIn.has(id) ? "vendored" : "api",
+        };
+      });
   })();
   cachedManifest = { task, expires: Date.now() + 300_000 };
   void task.catch(() => { if (cachedManifest?.task === task) cachedManifest = undefined; });
@@ -75,10 +105,9 @@ async function compiled(id: string) {
   const cached = bundles.get(id);
   if (cached && cached.expires > Date.now()) return cached.task;
 
-  // Only execute bundled artifacts from the deployment-configured provider repository.
-  const task = artifact("bundled/" + id + ".js").then(async (res) =>
-    new Script(await res.text(), { filename: id + ".provider.js" })
-  );
+  const source = match.bundleSource === "vendored" ? readFile(resolve(vendorDir, "bundles", id + ".js"), "utf8") :
+    artifact("bundled/" + id + ".js").then((response) => response.text());
+  const task = source.then((code) => new Script(code, { filename: id + ".provider.js" }));
   bundles.set(id, { task, expires: Date.now() + 300_000 });
   void task.catch(() => { if (bundles.get(id)?.task === task) bundles.delete(id); });
   return task;

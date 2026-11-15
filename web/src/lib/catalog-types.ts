@@ -1,7 +1,7 @@
 export type ProviderStage = "request" | "registry" | "rate-limit" | "bundle" | "runtime" | "upstream" | "normalize" | "verification";
 export type ProviderIssue = { provider?: string; operation: string; stage: ProviderStage; upstreamStatus?: number; message: string };
 export type ProviderHealth = { state: "healthy" | "degraded" | "needs verification"; checkedAt: number; issue?: ProviderIssue };
-export type Provider = { id: string; name: string; version?: string; description?: string; type?: string; icon?: string };
+export type Provider = { id: string; name: string; version?: string; description?: string; type?: string; icon?: string; bundleSource?: "vendored" | "api" };
 export type Category = { title: string; filter: string };
 export type Post = { title: string; ref: string; image?: string; type?: string; tag?: string };
 export type Episode = { title: string; ref: string; type?: string; description?: string; image?: string };
