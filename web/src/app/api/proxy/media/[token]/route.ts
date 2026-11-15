@@ -1,6 +1,6 @@
 import { streamUpstream } from "@/server/provider-network";
 import { mediaTarget } from "@/server/media-token";
-import { limitedText, rewritePlaylist, toWebVtt } from "@/server/media";
+import { limitedText, rewritePlaylist, sniffHlsSegment, toWebVtt } from "@/server/media";
 import { compatibleMedia } from "@/server/media-compatibility";
 import { HttpError, jsonResponse, rateLimit } from "@/server/http";
 
@@ -16,12 +16,12 @@ async function serve(request: Request, token: string) {
     const headers = new Headers(target.headers);
     headers.set("accept-encoding", "identity");
     const range = request.headers.get("range");
-    if (range && target.kind === "media") {
+    if (range && (target.kind === "media" || target.kind === "segment")) {
       if (!/^bytes=(?:\d{1,16}-\d{0,16}|-\d{1,16})$/.test(range)) throw new HttpError(416, "Invalid media range.");
       headers.set("range", range);
     }
     const { response, url } = await streamUpstream(target.url, request.method, headers, request.signal);
-    const bodyStream = response.body as unknown as ReadableStream<Uint8Array> | null;
+    let bodyStream = response.body as unknown as ReadableStream<Uint8Array> | null;
     const type = response.headers.get("content-type") ?? "";
     const playlist = target.format === "hls" || /mpegurl/i.test(type) || /\.m3u8$/i.test(url.pathname);
     const subtitle = target.kind === "subtitle" || /^text\/vtt/i.test(type) || /\.vtt$/i.test(url.pathname);
@@ -56,8 +56,15 @@ async function serve(request: Request, token: string) {
       return new Response(playlist ? rewritePlaylist(body, url.href, target) : toWebVtt(body), { headers: output });
     }
     if (/^(?:text\/html|application\/(?:json|xml))/i.test(type)) {
-      await response.body?.cancel();
-      throw new HttpError(502, "The source did not return media.");
+      if (bodyStream && target.kind === "segment") {
+        const segment = await sniffHlsSegment(bodyStream);
+        if (!segment) throw new HttpError(502, "The source did not return media.");
+        output.set("content-type", segment.type);
+        bodyStream = segment.body;
+      } else {
+        await response.body?.cancel();
+        throw new HttpError(502, "The source did not return media.");
+      }
     }
     return new Response(bodyStream, { status: response.status, headers: output });
   } catch (error) {

@@ -1,0 +1,363 @@
+{
+  "browser": "157.0.8103.51",
+  "rows": [
+    {
+      "provider": "anikoto",
+      "title": "Solo Leveling Season 2: Arise from the Shadow",
+      "group": "Solo Leveling Season 2: Arise from the Shadow",
+      "server": "Vidstream-2 (SUB)",
+      "requests": [
+        {
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "upstreamHost": "fetch.nexabloom.top",
+          "kind": "media"
+        },
+        {
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "upstreamHost": "fetch.nexabloom.top",
+          "kind": "media"
+        },
+        {
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "upstreamHost": "35b55.stellarfrontier.space",
+          "kind": "media"
+        },
+        {
+          "status": 502,
+          "contentType": "application/json",
+          "upstreamHost": "35b55.stellarfrontier.space",
+          "kind": "media"
+        }
+      ],
+      "currentGroup": "Solo Leveling Season 2: Arise from the Shadow",
+      "currentServer": "Vidstream-2 (SUB)",
+      "sameSelection": true,
+      "played": true,
+      "failures": [
+        {
+          "details": "fragLoadError",
+          "code": 502,
+          "fatal": false
+        }
+      ],
+      "untypedResponse": {
+        "upstreamHost": "35b55.stellarfrontier.space",
+        "status": 200,
+        "contentType": "image/jpeg",
+        "finalHost": "35b55.stellarfrontier.space",
+        "range": null,
+        "signature": "MPEG-TS sync at 0/188/376"
+      },
+      "failedRequest": {
+        "proxyHttp": 502,
+        "upstreamHost": "35b55.stellarfrontier.space",
+        "headerNames": [
+          "user-agent",
+          "referer",
+          "origin"
+        ],
+        "withHeaders": {
+          "status": 200,
+          "contentType": "text/html",
+          "finalHost": "35b55.stellarfrontier.space",
+          "range": null,
+          "signature": "MPEG-TS sync at 0/188/376"
+        },
+        "withoutContext": {
+          "status": 403,
+          "contentType": "text/html; charset=UTF-8",
+          "finalHost": "35b55.stellarfrontier.space",
+          "range": null,
+          "signature": "<!DOCTYPE"
+        }
+      }
+    },
+    {
+      "provider": "autoEmbed",
+      "title": "Heart of the Beast",
+      "group": "Heart of the Beast",
+      "server": "Cinejoy - Nebula",
+      "requests": [
+        {
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "upstreamHost": "nebula.bright67.online",
+          "kind": "media"
+        },
+        {
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "upstreamHost": "nebula.bright67.online",
+          "kind": "media"
+        },
+        {
+          "status": 400,
+          "contentType": "application/json",
+          "invalidToken": "Invalid media link.",
+          "tokenLength": 8,
+          "suffix": ".mp4"
+        },
+        {
+          "status": 400,
+          "contentType": "application/json",
+          "invalidToken": "Invalid media link.",
+          "tokenLength": 16,
+          "suffix": ".jpg"
+        },
+        {
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "upstreamHost": "nebula.bright67.online",
+          "kind": "media"
+        },
+        {
+          "status": 400,
+          "contentType": "application/json",
+          "invalidToken": "Invalid media link.",
+          "tokenLength": 8,
+          "suffix": ".mp4"
+        },
+        {
+          "status": 400,
+          "contentType": "application/json",
+          "invalidToken": "Invalid media link.",
+          "tokenLength": 16,
+          "suffix": ".jpg"
+        }
+      ],
+      "currentGroup": "Heart of the Beast",
+      "currentServer": "Cinejoy - Nebula",
+      "sameSelection": true,
+      "played": false,
+      "failures": [
+        {
+          "details": "fragLoadError",
+          "code": 400,
+          "fatal": false
+        },
+        {
+          "details": "aborted",
+          "fatal": false
+        },
+        {
+          "details": "fragLoadError",
+          "code": 400,
+          "fatal": true
+        }
+      ],
+      "untypedResponse": {
+        "upstreamHost": "nebula.bright67.online",
+        "status": 200,
+        "contentType": "image/jpeg",
+        "finalHost": "nebula.bright67.online",
+        "range": null,
+        "signature": "#EXTM3U"
+      },
+      "failedRequest": {
+        "proxyHttp": 400,
+        "pathnameSegments": 5,
+        "tokenLength": 16,
+        "suffix": ".jpg",
+        "message": "Invalid media link."
+      }
+    },
+    {
+      "provider": "autoEmbed",
+      "title": "Resident Evil",
+      "group": "Resident Evil",
+      "server": "Cinejoy - Nebula",
+      "requests": [
+        {
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "upstreamHost": "nebula.bright67.online",
+          "kind": "media"
+        },
+        {
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "upstreamHost": "nebula.bright67.online",
+          "kind": "media"
+        },
+        {
+          "status": 400,
+          "contentType": "application/json",
+          "invalidToken": "Invalid media link.",
+          "tokenLength": 8,
+          "suffix": ".mp4"
+        },
+        {
+          "status": 400,
+          "contentType": "application/json",
+          "invalidToken": "Invalid media link.",
+          "tokenLength": 16,
+          "suffix": ".jpg"
+        }
+      ],
+      "currentGroup": "Resident Evil",
+      "currentServer": "Cinejoy - Nebula",
+      "sameSelection": true,
+      "played": false,
+      "failures": [
+        {
+          "details": "fragLoadError",
+          "code": 400,
+          "fatal": false
+        },
+        {
+          "details": "fragLoadError",
+          "code": 400,
+          "fatal": true
+        }
+      ],
+      "untypedResponse": {
+        "upstreamHost": "nebula.bright67.online",
+        "status": 200,
+        "contentType": "image/jpeg",
+        "finalHost": "nebula.bright67.online",
+        "range": null,
+        "signature": "#EXTM3U"
+      },
+      "failedRequest": {
+        "proxyHttp": 400,
+        "pathnameSegments": 5,
+        "tokenLength": 16,
+        "suffix": ".jpg",
+        "message": "Invalid media link."
+      }
+    },
+    {
+      "provider": "1flex",
+      "title": "Resident Evil",
+      "group": "Movie",
+      "server": "Cinejoy - Nebula",
+      "requests": [
+        {
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "upstreamHost": "nebula.bright67.online",
+          "kind": "media"
+        },
+        {
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "upstreamHost": "nebula.bright67.online",
+          "kind": "media"
+        },
+        {
+          "status": 400,
+          "contentType": "application/json",
+          "invalidToken": "Invalid media link.",
+          "tokenLength": 8,
+          "suffix": ".mp4"
+        },
+        {
+          "status": 400,
+          "contentType": "application/json",
+          "invalidToken": "Invalid media link.",
+          "tokenLength": 16,
+          "suffix": ".jpg"
+        }
+      ],
+      "currentGroup": "Movie",
+      "currentServer": "Cinejoy - Nebula",
+      "sameSelection": true,
+      "played": false,
+      "failures": [
+        {
+          "details": "fragLoadError",
+          "code": 400,
+          "fatal": false
+        },
+        {
+          "details": "fragLoadError",
+          "code": 400,
+          "fatal": true
+        }
+      ],
+      "untypedResponse": {
+        "upstreamHost": "nebula.bright67.online",
+        "status": 200,
+        "contentType": "image/jpeg",
+        "finalHost": "nebula.bright67.online",
+        "range": null,
+        "signature": "#EXTM3U"
+      },
+      "failedRequest": {
+        "proxyHttp": 400,
+        "pathnameSegments": 5,
+        "tokenLength": 16,
+        "suffix": ".jpg",
+        "message": "Invalid media link."
+      }
+    },
+    {
+      "provider": "1flex",
+      "title": "Heart of the Beast",
+      "group": "Movie",
+      "server": "Cinejoy - Nebula",
+      "requests": [
+        {
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "upstreamHost": "nebula.bright67.online",
+          "kind": "media"
+        },
+        {
+          "status": 200,
+          "contentType": "application/octet-stream",
+          "upstreamHost": "nebula.bright67.online",
+          "kind": "media"
+        },
+        {
+          "status": 400,
+          "contentType": "application/json",
+          "invalidToken": "Invalid media link.",
+          "tokenLength": 8,
+          "suffix": ".mp4"
+        },
+        {
+          "status": 400,
+          "contentType": "application/json",
+          "invalidToken": "Invalid media link.",
+          "tokenLength": 16,
+          "suffix": ".jpg"
+        }
+      ],
+      "currentGroup": "Movie",
+      "currentServer": "Cinejoy - Nebula",
+      "sameSelection": true,
+      "played": false,
+      "failures": [
+        {
+          "details": "fragLoadError",
+          "code": 400,
+          "fatal": false
+        },
+        {
+          "details": "fragLoadError",
+          "code": 400,
+          "fatal": true
+        }
+      ],
+      "untypedResponse": {
+        "upstreamHost": "nebula.bright67.online",
+        "status": 200,
+        "contentType": "image/jpeg",
+        "finalHost": "nebula.bright67.online",
+        "range": null,
+        "signature": "#EXTM3U"
+      },
+      "failedRequest": {
+        "proxyHttp": 400,
+        "pathnameSegments": 5,
+        "tokenLength": 16,
+        "suffix": ".jpg",
+        "message": "Invalid media link."
+      }
+    }
+  ]
+}
