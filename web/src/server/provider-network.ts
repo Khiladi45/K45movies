@@ -38,14 +38,15 @@ function destination(input: string | URL) {
 
 const maxBody = 8 * 1024 * 1024;
 
-export function providerNetwork(signal: AbortSignal) {
+export function providerNetwork(signal: AbortSignal, defaultHeaders?: HeadersInit) {
   const jar = new CookieJar();
   let requests = 0;
-  const request = async (input: string | URL, options?: RequestInit): Promise<Response> => {
+  const request = async (input: string | URL, options?: RequestInit, maxRedirects = 5): Promise<Response> => {
     let url = destination(input);
     let method = (options?.method || "GET").toUpperCase();
     let body = options?.body;
-    const headers = new Headers(options?.headers);
+    const headers = new Headers(defaultHeaders);
+    new Headers(options?.headers).forEach((value, key) => headers.set(key, value));
     for (const name of ["host", "connection", "content-length", "proxy-authorization", "transfer-encoding"]) headers.delete(name);
     const deadline = AbortSignal.any([signal, AbortSignal.timeout(12_000), ...(options?.signal ? [options.signal] : [])]);
 
@@ -60,7 +61,11 @@ export function providerNetwork(signal: AbortSignal) {
       });
       for (const cookie of res.headers.getSetCookie()) await jar.setCookie(cookie, url.href, { ignoreError: true });
       const location = res.headers.get("location");
-      if (location && [301, 302, 303, 307, 308].includes(res.status)) {
+      if (location && options?.redirect !== "manual" && [301, 302, 303, 307, 308].includes(res.status)) {
+        if (options?.redirect === "error" || redirect === maxRedirects) {
+          await res.body?.cancel();
+          throw new Error("Upstream redirect limit reached.");
+        }
         await res.body?.cancel();
         const next = destination(new URL(location, url));
         if (next.origin !== url.origin) {
@@ -105,16 +110,21 @@ export function providerNetwork(signal: AbortSignal) {
 
   const http = axios.create({
     adapter: async (config) => {
+      const signals = [config.signal instanceof AbortSignal ? config.signal : undefined,
+        config.timeout && config.timeout > 0 ? AbortSignal.timeout(config.timeout) : undefined]
+        .filter((entry): entry is AbortSignal => !!entry);
       const res = await request(axios.getUri(config), {
         method: config.method,
         headers: Object.entries(config.headers.toJSON(true)).map(([key, value]) => [key, String(value)]),
         body: config.data,
-      });
+        signal: signals.length ? AbortSignal.any(signals) : undefined,
+        redirect: config.maxRedirects === 0 ? "manual" : undefined,
+      }, Math.min(config.maxRedirects ?? 5, 5));
       const response = {
         data: config.responseType === "arraybuffer" ? await res.arrayBuffer() : await res.text(),
         status: res.status, statusText: res.statusText,
-        headers: AxiosHeaders.from(Object.fromEntries(res.headers)), config,
-        request: { responseURL: res.url },
+        headers: AxiosHeaders.from({ ...Object.fromEntries(res.headers), "set-cookie": res.headers.getSetCookie() }), config,
+        request: { responseURL: res.url, res: { responseUrl: res.url }, _redirectable: { _currentUrl: res.url } },
       };
       if (config.validateStatus && !config.validateStatus(res.status)) {
         throw new AxiosError("Upstream request failed.", AxiosError.ERR_BAD_RESPONSE, config, response.request, response);

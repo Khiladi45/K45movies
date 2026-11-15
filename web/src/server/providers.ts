@@ -1,6 +1,6 @@
 import "server-only";
 import { createContext, Script } from "node:vm";
-import { createHash } from "node:crypto";
+import { createHash, webcrypto } from "node:crypto";
 import * as cheerio from "cheerio";
 import { z } from "zod";
 import type { Category, Episode, Post, Provider, ProviderDetail, Source } from "@/lib/catalog-types";
@@ -10,6 +10,7 @@ import { createMediaLink } from "./media";
 import { HttpError } from "./http";
 
 const defaultBase = "https://raw.githubusercontent.com/Khiladi45/K45movies-api/fce60ad0758822f734f505ef08661f837a450cbb/";
+const androidHeaders = { "User-Agent": "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36" };
 const providerId = z.string().regex(/^[a-zA-Z0-9_-]{1,65}$/);
 const manifestShape = z.object({
   providers: z.array(z.object({
@@ -103,24 +104,25 @@ async function execute(input: z.infer<typeof providerRequest>, args: Record<stri
     const bundle = await compiled(input.id);
     const signal = AbortSignal.any([requestSignal, AbortSignal.timeout(25_000)]);
     signal.throwIfAborted();
-    const { request, http } = providerNetwork(signal);
+    const { request, http } = providerNetwork(signal, androidHeaders);
     const values = new Map<string, unknown>();
     const exports: Record<string, unknown> = {};
     const context = createContext({
       exports, module: { exports }, Buffer, URL, URLSearchParams, TextEncoder, TextDecoder, atob, btoa,
-      AbortController, AbortSignal, Headers, Response, setTimeout, clearTimeout,
+      AbortController, AbortSignal, Headers, Request, Response, FormData, Blob, performance,
+      crypto: webcrypto, process: { env: { NODE_ENV: process.env.NODE_ENV } }, setTimeout, clearTimeout,
       fetch: request, require: (name: string) => { if (name === "crypto") return {}; throw new Error("Module unavailable."); },
       console: { log() {}, info() {}, warn() {}, error() {}, debug() {} },
       options: {
         ...args, provider: input.id, providerValue: input.id, signal,
         providerContext: {
-          axios: http, cheerio, commonHeaders: { "User-Agent": "Mozilla/5.0" },
-          Aes: { sha1: async (value: string) => createHash("sha1").update(value).digest("hex") },
+          axios: http, cheerio, commonHeaders: { ...androidHeaders },
+          Aes: { sha1: async (value: string) => createHash("sha1").update(String(value)).digest("hex") },
           openWebView: async () => { throw new Error("Interactive provider access is unavailable."); },
           kvStore: {
             get: async (key: string) => values.get(key),
             set: async (key: string, value: unknown) => { values.set(key, value); },
-            delete: async (key: string) => values.delete(key),
+            delete: async (key: string) => { values.delete(key); return true; },
             keys: async () => [...values.keys()],
             clear: async () => values.clear(),
           },
