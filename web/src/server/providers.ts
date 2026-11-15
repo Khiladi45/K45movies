@@ -8,6 +8,7 @@ import { providerNetwork } from "./provider-network";
 import { decodeReference, encodeReference } from "./references";
 import { createMediaLink } from "./media";
 import { HttpError } from "./http";
+import { providerStore } from "./provider-store";
 
 const defaultBase = "https://raw.githubusercontent.com/Khiladi45/K45movies-api/fce60ad0758822f734f505ef08661f837a450cbb/";
 const androidHeaders = { "User-Agent": "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36" };
@@ -105,7 +106,6 @@ async function execute(input: z.infer<typeof providerRequest>, args: Record<stri
     const signal = AbortSignal.any([requestSignal, AbortSignal.timeout(25_000)]);
     signal.throwIfAborted();
     const { request, http } = providerNetwork(signal, androidHeaders);
-    const values = new Map<string, unknown>();
     const exports: Record<string, unknown> = {};
     const context = createContext({
       exports, module: { exports }, Buffer, URL, URLSearchParams, TextEncoder, TextDecoder, atob, btoa,
@@ -119,13 +119,7 @@ async function execute(input: z.infer<typeof providerRequest>, args: Record<stri
           axios: http, cheerio, commonHeaders: { ...androidHeaders },
           Aes: { sha1: async (value: string) => createHash("sha1").update(String(value)).digest("hex") },
           openWebView: async () => { throw new Error("Interactive provider access is unavailable."); },
-          kvStore: {
-            get: async (key: string) => values.get(key),
-            set: async (key: string, value: unknown) => { values.set(key, value); },
-            delete: async (key: string) => { values.delete(key); return true; },
-            keys: async () => [...values.keys()],
-            clear: async () => values.clear(),
-          },
+          kvStore: providerStore(input.id),
         },
       },
     });
