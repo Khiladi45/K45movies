@@ -1,0 +1,393 @@
+{
+  "started": "2026-11-15T08:14:12.461Z",
+  "target": "http://127.0.0.1:3195",
+  "finished": "2026-11-15T08:14:33.638Z",
+  "query": "Batman",
+  "manifest": {
+    "state": "pass",
+    "ms": 721,
+    "http": 200,
+    "count": 45
+  },
+  "manifestIds": [
+    "1flex",
+    "1tamilblasters",
+    "1tamilmv",
+    "4khdhub",
+    "Joya9tv",
+    "anikoto",
+    "animesalt",
+    "animesub",
+    "animeworld",
+    "autoEmbed",
+    "castle",
+    "disneyPlus",
+    "drive",
+    "dvdplay",
+    "gokuHD",
+    "hdhub4u",
+    "hdmovieslife",
+    "hiAnime",
+    "hotstar",
+    "kickAssAnime",
+    "kissKh",
+    "kmMovies",
+    "luxMovies",
+    "marvel",
+    "movieBoxWeb",
+    "movielinkdb",
+    "movies4u",
+    "moviesda",
+    "movieswood",
+    "moviezwap",
+    "multi",
+    "mxplayer",
+    "netflix",
+    "pixar",
+    "primeVideo",
+    "showbox",
+    "starWars",
+    "torrentio",
+    "uhd",
+    "uniquestream",
+    "vega",
+    "zeefliz",
+    "disneyMirror",
+    "netflixMirror",
+    "primeMirror"
+  ],
+  "manifestSources": [
+    {
+      "id": "1flex",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "1tamilblasters",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "1tamilmv",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "4khdhub",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "Joya9tv",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "anikoto",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "animesalt",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "animesub",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "animeworld",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "autoEmbed",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "castle",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "disneyPlus",
+      "bundleSource": "api"
+    },
+    {
+      "id": "drive",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "dvdplay",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "gokuHD",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "hdhub4u",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "hdmovieslife",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "hiAnime",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "hotstar",
+      "bundleSource": "api"
+    },
+    {
+      "id": "kickAssAnime",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "kissKh",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "kmMovies",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "luxMovies",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "marvel",
+      "bundleSource": "api"
+    },
+    {
+      "id": "movieBoxWeb",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "movielinkdb",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "movies4u",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "moviesda",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "movieswood",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "moviezwap",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "multi",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "mxplayer",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "netflix",
+      "bundleSource": "api"
+    },
+    {
+      "id": "pixar",
+      "bundleSource": "api"
+    },
+    {
+      "id": "primeVideo",
+      "bundleSource": "api"
+    },
+    {
+      "id": "showbox",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "starWars",
+      "bundleSource": "api"
+    },
+    {
+      "id": "torrentio",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "uhd",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "uniquestream",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "vega",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "zeefliz",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "disneyMirror",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "netflixMirror",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "primeMirror",
+      "bundleSource": "vendored"
+    }
+  ],
+  "rows": [
+    {
+      "id": "vega",
+      "title": "The Beast",
+      "group": "The Beast (2026) {Hindi-English} 480p WEB-DL x264 [360MB]",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 46,
+          "http": 200,
+          "count": 17
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 948,
+          "http": 200,
+          "count": 20
+        },
+        "search": {
+          "state": "pass",
+          "ms": 1714,
+          "http": 200,
+          "count": 15
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 411,
+          "http": 200
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 16503,
+          "http": 200,
+          "count": 5
+        }
+      },
+      "samples": [
+        {
+          "server": "Instant (Google CDN)",
+          "hint": "mkv",
+          "hls": false,
+          "status": 200,
+          "contentType": "video/mp4",
+          "range": null,
+          "signature": "ISO BMFF",
+          "ms": 1777
+        },
+        {
+          "server": "Transfer.it",
+          "hint": "mp4",
+          "hls": false,
+          "status": 206,
+          "contentType": "video/x-matroska",
+          "range": "bytes 0-4095/377754496",
+          "signature": "EBML",
+          "ms": 935
+        },
+        {
+          "server": "Gofile",
+          "hint": "mp4",
+          "quality": "480p",
+          "hls": false,
+          "status": 206,
+          "contentType": "video/x-matroska",
+          "range": "bytes 0-4095/377754496",
+          "signature": "EBML",
+          "ms": 769
+        }
+      ]
+    },
+    {
+      "id": "movieBoxWeb",
+      "title": "Lucifer [Hindi] S1-S6",
+      "group": "Original Audio",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 90,
+          "http": 200,
+          "count": 3
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 832,
+          "http": 200,
+          "count": 18
+        },
+        "search": {
+          "state": "pass",
+          "ms": 616,
+          "http": 200,
+          "count": 4
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 260,
+          "http": 200
+        },
+        "episodes": {
+          "state": "pass",
+          "ms": 12,
+          "http": 200,
+          "count": 93
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 2763,
+          "http": 200,
+          "count": 4
+        }
+      },
+      "samples": [
+        {
+          "server": "Original Audio 360",
+          "hint": "mp4",
+          "quality": "360p",
+          "hls": false,
+          "status": 206,
+          "contentType": "video/mp4",
+          "range": "bytes 0-4095/122899849",
+          "signature": "ISO BMFF",
+          "ms": 204
+        },
+        {
+          "server": "Original Audio 480",
+          "hint": "mp4",
+          "quality": "480p",
+          "hls": false,
+          "status": 206,
+          "contentType": "video/mp4",
+          "range": "bytes 0-4095/167378467",
+          "signature": "ISO BMFF",
+          "ms": 206
+        },
+        {
+          "server": "Original Audio 720",
+          "hint": "mp4",
+          "quality": "720p",
+          "hls": false,
+          "status": 206,
+          "contentType": "video/mp4",
+          "range": "bytes 0-4095/374134738",
+          "signature": "ISO BMFF",
+          "ms": 207
+        }
+      ]
+    }
+  ]
+}

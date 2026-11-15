@@ -1,0 +1,964 @@
+{
+  "site": "http://127.0.0.1:3194",
+  "engines": [
+    "Chromium",
+    "Firefox"
+  ],
+  "rows": [
+    {
+      "provider": "vega",
+      "titles": [
+        {
+          "title": "The Beast",
+          "group": "The Beast (2026) {Hindi-English} 480p WEB-DL x264 [360MB]",
+          "entry": "Movie",
+          "samples": [
+            {
+              "server": "Instant (Google CDN)",
+              "format": "mp4",
+              "probe": {
+                "status": "ok",
+                "httpStatus": 200,
+                "contentType": "video/mp4",
+                "format": "mp4"
+              },
+              "evidence": {
+                "container": "mov,mp4,m4a,3gp,3g2,mj2",
+                "codecs": [
+                  "h264",
+                  "aac"
+                ]
+              },
+              "browsers": {
+                "Chromium": {
+                  "version": "157.0.8103.51",
+                  "played": true,
+                  "seconds": 0.6,
+                  "width": 720,
+                  "height": 300,
+                  "frames": 18,
+                  "elapsedMs": 3033
+                },
+                "Firefox": {
+                  "version": "159.0",
+                  "played": true,
+                  "seconds": 0.61,
+                  "width": 720,
+                  "height": 300,
+                  "frames": 14,
+                  "elapsedMs": 3218
+                }
+              }
+            },
+            {
+              "server": "Transfer.it",
+              "format": "mkv",
+              "probe": {
+                "status": "ok",
+                "httpStatus": 206,
+                "contentType": "application/octet-stream",
+                "format": "mkv",
+                "videoCodec": "h264"
+              },
+              "evidence": {
+                "container": "matroska,webm",
+                "codecs": [
+                  "h264",
+                  "aac"
+                ]
+              },
+              "browsers": {
+                "Chromium": {
+                  "version": "157.0.8103.51",
+                  "played": true,
+                  "seconds": 0.53,
+                  "width": 720,
+                  "height": 300,
+                  "frames": 17,
+                  "elapsedMs": 3377
+                },
+                "Firefox": {
+                  "version": "159.0",
+                  "played": true,
+                  "seconds": 0.57,
+                  "width": 720,
+                  "height": 300,
+                  "frames": 13,
+                  "elapsedMs": 2416
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "issues": []
+    },
+    {
+      "provider": "4khdhub",
+      "titles": [
+        {
+          "title": "The Beast (2026)",
+          "group": "The Beast (2160p WEB-DL HDR10+ HEVC) 15.66 GB Hindi, Tamil, Telugu, English WEB-DL",
+          "entry": "The Beast (2160p WEB-DL HDR10+ HEVC) 15.66 GB Hindi, Tamil, Telugu, English WEB-DL",
+          "samples": [
+            {
+              "server": "CF Storage",
+              "quality": "2160p",
+              "format": "mkv",
+              "probe": {
+                "status": "ok",
+                "httpStatus": 206,
+                "contentType": "application/octet-stream",
+                "format": "mkv",
+                "videoCodec": "hevc",
+                "audioCodec": "eac3"
+              },
+              "evidence": {
+                "container": "matroska,webm",
+                "codecs": [
+                  "hevc",
+                  "eac3"
+                ]
+              },
+              "browsers": {
+                "Chromium": {
+                  "version": "157.0.8103.51",
+                  "played": true,
+                  "seconds": 0.6,
+                  "width": 3840,
+                  "height": 1600,
+                  "frames": 5,
+                  "elapsedMs": 2570
+                },
+                "Firefox": {
+                  "version": "159.0",
+                  "played": false,
+                  "seconds": 0,
+                  "width": 3840,
+                  "height": 1600,
+                  "frames": 0,
+                  "failure": "MediaError 3",
+                  "elapsedMs": 9347
+                }
+              }
+            },
+            {
+              "server": "CF Storage",
+              "quality": "2160p",
+              "format": "mkv",
+              "probe": {
+                "status": "ok",
+                "httpStatus": 206,
+                "contentType": "application/octet-stream",
+                "format": "mkv",
+                "videoCodec": "hevc",
+                "audioCodec": "eac3"
+              },
+              "evidence": {
+                "container": "matroska,webm",
+                "codecs": [
+                  "hevc",
+                  "eac3"
+                ]
+              },
+              "browsers": {
+                "Chromium": {
+                  "version": "157.0.8103.51",
+                  "played": true,
+                  "seconds": 0.51,
+                  "width": 3840,
+                  "height": 1600,
+                  "frames": 17,
+                  "elapsedMs": 3296
+                },
+                "Firefox": {
+                  "version": "159.0",
+                  "played": false,
+                  "seconds": 0,
+                  "width": 0,
+                  "height": 0,
+                  "frames": 0,
+                  "failure": "No decoded video within 13 seconds",
+                  "elapsedMs": 13066
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "issues": []
+    },
+    {
+      "provider": "hdhub4u",
+      "titles": [
+        {
+          "title": "The Great Indian Kapil Show",
+          "group": "The Great Indian Kapil Show (Season 5)",
+          "entry": "EPISODE 1",
+          "samples": [
+            {
+              "server": "CF Storage",
+              "quality": "480p",
+              "format": "mkv",
+              "probe": {
+                "status": "ok",
+                "httpStatus": 206,
+                "contentType": "application/octet-stream",
+                "format": "mkv",
+                "videoCodec": "h264"
+              },
+              "evidence": {
+                "container": "matroska,webm",
+                "codecs": [
+                  "h264",
+                  "aac",
+                  "png"
+                ]
+              },
+              "browsers": {
+                "Chromium": {
+                  "version": "157.0.8103.51",
+                  "played": true,
+                  "seconds": 0.58,
+                  "width": 750,
+                  "height": 422,
+                  "frames": 19,
+                  "elapsedMs": 3527
+                },
+                "Firefox": {
+                  "version": "159.0",
+                  "played": true,
+                  "seconds": 0.53,
+                  "width": 750,
+                  "height": 422,
+                  "frames": 13,
+                  "elapsedMs": 2213
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "issues": []
+    },
+    {
+      "provider": "anikoto",
+      "titles": [
+        {
+          "title": "Solo Leveling Season 2: Arise from the Shadow",
+          "group": "Solo Leveling Season 2: Arise from the Shadow",
+          "entry": "Episode 1",
+          "samples": [
+            {
+              "server": "Vidstream-2 (SUB)",
+              "quality": "auto",
+              "format": "hls",
+              "probe": {
+                "status": "ok",
+                "httpStatus": 200,
+                "contentType": "application/vnd.apple.mpegurl",
+                "format": "hls",
+                "codecs": [
+                  "avc1.640032",
+                  "mp4a.40.2"
+                ],
+                "videoCodec": "h264"
+              },
+              "evidence": {
+                "container": "hls,applehttp",
+                "codecs": [
+                  "h264",
+                  "aac"
+                ]
+              },
+              "browsers": {
+                "Chromium": {
+                  "version": "157.0.8103.51",
+                  "played": false,
+                  "seconds": 0.09,
+                  "width": 1920,
+                  "height": 1080,
+                  "frames": 5,
+                  "failure": "fragLoadError",
+                  "elapsedMs": 1485
+                },
+                "Firefox": {
+                  "version": "159.0",
+                  "played": false,
+                  "seconds": 0.04,
+                  "width": 1920,
+                  "height": 1080,
+                  "frames": 0,
+                  "failure": "fragLoadError",
+                  "elapsedMs": 1411
+                }
+              }
+            }
+          ]
+        },
+        {
+          "title": "One Piece",
+          "group": "One Piece",
+          "entry": "Episode 1",
+          "samples": [
+            {
+              "server": "HD-1 (SUB)",
+              "quality": "auto",
+              "format": "hls",
+              "probe": {
+                "status": "ok",
+                "httpStatus": 206,
+                "contentType": "application/vnd.apple.mpegurl",
+                "format": "hls",
+                "codecs": [
+                  "avc1.640028",
+                  "mp4a.40.2"
+                ],
+                "videoCodec": "h264"
+              },
+              "evidence": {
+                "container": "hls,applehttp",
+                "codecs": [
+                  "png"
+                ]
+              },
+              "browsers": {
+                "Chromium": {
+                  "version": "157.0.8103.51",
+                  "played": true,
+                  "seconds": 0.6,
+                  "width": 1440,
+                  "height": 1080,
+                  "frames": 17,
+                  "elapsedMs": 3764
+                },
+                "Firefox": {
+                  "version": "159.0",
+                  "played": true,
+                  "seconds": 0.53,
+                  "width": 1440,
+                  "height": 1080,
+                  "frames": 9,
+                  "elapsedMs": 3126
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "issues": []
+    },
+    {
+      "provider": "animeworld",
+      "titles": [
+        {
+          "title": "Arifureta: From Commonplace to World's Strongest",
+          "group": "Season 1",
+          "entry": "Episode 1",
+          "samples": [
+            {
+              "server": "ZephyrFlick",
+              "format": "hls",
+              "probe": {
+                "status": "ok",
+                "httpStatus": 200,
+                "contentType": "application/x-mpegURL",
+                "format": "hls",
+                "codecs": [
+                  "avc1.4D400D",
+                  "mp4a.40.2"
+                ],
+                "videoCodec": "h264"
+              },
+              "evidence": {
+                "error": "ffprobe failed or timed out"
+              },
+              "browsers": {
+                "Chromium": {
+                  "version": "157.0.8103.51",
+                  "played": true,
+                  "seconds": 0.59,
+                  "width": 640,
+                  "height": 360,
+                  "frames": 17,
+                  "elapsedMs": 2990
+                },
+                "Firefox": {
+                  "version": "159.0",
+                  "played": true,
+                  "seconds": 0.56,
+                  "width": 640,
+                  "height": 360,
+                  "frames": 10,
+                  "elapsedMs": 2936
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "issues": []
+    },
+    {
+      "provider": "castle",
+      "titles": [
+        {
+          "title": "Jailer 2",
+          "group": "Movie",
+          "entry": "Play",
+          "samples": [
+            {
+              "server": "Jailer 2 - Hindi, Tamil, Telugu, Malayalam, Kannada - 1080p - preview",
+              "quality": "1080p",
+              "format": "hls",
+              "probe": {
+                "status": "ok",
+                "httpStatus": 206,
+                "contentType": "application/vnd.apple.mpegurl",
+                "format": "hls"
+              },
+              "evidence": {
+                "container": "hls,applehttp",
+                "codecs": [
+                  "h264",
+                  "aac"
+                ]
+              },
+              "browsers": {
+                "Chromium": {
+                  "version": "157.0.8103.51",
+                  "played": true,
+                  "seconds": 0.57,
+                  "width": 856,
+                  "height": 480,
+                  "frames": 14,
+                  "elapsedMs": 1456
+                },
+                "Firefox": {
+                  "version": "159.0",
+                  "played": true,
+                  "seconds": 0.57,
+                  "width": 855,
+                  "height": 480,
+                  "frames": 9,
+                  "elapsedMs": 1311
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "issues": []
+    },
+    {
+      "provider": "autoEmbed",
+      "titles": [
+        {
+          "title": "Heart of the Beast",
+          "group": "Heart of the Beast",
+          "entry": "Movie",
+          "samples": [
+            {
+              "server": "Cinejoy - Nebula",
+              "quality": "1080p",
+              "format": "hls",
+              "probe": {
+                "status": "ok",
+                "httpStatus": 206,
+                "contentType": "image/jpeg",
+                "format": "hls"
+              },
+              "evidence": {
+                "error": "ffprobe failed or timed out"
+              },
+              "browsers": {
+                "Chromium": {
+                  "version": "157.0.8103.51",
+                  "played": false,
+                  "seconds": 0,
+                  "width": 0,
+                  "height": 0,
+                  "frames": 0,
+                  "failure": "fragLoadError",
+                  "elapsedMs": 222
+                },
+                "Firefox": {
+                  "version": "159.0",
+                  "played": false,
+                  "seconds": 0,
+                  "width": 0,
+                  "height": 0,
+                  "frames": 0,
+                  "failure": "fragLoadError",
+                  "elapsedMs": 306
+                }
+              }
+            }
+          ]
+        },
+        {
+          "title": "Resident Evil",
+          "group": "Resident Evil",
+          "entry": "Movie",
+          "samples": [
+            {
+              "server": "Cinejoy - Nebula",
+              "quality": "1080p",
+              "format": "hls",
+              "probe": {
+                "status": "ok",
+                "httpStatus": 206,
+                "contentType": "image/jpeg",
+                "format": "hls"
+              },
+              "evidence": {
+                "error": "ffprobe failed or timed out"
+              },
+              "browsers": {
+                "Chromium": {
+                  "version": "157.0.8103.51",
+                  "played": false,
+                  "seconds": 0,
+                  "width": 0,
+                  "height": 0,
+                  "frames": 0,
+                  "failure": "fragLoadError",
+                  "elapsedMs": 218
+                },
+                "Firefox": {
+                  "version": "159.0",
+                  "played": false,
+                  "seconds": 0,
+                  "width": 0,
+                  "height": 0,
+                  "frames": 0,
+                  "failure": "fragLoadError",
+                  "elapsedMs": 308
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "issues": []
+    },
+    {
+      "provider": "movieBoxWeb",
+      "titles": [
+        {
+          "title": "Lucifer [Hindi] S1-S6",
+          "group": "Original Audio",
+          "entry": "S01 E01",
+          "samples": [
+            {
+              "server": "Original Audio 360",
+              "quality": "360p",
+              "format": "mp4",
+              "probe": {
+                "status": "ok",
+                "httpStatus": 206,
+                "contentType": "video/mp4",
+                "format": "mp4",
+                "videoCodec": "h264"
+              },
+              "evidence": {
+                "error": "ffprobe failed or timed out"
+              },
+              "browsers": {
+                "Chromium": {
+                  "version": "157.0.8103.51",
+                  "played": true,
+                  "seconds": 0.51,
+                  "width": 640,
+                  "height": 360,
+                  "frames": 17,
+                  "elapsedMs": 3044
+                },
+                "Firefox": {
+                  "version": "159.0",
+                  "played": true,
+                  "seconds": 0.52,
+                  "width": 640,
+                  "height": 360,
+                  "frames": 13,
+                  "elapsedMs": 3118
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "issues": []
+    },
+    {
+      "provider": "hdmovieslife",
+      "titles": [],
+      "issues": []
+    },
+    {
+      "provider": "1flex",
+      "titles": [
+        {
+          "title": "Resident Evil",
+          "group": "Movie",
+          "entry": "Resident Evil",
+          "samples": [
+            {
+              "server": "Cinejoy - Nebula",
+              "quality": "1080p",
+              "format": "hls",
+              "probe": {
+                "status": "ok",
+                "httpStatus": 206,
+                "contentType": "image/jpeg",
+                "format": "hls"
+              },
+              "evidence": {
+                "error": "ffprobe failed or timed out"
+              },
+              "browsers": {
+                "Chromium": {
+                  "version": "157.0.8103.51",
+                  "played": false,
+                  "seconds": 0,
+                  "width": 0,
+                  "height": 0,
+                  "frames": 0,
+                  "failure": "fragLoadError",
+                  "elapsedMs": 210
+                },
+                "Firefox": {
+                  "version": "159.0",
+                  "played": false,
+                  "seconds": 0,
+                  "width": 0,
+                  "height": 0,
+                  "frames": 0,
+                  "failure": "fragLoadError",
+                  "elapsedMs": 606
+                }
+              }
+            }
+          ]
+        },
+        {
+          "title": "Heart of the Beast",
+          "group": "Movie",
+          "entry": "Heart of the Beast",
+          "samples": [
+            {
+              "server": "Cinejoy - Nebula",
+              "quality": "1080p",
+              "format": "hls",
+              "probe": {
+                "status": "ok",
+                "httpStatus": 206,
+                "contentType": "image/jpeg",
+                "format": "hls"
+              },
+              "evidence": {
+                "error": "ffprobe failed or timed out"
+              },
+              "browsers": {
+                "Chromium": {
+                  "version": "157.0.8103.51",
+                  "played": false,
+                  "seconds": 0,
+                  "width": 0,
+                  "height": 0,
+                  "frames": 0,
+                  "failure": "fragLoadError",
+                  "elapsedMs": 218
+                },
+                "Firefox": {
+                  "version": "159.0",
+                  "played": false,
+                  "seconds": 0,
+                  "width": 0,
+                  "height": 0,
+                  "frames": 0,
+                  "failure": "fragLoadError",
+                  "elapsedMs": 307
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "issues": []
+    },
+    {
+      "provider": "1tamilblasters",
+      "titles": [],
+      "issues": [
+        "posts: Upstream request failed (ECONNRESET)."
+      ]
+    },
+    {
+      "provider": "kickAssAnime",
+      "titles": [
+        {
+          "title": "Bungo Stray Dogs 5",
+          "group": "Episodes (Sub)",
+          "entry": "Episode 1 - The Strongest Man",
+          "samples": [
+            {
+              "server": "VidStreaming (Auto)",
+              "quality": "auto",
+              "format": "hls",
+              "probe": {
+                "status": "ok",
+                "httpStatus": 200,
+                "contentType": "application/x-mpegURL",
+                "format": "hls",
+                "codecs": [
+                  "avc1.4D4C28",
+                  "mp4a.40.2"
+                ],
+                "videoCodec": "h264"
+              },
+              "evidence": {
+                "container": "hls,applehttp",
+                "codecs": [
+                  "aac",
+                  "h264"
+                ]
+              },
+              "browsers": {
+                "Chromium": {
+                  "version": "157.0.8103.51",
+                  "played": true,
+                  "seconds": 0.51,
+                  "width": 1280,
+                  "height": 720,
+                  "frames": 15,
+                  "elapsedMs": 2298
+                },
+                "Firefox": {
+                  "version": "159.0",
+                  "played": true,
+                  "seconds": 0.53,
+                  "width": 1280,
+                  "height": 720,
+                  "frames": 10,
+                  "elapsedMs": 3121
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "issues": []
+    },
+    {
+      "provider": "movielinkdb",
+      "titles": [
+        {
+          "title": "Bachelor Point",
+          "group": "720p",
+          "entry": "Complete Series • 1.4 GB",
+          "samples": [
+            {
+              "server": "mp4-entry",
+              "quality": "720p",
+              "format": "mp4",
+              "probe": {
+                "status": "ok",
+                "httpStatus": 206,
+                "contentType": "video/mp4",
+                "format": "mp4",
+                "videoCodec": "h264"
+              },
+              "evidence": {
+                "error": "ffprobe failed or timed out"
+              },
+              "browsers": {
+                "Chromium": {
+                  "version": "157.0.8103.51",
+                  "played": true,
+                  "seconds": 0.51,
+                  "width": 1280,
+                  "height": 720,
+                  "frames": 15,
+                  "elapsedMs": 2727
+                },
+                "Firefox": {
+                  "version": "159.0",
+                  "played": true,
+                  "seconds": 0.53,
+                  "width": 1280,
+                  "height": 720,
+                  "frames": 11,
+                  "elapsedMs": 1916
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "issues": []
+    },
+    {
+      "provider": "luxMovies",
+      "titles": [
+        {
+          "title": "The Great Indian Kapil Show",
+          "group": "Season 5 {HiNDi-Series} 480p WEB-DL x264 [400MB/E]",
+          "entry": "Episode 1",
+          "samples": [
+            {
+              "server": "CF Storage",
+              "quality": "480p",
+              "format": "mkv",
+              "probe": {
+                "status": "ok",
+                "httpStatus": 206,
+                "contentType": "application/octet-stream",
+                "format": "mkv",
+                "videoCodec": "h264"
+              },
+              "evidence": {
+                "container": "matroska,webm",
+                "codecs": [
+                  "h264",
+                  "aac"
+                ]
+              },
+              "browsers": {
+                "Chromium": {
+                  "version": "157.0.8103.51",
+                  "played": true,
+                  "seconds": 0.57,
+                  "width": 848,
+                  "height": 480,
+                  "frames": 16,
+                  "elapsedMs": 2094
+                },
+                "Firefox": {
+                  "version": "159.0",
+                  "played": false,
+                  "seconds": 0,
+                  "width": 848,
+                  "height": 480,
+                  "frames": 0,
+                  "failure": "MediaError 3",
+                  "elapsedMs": 907
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "issues": []
+    },
+    {
+      "provider": "moviezwap",
+      "titles": [
+        {
+          "title": "Money Heist Telugu Dubbed Season (01 to 05) All Episodes HDRip ESub Full Movie Free Download HD MP4 Format for PC Laptop Android Mobile Tab",
+          "group": "Money Heist (2021) Telugu Season 05 Vol.2 Eps (06 to 10)",
+          "entry": "Money-Heist-(2021)-Telugu-Season-5-Vol-2-Eps-(06-10)-HDRip-480p-HQ-ESub.Mp4",
+          "samples": [
+            {
+              "server": "Fast Download",
+              "quality": "480p",
+              "format": "mkv",
+              "probe": {
+                "status": "ok",
+                "httpStatus": 206,
+                "contentType": "video/mp4",
+                "format": "mkv",
+                "videoCodec": "h264"
+              },
+              "evidence": {
+                "container": "matroska,webm",
+                "codecs": [
+                  "h264",
+                  "aac"
+                ]
+              },
+              "browsers": {
+                "Chromium": {
+                  "version": "157.0.8103.51",
+                  "played": true,
+                  "seconds": 0.6,
+                  "width": 854,
+                  "height": 481,
+                  "frames": 16,
+                  "elapsedMs": 2600
+                },
+                "Firefox": {
+                  "version": "159.0",
+                  "played": true,
+                  "seconds": 0.53,
+                  "width": 854,
+                  "height": 480,
+                  "frames": 11,
+                  "elapsedMs": 2617
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "issues": []
+    },
+    {
+      "provider": "movieswood",
+      "titles": [
+        {
+          "title": "DNK",
+          "group": "⬇ Download",
+          "entry": "⬇ Download",
+          "samples": [
+            {
+              "server": "MoviesWood Direct",
+              "quality": "720p",
+              "format": "mkv",
+              "probe": {
+                "status": "ok",
+                "httpStatus": 206,
+                "contentType": "application/octet-stream",
+                "format": "mkv",
+                "videoCodec": "h264"
+              },
+              "evidence": {
+                "container": "matroska,webm",
+                "codecs": [
+                  "h264",
+                  "aac"
+                ]
+              },
+              "browsers": {
+                "Chromium": {
+                  "version": "157.0.8103.51",
+                  "played": true,
+                  "seconds": 0.56,
+                  "width": 1280,
+                  "height": 560,
+                  "frames": 18,
+                  "elapsedMs": 2396
+                },
+                "Firefox": {
+                  "version": "159.0",
+                  "played": true,
+                  "seconds": 0.53,
+                  "width": 1280,
+                  "height": 560,
+                  "frames": 12,
+                  "elapsedMs": 1109
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "issues": []
+    },
+    {
+      "provider": "kmMovies",
+      "titles": [],
+      "issues": []
+    }
+  ]
+}

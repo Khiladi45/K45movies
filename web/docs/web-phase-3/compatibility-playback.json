@@ -1,0 +1,310 @@
+{
+  "site": "http://127.0.0.1:3195",
+  "engines": [
+    "Chromium",
+    "Firefox"
+  ],
+  "rows": [
+    {
+      "provider": "4khdhub",
+      "titles": [
+        {
+          "title": "The Beast (2026)",
+          "group": "The Beast (2160p WEB-DL HDR10+ HEVC) 15.66 GB Hindi, Tamil, Telugu, English WEB-DL",
+          "entry": "The Beast (2160p WEB-DL HDR10+ HEVC) 15.66 GB Hindi, Tamil, Telugu, English WEB-DL",
+          "samples": [
+            {
+              "server": "CF Storage",
+              "quality": "2160p",
+              "format": "mkv",
+              "probe": {
+                "status": "ok",
+                "httpStatus": 206,
+                "contentType": "application/octet-stream",
+                "format": "mkv",
+                "videoCodec": "hevc",
+                "audioCodec": "eac3"
+              },
+              "evidence": {
+                "container": "matroska,webm",
+                "codecs": [
+                  "hevc",
+                  "eac3"
+                ]
+              },
+              "browsers": {
+                "Chromium": {
+                  "version": "157.0.8103.51",
+                  "played": true,
+                  "seconds": 0.58,
+                  "width": 3840,
+                  "height": 1600,
+                  "frames": 17,
+                  "audioBytes": 0,
+                  "elapsedMs": 3193,
+                  "httpStatus": 206
+                },
+                "Firefox": {
+                  "version": "159.0",
+                  "played": false,
+                  "seconds": 0,
+                  "width": 0,
+                  "height": 0,
+                  "frames": 0,
+                  "failure": "No decoded video within 13 seconds",
+                  "elapsedMs": 13077,
+                  "httpStatus": 206
+                }
+              },
+              "compatibility": {
+                "Chromium": {
+                  "played": false,
+                  "seconds": 0,
+                  "width": 0,
+                  "height": 0,
+                  "frames": 0,
+                  "audioBytes": 0,
+                  "failure": "No decoded video within 13 seconds",
+                  "elapsedMs": 13065,
+                  "httpStatus": 200
+                },
+                "Firefox": {
+                  "played": false,
+                  "seconds": 0,
+                  "width": 0,
+                  "height": 0,
+                  "frames": 0,
+                  "failure": "No decoded video within 13 seconds",
+                  "elapsedMs": 13017,
+                  "httpStatus": 200
+                }
+              }
+            },
+            {
+              "server": "CF Storage",
+              "quality": "2160p",
+              "format": "mkv",
+              "probe": {
+                "status": "ok",
+                "httpStatus": 206,
+                "contentType": "application/octet-stream",
+                "format": "mkv",
+                "videoCodec": "hevc",
+                "audioCodec": "eac3"
+              },
+              "evidence": {
+                "container": "matroska,webm",
+                "codecs": [
+                  "hevc",
+                  "eac3"
+                ]
+              },
+              "browsers": {
+                "Chromium": {
+                  "version": "157.0.8103.51",
+                  "played": true,
+                  "seconds": 0.58,
+                  "width": 3840,
+                  "height": 1600,
+                  "frames": 17,
+                  "audioBytes": 0,
+                  "elapsedMs": 5039,
+                  "httpStatus": 206
+                },
+                "Firefox": {
+                  "version": "159.0",
+                  "played": false,
+                  "seconds": 0,
+                  "width": 0,
+                  "height": 0,
+                  "frames": 0,
+                  "failure": "No decoded video within 13 seconds",
+                  "elapsedMs": 13084,
+                  "httpStatus": 206
+                }
+              },
+              "compatibility": {
+                "Chromium": {
+                  "played": false,
+                  "seconds": 0,
+                  "width": 0,
+                  "height": 0,
+                  "frames": 0,
+                  "audioBytes": 0,
+                  "failure": "No decoded video within 13 seconds",
+                  "elapsedMs": 13070,
+                  "httpStatus": 200
+                },
+                "Firefox": {
+                  "played": false,
+                  "seconds": 0,
+                  "width": 0,
+                  "height": 0,
+                  "frames": 0,
+                  "failure": "No decoded video within 13 seconds",
+                  "elapsedMs": 13089,
+                  "httpStatus": 200
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "issues": []
+    },
+    {
+      "provider": "hdhub4u",
+      "titles": [
+        {
+          "title": "The Great Indian Kapil Show",
+          "group": "The Great Indian Kapil Show (Season 5)",
+          "entry": "EPISODE 1",
+          "samples": [
+            {
+              "server": "CF Storage",
+              "quality": "480p",
+              "format": "mkv",
+              "probe": {
+                "status": "ok",
+                "httpStatus": 206,
+                "contentType": "application/octet-stream",
+                "format": "mkv",
+                "videoCodec": "h264"
+              },
+              "evidence": {
+                "container": "matroska,webm",
+                "codecs": [
+                  "h264",
+                  "aac",
+                  "png"
+                ]
+              },
+              "browsers": {
+                "Chromium": {
+                  "version": "157.0.8103.51",
+                  "played": true,
+                  "seconds": 0.59,
+                  "width": 750,
+                  "height": 422,
+                  "frames": 19,
+                  "audioBytes": 6144,
+                  "elapsedMs": 9644,
+                  "httpStatus": 206
+                },
+                "Firefox": {
+                  "version": "159.0",
+                  "played": true,
+                  "seconds": 0.57,
+                  "width": 750,
+                  "height": 422,
+                  "frames": 14,
+                  "elapsedMs": 1608,
+                  "httpStatus": 206
+                }
+              },
+              "compatibility": {
+                "Chromium": {
+                  "played": true,
+                  "seconds": 0.53,
+                  "width": 750,
+                  "height": 422,
+                  "frames": 14,
+                  "audioBytes": 3290,
+                  "elapsedMs": 2084,
+                  "httpStatus": 200
+                },
+                "Firefox": {
+                  "played": true,
+                  "seconds": 0.61,
+                  "width": 750,
+                  "height": 422,
+                  "frames": 12,
+                  "elapsedMs": 1409,
+                  "httpStatus": 200
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "issues": []
+    },
+    {
+      "provider": "luxMovies",
+      "titles": [
+        {
+          "title": "The Great Indian Kapil Show",
+          "group": "Season 5 {HiNDi-Series} 480p WEB-DL x264 [400MB/E]",
+          "entry": "Episode 1",
+          "samples": [
+            {
+              "server": "CF Storage",
+              "quality": "480p",
+              "format": "mkv",
+              "probe": {
+                "status": "ok",
+                "httpStatus": 206,
+                "contentType": "application/octet-stream",
+                "format": "mkv",
+                "videoCodec": "h264"
+              },
+              "evidence": {
+                "container": "matroska,webm",
+                "codecs": [
+                  "h264",
+                  "aac"
+                ]
+              },
+              "browsers": {
+                "Chromium": {
+                  "version": "157.0.8103.51",
+                  "played": true,
+                  "seconds": 0.6,
+                  "width": 848,
+                  "height": 480,
+                  "frames": 17,
+                  "audioBytes": 14117,
+                  "elapsedMs": 1866,
+                  "httpStatus": 206
+                },
+                "Firefox": {
+                  "version": "159.0",
+                  "played": false,
+                  "seconds": 0,
+                  "width": 848,
+                  "height": 480,
+                  "frames": 0,
+                  "failure": "MediaError 3",
+                  "elapsedMs": 807,
+                  "httpStatus": 206
+                }
+              },
+              "compatibility": {
+                "Chromium": {
+                  "played": true,
+                  "seconds": 0.52,
+                  "width": 848,
+                  "height": 480,
+                  "frames": 14,
+                  "audioBytes": 221,
+                  "elapsedMs": 2324,
+                  "httpStatus": 200
+                },
+                "Firefox": {
+                  "played": true,
+                  "seconds": 0.57,
+                  "width": 848,
+                  "height": 480,
+                  "frames": 11,
+                  "elapsedMs": 1511,
+                  "httpStatus": 200
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "issues": []
+    }
+  ]
+}

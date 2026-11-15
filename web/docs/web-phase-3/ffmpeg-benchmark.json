@@ -1,0 +1,27 @@
+{
+  "version": "ffmpeg version N-92722-gf22fcd4483 Copyright (c) 2000-2018 the FFmpeg developers",
+  "machine": "Intel(R) Core(TM) i7-10875H CPU @ 2.30GHz",
+  "durationSeconds": 30,
+  "fixture": "1280x720/24 fps H.264 + E-AC-3 in Matroska",
+  "output": "fragmented MP4, H.264 copy, stereo AAC",
+  "timings": [
+    {
+      "user": 1.812,
+      "system": 0.031,
+      "wall": 1.832,
+      "cpu": 1.843
+    },
+    {
+      "user": 1.719,
+      "system": 0.047,
+      "wall": 1.761,
+      "cpu": 1.766
+    },
+    {
+      "user": 1.812,
+      "system": 0,
+      "wall": 1.799,
+      "cpu": 1.812
+    }
+  ]
+}

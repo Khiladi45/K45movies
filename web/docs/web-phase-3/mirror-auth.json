@@ -1,0 +1,253 @@
+{
+  "ref": "a77aa81c9ae068e747d3c8b7b40809e895db0188",
+  "apiRef": "02f2b0e96ea822cc68b2d18609418501534283ca",
+  "urlChecks": {
+    "nfMirror": {
+      "host": "net77.cc",
+      "finalHost": "net77.cc",
+      "status": 403,
+      "ms": 2895
+    },
+    "UhdMovies": {
+      "host": "uhdmovies.beauty",
+      "error": "TimeoutError",
+      "ms": 10005
+    }
+  },
+  "results": [
+    {
+      "id": "disneyMirror",
+      "title": "Batman: Knightfall Part 1: Knightfall",
+      "operations": {
+        "meta": {
+          "state": "pass",
+          "count": 1,
+          "ms": 686,
+          "events": [
+            {
+              "host": "tv.imgcdn.kim",
+              "status": 200
+            }
+          ]
+        },
+        "episodes": {
+          "state": "skipped"
+        },
+        "stream": {
+          "state": "empty",
+          "count": 0,
+          "ms": 707,
+          "events": [
+            {
+              "host": "tv.imgcdn.kim",
+              "status": 200,
+              "player": {
+                "videoLink": true,
+                "playerReady": false,
+                "applicationStatus": "otp",
+                "userTokenRequested": false,
+                "redirectedToLogin": false
+              }
+            }
+          ]
+        },
+        "catalog": {
+          "state": "pass",
+          "count": 4,
+          "ms": 5,
+          "events": []
+        },
+        "posts": {
+          "state": "empty",
+          "count": 0,
+          "ms": 2066,
+          "events": [
+            {
+              "host": "mobiledetects.com",
+              "status": 200
+            },
+            {
+              "host": "tv.imgcdn.kim",
+              "status": 200
+            }
+          ]
+        },
+        "search": {
+          "state": "pass",
+          "count": 8,
+          "ms": 2178,
+          "events": [
+            {
+              "host": "mobiledetects.com",
+              "status": 200
+            },
+            {
+              "host": "tv.imgcdn.kim",
+              "status": 200
+            }
+          ]
+        }
+      },
+      "sourceRecords": {
+        "total": 0,
+        "http": 0
+      }
+    },
+    {
+      "id": "netflixMirror",
+      "title": "Batman Ninja",
+      "operations": {
+        "meta": {
+          "state": "pass",
+          "count": 1,
+          "ms": 697,
+          "events": [
+            {
+              "host": "tv.imgcdn.kim",
+              "status": 200
+            }
+          ]
+        },
+        "episodes": {
+          "state": "skipped"
+        },
+        "stream": {
+          "state": "empty",
+          "count": 0,
+          "ms": 676,
+          "events": [
+            {
+              "host": "tv.imgcdn.kim",
+              "status": 200,
+              "player": {
+                "videoLink": true,
+                "playerReady": false,
+                "applicationStatus": "otp",
+                "userTokenRequested": false,
+                "redirectedToLogin": false
+              }
+            }
+          ]
+        },
+        "catalog": {
+          "state": "pass",
+          "count": 4,
+          "ms": 2,
+          "events": []
+        },
+        "posts": {
+          "state": "empty",
+          "count": 0,
+          "ms": 2195,
+          "events": [
+            {
+              "host": "mobiledetects.com",
+              "status": 200
+            },
+            {
+              "host": "tv.imgcdn.kim",
+              "status": 200
+            }
+          ]
+        },
+        "search": {
+          "state": "pass",
+          "count": 5,
+          "ms": 2198,
+          "events": [
+            {
+              "host": "mobiledetects.com",
+              "status": 200
+            },
+            {
+              "host": "tv.imgcdn.kim",
+              "status": 200
+            }
+          ]
+        }
+      },
+      "sourceRecords": {
+        "total": 0,
+        "http": 0
+      }
+    },
+    {
+      "id": "primeMirror",
+      "title": "Batman",
+      "operations": {
+        "meta": {
+          "state": "pass",
+          "count": 1,
+          "ms": 710,
+          "events": [
+            {
+              "host": "tv.imgcdn.kim",
+              "status": 200
+            }
+          ]
+        },
+        "episodes": {
+          "state": "skipped"
+        },
+        "stream": {
+          "state": "empty",
+          "count": 0,
+          "ms": 675,
+          "events": [
+            {
+              "host": "tv.imgcdn.kim",
+              "status": 200,
+              "player": {
+                "videoLink": true,
+                "playerReady": false,
+                "applicationStatus": "otp",
+                "userTokenRequested": false,
+                "redirectedToLogin": false
+              }
+            }
+          ]
+        },
+        "catalog": {
+          "state": "pass",
+          "count": 4,
+          "ms": 0,
+          "events": []
+        },
+        "posts": {
+          "state": "empty",
+          "count": 0,
+          "ms": 2181,
+          "events": [
+            {
+              "host": "mobiledetects.com",
+              "status": 200
+            },
+            {
+              "host": "tv.imgcdn.kim",
+              "status": 200
+            }
+          ]
+        },
+        "search": {
+          "state": "pass",
+          "count": 13,
+          "ms": 2184,
+          "events": [
+            {
+              "host": "mobiledetects.com",
+              "status": 200
+            },
+            {
+              "host": "tv.imgcdn.kim",
+              "status": 200
+            }
+          ]
+        }
+      },
+      "sourceRecords": {
+        "total": 0,
+        "http": 0
+      }
+    }
+  ]
+}

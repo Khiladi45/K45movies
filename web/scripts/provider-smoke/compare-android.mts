@@ -31,7 +31,12 @@ async function invoke(bundle, values, id, op, args) {
   http.interceptors.response.use((response) => {
     const player = typeof response.data === "object" && response.data !== null &&
       new URL(response.request.responseURL).pathname.endsWith("/player.php") ?
-      { videoLink: typeof response.data.video_link === "string", playerReady: response.data.status === "ok" } : undefined;
+      {
+        videoLink: typeof response.data.video_link === "string", playerReady: response.data.status === "ok",
+        applicationStatus: /^[a-z_ -]{1,40}$/i.test(String(response.data.status ?? "")) ? response.data.status : undefined,
+        userTokenRequested: /(?:user\s*token|log\s*in|sign\s*in|authenticat|authoriz)/i.test(String(response.data.message ?? response.data.error ?? "")),
+        redirectedToLogin: /(?:login|signin|auth)(?:[.\/?]|$)/i.test(String(response.data.video_link ?? "").split("?")[0]),
+      } : undefined;
     events.push({ host: new URL(response.request.responseURL).hostname, status: response.status, player });
     return response;
   }, (error) => {
