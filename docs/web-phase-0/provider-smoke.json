@@ -1,0 +1,5699 @@
+{
+  "started": "2026-11-15T06:50:47.656Z",
+  "finished": "2026-11-15T06:54:09.503Z",
+  "query": "Batman",
+  "manifest": {
+    "state": "pass",
+    "ms": 200,
+    "http": 200,
+    "count": 42,
+    "trace": {
+      "requests": 1,
+      "statuses": {
+        "200": 1
+      },
+      "errors": [],
+      "providerLogs": 0,
+      "webViewCalls": 0
+    }
+  },
+  "manifestIds": [
+    "1flex",
+    "1tamilblasters",
+    "1tamilmv",
+    "4khdhub",
+    "Joya9tv",
+    "anikoto",
+    "animesalt",
+    "animesub",
+    "animeworld",
+    "autoEmbed",
+    "castle",
+    "disneyPlus",
+    "drive",
+    "dvdplay",
+    "gokuHD",
+    "hdhub4u",
+    "hdmovieslife",
+    "hiAnime",
+    "hotstar",
+    "kickAssAnime",
+    "kissKh",
+    "kmMovies",
+    "luxMovies",
+    "marvel",
+    "movieBoxWeb",
+    "movielinkdb",
+    "movies4u",
+    "moviesda",
+    "movieswood",
+    "moviezwap",
+    "multi",
+    "mxplayer",
+    "netflix",
+    "pixar",
+    "primeVideo",
+    "showbox",
+    "starWars",
+    "torrentio",
+    "uhd",
+    "uniquestream",
+    "vega",
+    "zeefliz"
+  ],
+  "rows": [
+    {
+      "id": "1flex",
+      "title": "Resident Evil",
+      "group": "Movie",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 197,
+          "http": 200,
+          "count": 4,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 308,
+          "http": 200,
+          "count": 20,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "pass",
+          "ms": 236,
+          "http": 200,
+          "count": 20,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 98,
+          "http": 200,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 15404,
+          "http": 200,
+          "count": 20,
+          "trace": {
+            "requests": 32,
+            "statuses": {
+              "200": 22,
+              "404": 9
+            },
+            "errors": [
+              "23"
+            ],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        }
+      },
+      "samples": [
+        {
+          "server": "Movy - Delhi (Hindi) (Hindi)",
+          "hint": "mp4",
+          "hls": false,
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "range": null,
+          "signature": "HLS",
+          "ms": 724,
+          "codecs": {
+            "programs": [
+              {
+                "streams": [
+                  {
+                    "codec_name": "h264",
+                    "profile": "High",
+                    "codec_type": "video"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  }
+                ]
+              },
+              {
+                "streams": [
+                  {
+                    "codec_name": "h264",
+                    "profile": "High",
+                    "codec_type": "video"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  }
+                ]
+              },
+              {
+                "streams": [
+                  {
+                    "codec_name": "h264",
+                    "profile": "High",
+                    "codec_type": "video"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  }
+                ]
+              }
+            ],
+            "streams": [
+              {
+                "codec_name": "h264",
+                "profile": "High",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "h264",
+                "profile": "High",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "h264",
+                "profile": "High",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              }
+            ],
+            "format": {
+              "format_name": "hls,applehttp"
+            }
+          }
+        },
+        {
+          "server": "Movy - Delhi (Hindi) (English)",
+          "hint": "m3u8",
+          "hls": true,
+          "status": 404,
+          "contentType": "application/json",
+          "range": null,
+          "ms": 1514
+        },
+        {
+          "server": "Movy - Austin (Hindi)",
+          "hint": "mp4",
+          "hls": false,
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "range": null,
+          "signature": "HLS",
+          "ms": 800,
+          "codecs": {
+            "programs": [
+              {
+                "streams": [
+                  {
+                    "codec_name": "h264",
+                    "profile": "High",
+                    "codec_type": "video"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  }
+                ]
+              },
+              {
+                "streams": [
+                  {
+                    "codec_name": "h264",
+                    "profile": "High",
+                    "codec_type": "video"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  }
+                ]
+              },
+              {
+                "streams": [
+                  {
+                    "codec_name": "h264",
+                    "profile": "High",
+                    "codec_type": "video"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  }
+                ]
+              }
+            ],
+            "streams": [
+              {
+                "codec_name": "h264",
+                "profile": "High",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "h264",
+                "profile": "High",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "h264",
+                "profile": "High",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              }
+            ],
+            "format": {
+              "format_name": "hls,applehttp"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "1tamilblasters",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 113,
+          "http": 200,
+          "count": 9,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "fail",
+          "ms": 213,
+          "http": 502,
+          "error": "The upstream catalog is unavailable. Try again.",
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [
+              "ECONNRESET",
+              "1TamilBlasters posts failed: {}"
+            ],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "fail",
+          "ms": 343,
+          "http": 502,
+          "error": "The upstream catalog is unavailable. Try again.",
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [
+              "ECONNRESET",
+              "1TamilBlasters search posts failed: {}"
+            ],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "skipped",
+          "error": "No title from posts or search"
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "1tamilmv",
+      "title": "Maaya Oviyan (2026) 1080p",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 65,
+          "http": 200,
+          "count": 4,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 706,
+          "http": 200,
+          "count": 25,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "fail",
+          "ms": 377,
+          "http": 502,
+          "error": "The upstream catalog is unavailable. Try again.",
+          "trace": {
+            "requests": 3,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [
+              "ECONNRESET",
+              "1TamilMV search posts failed: 1TamilMV search posts failed: {}"
+            ],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 348,
+          "http": 200,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "4khdhub",
+      "title": "The Beast (2026)",
+      "group": "The Beast (2160p WEB-DL HDR10+ HEVC) 15.66 GB Hindi, Tamil, Telugu, English WEB-DL",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 163,
+          "http": 200,
+          "count": 12,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 528,
+          "http": 200,
+          "count": 18,
+          "trace": {
+            "requests": 3,
+            "statuses": {
+              "200": 2,
+              "301": 1
+            },
+            "errors": [
+              "20"
+            ],
+            "providerLogs": 2,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "pass",
+          "ms": 778,
+          "http": 200,
+          "count": 18,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 2,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 271,
+          "http": 200,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 7543,
+          "http": 200,
+          "count": 2,
+          "trace": {
+            "requests": 8,
+            "statuses": {
+              "200": 5,
+              "302": 3
+            },
+            "errors": [
+              "20",
+              "Unexpected end of JSON input"
+            ],
+            "providerLogs": 7,
+            "webViewCalls": 0
+          }
+        }
+      },
+      "samples": [
+        {
+          "server": "CF Storage",
+          "hint": "mkv",
+          "hls": false,
+          "status": 206,
+          "contentType": "application/octet-stream",
+          "range": "bytes 0-4095/16819069525",
+          "signature": "EBML",
+          "ms": 518,
+          "codecs": {
+            "programs": [],
+            "streams": [
+              {
+                "codec_name": "hevc",
+                "profile": "Main 10",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "eac3",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "eac3",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "eac3",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "eac3",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "subrip",
+                "codec_type": "subtitle"
+              },
+              {
+                "codec_name": "subrip",
+                "codec_type": "subtitle"
+              },
+              {
+                "codec_name": "subrip",
+                "codec_type": "subtitle"
+              }
+            ],
+            "format": {
+              "format_name": "matroska,webm"
+            }
+          }
+        },
+        {
+          "server": "CF Storage",
+          "hint": "mkv",
+          "hls": false,
+          "status": 206,
+          "contentType": "application/octet-stream",
+          "range": "bytes 0-4095/16819069521",
+          "signature": "EBML",
+          "ms": 1429,
+          "codecs": {
+            "programs": [],
+            "streams": [
+              {
+                "codec_name": "hevc",
+                "profile": "Main 10",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "eac3",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "eac3",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "eac3",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "eac3",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "subrip",
+                "codec_type": "subtitle"
+              },
+              {
+                "codec_name": "subrip",
+                "codec_type": "subtitle"
+              },
+              {
+                "codec_name": "subrip",
+                "codec_type": "subtitle"
+              }
+            ],
+            "format": {
+              "format_name": "matroska,webm"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "Joya9tv",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 65,
+          "http": 200,
+          "count": 2,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "fail",
+          "ms": 12058,
+          "http": 502,
+          "error": "The upstream catalog is unavailable. Try again.",
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [
+              "Joya9TV posts failed: {}"
+            ],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "fail",
+          "ms": 12059,
+          "http": 502,
+          "error": "The upstream catalog is unavailable. Try again.",
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [
+              "Joya9TV search posts failed: {}"
+            ],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "skipped",
+          "error": "No title from posts or search"
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "anikoto",
+      "title": "Solo Leveling Season 2: Arise from the Shadow",
+      "group": "Solo Leveling Season 2: Arise from the Shadow",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 2693,
+          "http": 200,
+          "count": 7,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 1284,
+          "http": 200,
+          "count": 30,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 1,
+              "301": 1
+            },
+            "errors": [
+              "20"
+            ],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "pass",
+          "ms": 3554,
+          "http": 200,
+          "count": 2,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 1,
+              "301": 1
+            },
+            "errors": [
+              "20"
+            ],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 319,
+          "http": 200,
+          "trace": {
+            "requests": 3,
+            "statuses": {
+              "200": 2,
+              "301": 1
+            },
+            "errors": [
+              "20"
+            ],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 1370,
+          "http": 200,
+          "count": 12,
+          "trace": {
+            "requests": 42,
+            "statuses": {
+              "200": 33,
+              "301": 9
+            },
+            "errors": [
+              "20"
+            ],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        }
+      },
+      "samples": [
+        {
+          "server": "HD-1 (SUB)",
+          "hint": "m3u8",
+          "quality": "auto",
+          "hls": true,
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "range": null,
+          "signature": "HLS",
+          "ms": 303,
+          "codecs": {
+            "programs": [
+              {
+                "streams": [
+                  {
+                    "codec_name": "png",
+                    "codec_type": "video"
+                  }
+                ]
+              }
+            ],
+            "streams": [
+              {
+                "codec_name": "png",
+                "codec_type": "video"
+              }
+            ],
+            "format": {
+              "format_name": "hls,applehttp"
+            }
+          }
+        },
+        {
+          "server": "Vidstream-1 (DUB)",
+          "hint": "m3u8",
+          "quality": "auto",
+          "hls": true,
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "range": null,
+          "signature": "HLS",
+          "ms": 474,
+          "codecs": {
+            "programs": [
+              {
+                "streams": [
+                  {
+                    "codec_name": "h264",
+                    "profile": "High",
+                    "codec_type": "video"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "timed_id3",
+                    "codec_type": "data"
+                  }
+                ]
+              }
+            ],
+            "streams": [
+              {
+                "codec_name": "h264",
+                "profile": "High",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "timed_id3",
+                "codec_type": "data"
+              }
+            ],
+            "format": {
+              "format_name": "hls,applehttp"
+            }
+          }
+        },
+        {
+          "server": "HD-1 (DUB)",
+          "hint": "m3u8",
+          "quality": "auto",
+          "hls": true,
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "range": null,
+          "signature": "HLS",
+          "ms": 367,
+          "codecs": {
+            "programs": [
+              {
+                "streams": [
+                  {
+                    "codec_name": "png",
+                    "codec_type": "video"
+                  }
+                ]
+              }
+            ],
+            "streams": [
+              {
+                "codec_name": "png",
+                "codec_type": "video"
+              }
+            ],
+            "format": {
+              "format_name": "hls,applehttp"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "animesalt",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 142,
+          "http": 200,
+          "count": 3,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "empty",
+          "ms": 976,
+          "http": 200,
+          "count": 0,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "empty",
+          "ms": 1353,
+          "http": 200,
+          "count": 0,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "skipped",
+          "error": "No title from posts or search"
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "animesub",
+      "title": "Steel Ball Run: JoJo no Kimyou na Bouken",
+      "group": "Season 6",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 64,
+          "http": 200,
+          "count": 4,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 798,
+          "http": 200,
+          "count": 50,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "pass",
+          "ms": 671,
+          "http": 200,
+          "count": 9,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 2576,
+          "http": 200,
+          "trace": {
+            "requests": 13,
+            "statuses": {
+              "200": 11,
+              "404": 2
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "empty",
+          "ms": 1619,
+          "http": 200,
+          "count": 0,
+          "trace": {
+            "requests": 3,
+            "statuses": {
+              "200": 3
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "animeworld",
+      "title": "Arifureta: From Commonplace to World's Strongest",
+      "group": "Season 1",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 99,
+          "http": 200,
+          "count": 2,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 1011,
+          "http": 200,
+          "count": 20,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "pass",
+          "ms": 708,
+          "http": 200,
+          "count": 1,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 756,
+          "http": 200,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "episodes": {
+          "state": "pass",
+          "ms": 1307,
+          "http": 200,
+          "count": 13,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 2,
+            "webViewCalls": 0
+          }
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 2516,
+          "http": 200,
+          "count": 16,
+          "trace": {
+            "requests": 34,
+            "statuses": {
+              "200": 14,
+              "400": 20
+            },
+            "errors": [],
+            "providerLogs": 5,
+            "webViewCalls": 0
+          }
+        }
+      },
+      "samples": [
+        {
+          "server": "ZephyrFlick",
+          "hint": "m3u8",
+          "hls": true,
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "range": null,
+          "signature": "HLS",
+          "ms": 5640,
+          "codecs": {
+            "programs": [
+              {
+                "streams": [
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "h264",
+                    "profile": "High",
+                    "codec_type": "video"
+                  }
+                ]
+              },
+              {
+                "streams": [
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "h264",
+                    "profile": "High",
+                    "codec_type": "video"
+                  }
+                ]
+              },
+              {
+                "streams": [
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "h264",
+                    "profile": "High",
+                    "codec_type": "video"
+                  }
+                ]
+              },
+              {
+                "streams": [
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "h264",
+                    "profile": "High",
+                    "codec_type": "video"
+                  }
+                ]
+              },
+              {
+                "streams": [
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "h264",
+                    "profile": "High",
+                    "codec_type": "video"
+                  }
+                ]
+              }
+            ],
+            "streams": [
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "h264",
+                "profile": "High",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "h264",
+                "profile": "High",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "h264",
+                "profile": "High",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "h264",
+                "profile": "High",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "h264",
+                "profile": "High",
+                "codec_type": "video"
+              }
+            ],
+            "format": {
+              "format_name": "hls,applehttp"
+            }
+          }
+        },
+        {
+          "server": "AbyssPlayer (Hindi)",
+          "hint": "mp4",
+          "quality": "HI · 480p · h264",
+          "hls": false,
+          "status": 206,
+          "contentType": "video/mp4",
+          "range": "bytes 0-4095/129370057",
+          "signature": "ISO BMFF",
+          "ms": 372,
+          "codecs": {
+            "programs": [],
+            "streams": [
+              {
+                "codec_name": "h264",
+                "profile": "Main",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              }
+            ],
+            "format": {
+              "format_name": "mov,mp4,m4a,3gp,3g2,mj2"
+            }
+          }
+        },
+        {
+          "server": "AbyssPlayer (Hindi)",
+          "hint": "mp4",
+          "quality": "HI · 720p · h264",
+          "hls": false,
+          "status": 502,
+          "contentType": "application/json",
+          "range": null,
+          "ms": 5649
+        }
+      ]
+    },
+    {
+      "id": "autoEmbed",
+      "title": "Heart of the Beast",
+      "group": "Heart of the Beast",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 91,
+          "http": 200,
+          "count": 4,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 256,
+          "http": 200,
+          "count": 50,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 2,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "pass",
+          "ms": 283,
+          "http": 200,
+          "count": 40,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 78,
+          "http": 200,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 12349,
+          "http": 200,
+          "count": 19,
+          "trace": {
+            "requests": 20,
+            "statuses": {
+              "200": 11,
+              "404": 8
+            },
+            "errors": [
+              "23"
+            ],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        }
+      },
+      "samples": [
+        {
+          "server": "Movy - Miami (Multi/4K)",
+          "hint": "m3u8",
+          "quality": "2160",
+          "hls": true,
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "range": null,
+          "signature": "HLS",
+          "ms": 507,
+          "codecs": {
+            "programs": [
+              {
+                "streams": [
+                  {
+                    "codec_name": "h264",
+                    "profile": "High",
+                    "codec_type": "video"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  }
+                ]
+              },
+              {
+                "streams": [
+                  {
+                    "codec_name": "h264",
+                    "profile": "High",
+                    "codec_type": "video"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  }
+                ]
+              },
+              {
+                "streams": [
+                  {
+                    "codec_name": "h264",
+                    "profile": "Main",
+                    "codec_type": "video"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  }
+                ]
+              },
+              {
+                "streams": [
+                  {
+                    "codec_name": "h264",
+                    "profile": "Main",
+                    "codec_type": "video"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  }
+                ]
+              }
+            ],
+            "streams": [
+              {
+                "codec_name": "h264",
+                "profile": "High",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "h264",
+                "profile": "High",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "h264",
+                "profile": "Main",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "h264",
+                "profile": "Main",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              }
+            ],
+            "format": {
+              "format_name": "hls,applehttp"
+            }
+          }
+        },
+        {
+          "server": "Movy - Miami (Multi/4K) (2160p)",
+          "hint": "m3u8",
+          "quality": "2160",
+          "hls": true,
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "range": null,
+          "signature": "HLS",
+          "ms": 1161,
+          "codecs": {
+            "programs": [
+              {
+                "streams": [
+                  {
+                    "codec_name": "h264",
+                    "profile": "High",
+                    "codec_type": "video"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  }
+                ]
+              }
+            ],
+            "streams": [
+              {
+                "codec_name": "h264",
+                "profile": "High",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              }
+            ],
+            "format": {
+              "format_name": "hls,applehttp"
+            }
+          }
+        },
+        {
+          "server": "Movy - Boise (Multi/4K)",
+          "hint": "m3u8",
+          "quality": "2160",
+          "hls": true,
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "range": null,
+          "signature": "HLS",
+          "ms": 454,
+          "codecs": {
+            "programs": [
+              {
+                "streams": [
+                  {
+                    "codec_name": "h264",
+                    "profile": "High",
+                    "codec_type": "video"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  }
+                ]
+              },
+              {
+                "streams": [
+                  {
+                    "codec_name": "h264",
+                    "profile": "High",
+                    "codec_type": "video"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  }
+                ]
+              },
+              {
+                "streams": [
+                  {
+                    "codec_name": "h264",
+                    "profile": "Main",
+                    "codec_type": "video"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  }
+                ]
+              },
+              {
+                "streams": [
+                  {
+                    "codec_name": "h264",
+                    "profile": "Main",
+                    "codec_type": "video"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  }
+                ]
+              }
+            ],
+            "streams": [
+              {
+                "codec_name": "h264",
+                "profile": "High",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "h264",
+                "profile": "High",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "h264",
+                "profile": "Main",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "h264",
+                "profile": "Main",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              }
+            ],
+            "format": {
+              "format_name": "hls,applehttp"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "castle",
+      "title": "Jailer 2",
+      "group": "Movie",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 135,
+          "http": 200,
+          "count": 3,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 6142,
+          "http": 200,
+          "count": 20,
+          "trace": {
+            "requests": 3,
+            "statuses": {
+              "200": 3
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "pass",
+          "ms": 881,
+          "http": 200,
+          "count": 20,
+          "trace": {
+            "requests": 3,
+            "statuses": {
+              "200": 3
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 333,
+          "http": 200,
+          "trace": {
+            "requests": 3,
+            "statuses": {
+              "200": 3
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 537,
+          "http": 200,
+          "count": 2,
+          "trace": {
+            "requests": 6,
+            "statuses": {
+              "200": 6
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        }
+      },
+      "samples": [
+        {
+          "server": "Jailer 2 - Hindi, Tamil, Telugu, Malayalam, Kannada - 1080p - preview",
+          "hint": "m3u8",
+          "quality": "1080",
+          "hls": true,
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "range": null,
+          "signature": "HLS",
+          "ms": 224,
+          "codecs": {
+            "programs": [
+              {
+                "streams": [
+                  {
+                    "codec_name": "h264",
+                    "profile": "Main",
+                    "codec_type": "video"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  }
+                ]
+              }
+            ],
+            "streams": [
+              {
+                "codec_name": "h264",
+                "profile": "Main",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              }
+            ],
+            "format": {
+              "format_name": "hls,applehttp"
+            }
+          }
+        },
+        {
+          "server": "Jailer 2 - Hindi, Tamil, Telugu, Malayalam, Kannada - 720p - preview",
+          "hint": "m3u8",
+          "quality": "720",
+          "hls": true,
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "range": null,
+          "signature": "HLS",
+          "ms": 259,
+          "codecs": {
+            "programs": [
+              {
+                "streams": [
+                  {
+                    "codec_name": "h264",
+                    "profile": "Main",
+                    "codec_type": "video"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  }
+                ]
+              }
+            ],
+            "streams": [
+              {
+                "codec_name": "h264",
+                "profile": "Main",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              }
+            ],
+            "format": {
+              "format_name": "hls,applehttp"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "disneyPlus",
+      "results": {
+        "catalog": {
+          "state": "fail",
+          "ms": 25046,
+          "http": 504,
+          "error": "The provider took too long to respond.",
+          "trace": {
+            "requests": 12,
+            "statuses": {
+              "200": 11,
+              "301": 1
+            },
+            "errors": [
+              "20"
+            ],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "skipped",
+          "error": "No category returned"
+        },
+        "search": {
+          "state": "fail",
+          "ms": 25014,
+          "http": 504,
+          "error": "The provider took too long to respond.",
+          "trace": {
+            "requests": 11,
+            "statuses": {
+              "200": 10,
+              "301": 1
+            },
+            "errors": [
+              "20"
+            ],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "skipped",
+          "error": "No title from posts or search"
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "drive",
+      "title": "Avengers: Endgame",
+      "group": "Avengers Endgame: Encore (2026) [IMAX] Hindi – English – Tamil – Telugu Watch Online",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 54,
+          "http": 200,
+          "count": 7,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 1682,
+          "http": 200,
+          "count": 26,
+          "trace": {
+            "requests": 3,
+            "statuses": {
+              "200": 2,
+              "301": 1
+            },
+            "errors": [
+              "20"
+            ],
+            "providerLogs": 2,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "pass",
+          "ms": 734,
+          "http": 200,
+          "count": 10,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 2,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 840,
+          "http": 200,
+          "trace": {
+            "requests": 3,
+            "statuses": {
+              "200": 3
+            },
+            "errors": [],
+            "providerLogs": 2,
+            "webViewCalls": 0
+          }
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "empty",
+          "ms": 1813,
+          "http": 200,
+          "count": 0,
+          "trace": {
+            "requests": 3,
+            "statuses": {
+              "200": 3
+            },
+            "errors": [],
+            "providerLogs": 3,
+            "webViewCalls": 0
+          }
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "dvdplay",
+      "title": "Ranabaali (2026) Tamil HDRip",
+      "group": "1 [TRUE WEB-DL - 4K SDR - 2160p HQ - HEVC - UNTOUCHED - [Tamil + Telugu + Hindi + Malayalam + Kannada]",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 45,
+          "http": 200,
+          "count": 5,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 514,
+          "http": 200,
+          "count": 10,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "fail",
+          "ms": 8,
+          "http": 502,
+          "error": "The upstream catalog is unavailable. Try again.",
+          "trace": {
+            "requests": 0,
+            "statuses": {},
+            "errors": [
+              "DVDPlay search failed: Search is unavailable. Browse the categories."
+            ],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 371,
+          "http": 200,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "empty",
+          "ms": 3368,
+          "http": 200,
+          "count": 0,
+          "trace": {
+            "requests": 5,
+            "statuses": {
+              "200": 4,
+              "403": 1
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "gokuHD",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 72,
+          "http": 200,
+          "count": 5,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "fail",
+          "ms": 10683,
+          "http": 502,
+          "error": "The upstream catalog is unavailable. Try again.",
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [
+              "UND_ERR_CONNECT_TIMEOUT",
+              "fetch failed"
+            ],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "fail",
+          "ms": 12358,
+          "http": 502,
+          "error": "The upstream catalog is unavailable. Try again.",
+          "trace": {
+            "requests": 3,
+            "statuses": {
+              "200": 1,
+              "403": 1
+            },
+            "errors": [
+              "The operation was aborted due to timeout"
+            ],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "skipped",
+          "error": "No title from posts or search"
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "hdhub4u",
+      "title": "The Great Indian Kapil Show",
+      "group": "The Great Indian Kapil Show (Season 5)",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 46,
+          "http": 200,
+          "count": 9,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 604,
+          "http": 200,
+          "count": 50,
+          "trace": {
+            "requests": 3,
+            "statuses": {
+              "200": 2,
+              "301": 1
+            },
+            "errors": [
+              "20"
+            ],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "pass",
+          "ms": 154,
+          "http": 200,
+          "count": 14,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 1060,
+          "http": 200,
+          "trace": {
+            "requests": 11,
+            "statuses": {
+              "200": 3,
+              "404": 8
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 3803,
+          "http": 200,
+          "count": 3,
+          "trace": {
+            "requests": 10,
+            "statuses": {
+              "200": 7,
+              "302": 3
+            },
+            "errors": [
+              "20"
+            ],
+            "providerLogs": 5,
+            "webViewCalls": 0
+          }
+        }
+      },
+      "samples": [
+        {
+          "server": "CF Storage",
+          "hint": "mkv",
+          "hls": false,
+          "status": 206,
+          "contentType": "application/octet-stream",
+          "range": "bytes 0-4095/249175143",
+          "signature": "EBML",
+          "ms": 483,
+          "codecs": {
+            "programs": [],
+            "streams": [
+              {
+                "codec_name": "h264",
+                "profile": "Main",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "HE-AAC",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "subrip",
+                "codec_type": "subtitle"
+              },
+              {
+                "codec_name": "png",
+                "codec_type": "video"
+              }
+            ],
+            "format": {
+              "format_name": "matroska,webm"
+            }
+          }
+        },
+        {
+          "server": "CF Storage",
+          "hint": "mkv",
+          "hls": false,
+          "status": 502,
+          "contentType": "application/json",
+          "range": null,
+          "ms": 205
+        },
+        {
+          "server": "Pixeldrain",
+          "hint": "mkv",
+          "hls": false,
+          "status": 206,
+          "contentType": "video/matroska",
+          "range": "bytes 0-4095/249175143",
+          "signature": "EBML",
+          "ms": 609,
+          "codecs": {
+            "programs": [],
+            "streams": [
+              {
+                "codec_name": "h264",
+                "profile": "Main",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "HE-AAC",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "subrip",
+                "codec_type": "subtitle"
+              },
+              {
+                "codec_name": "png",
+                "codec_type": "video"
+              }
+            ],
+            "format": {
+              "format_name": "matroska,webm"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "hdmovieslife",
+      "title": "Avengers Endgame : Encore (2026)",
+      "group": "Download",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 44,
+          "http": 200,
+          "count": 6,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 839,
+          "http": 200,
+          "count": 18,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "empty",
+          "ms": 929,
+          "http": 200,
+          "count": 0,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 334,
+          "http": 200,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 18830,
+          "http": 200,
+          "count": 1,
+          "trace": {
+            "requests": 12,
+            "statuses": {
+              "200": 4,
+              "206": 1,
+              "301": 2,
+              "302": 4
+            },
+            "errors": [
+              "20",
+              "UND_ERR_CONNECT_TIMEOUT"
+            ],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        }
+      },
+      "samples": [
+        {
+          "server": "HDMoviesLife Fast Drive",
+          "hint": "mkv",
+          "quality": "480",
+          "hls": false,
+          "status": 206,
+          "contentType": "application/octet-stream",
+          "range": "bytes 0-4095/940129536",
+          "signature": "EBML",
+          "ms": 1824,
+          "codecs": {
+            "programs": [],
+            "streams": [
+              {
+                "codec_name": "h264",
+                "profile": "Main",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "HE-AACv2",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "HE-AACv2",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "subrip",
+                "codec_type": "subtitle"
+              },
+              {
+                "codec_name": "subrip",
+                "codec_type": "subtitle"
+              },
+              {
+                "codec_name": "subrip",
+                "codec_type": "subtitle"
+              }
+            ],
+            "format": {
+              "format_name": "matroska,webm"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "hiAnime",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 114,
+          "http": 200,
+          "count": 4,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "empty",
+          "ms": 37,
+          "http": 200,
+          "count": 0,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [
+              "Invalid URL"
+            ],
+            "providerLogs": 2,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "empty",
+          "ms": 38,
+          "http": 200,
+          "count": 0,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [
+              "Invalid URL"
+            ],
+            "providerLogs": 2,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "skipped",
+          "error": "No title from posts or search"
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "hotstar",
+      "results": {
+        "catalog": {
+          "state": "fail",
+          "ms": 25043,
+          "http": 504,
+          "error": "The provider took too long to respond.",
+          "trace": {
+            "requests": 12,
+            "statuses": {
+              "200": 11,
+              "301": 1
+            },
+            "errors": [
+              "20"
+            ],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "skipped",
+          "error": "No category returned"
+        },
+        "search": {
+          "state": "fail",
+          "ms": 25011,
+          "http": 504,
+          "error": "The provider took too long to respond.",
+          "trace": {
+            "requests": 11,
+            "statuses": {
+              "200": 10,
+              "301": 1
+            },
+            "errors": [
+              "20"
+            ],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "skipped",
+          "error": "No title from posts or search"
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "kickAssAnime",
+      "title": "Bungo Stray Dogs 5",
+      "group": "Episodes (Sub)",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 40,
+          "http": 200,
+          "count": 6,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 904,
+          "http": 200,
+          "count": 24,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "pass",
+          "ms": 805,
+          "http": 200,
+          "count": 5,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 4099,
+          "http": 200,
+          "trace": {
+            "requests": 7,
+            "statuses": {
+              "200": 7
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 3639,
+          "http": 200,
+          "count": 5,
+          "trace": {
+            "requests": 4,
+            "statuses": {
+              "200": 4
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        }
+      },
+      "samples": [
+        {
+          "server": "VidStreaming (Auto)",
+          "hint": "m3u8",
+          "quality": "auto",
+          "hls": true,
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "range": null,
+          "signature": "HLS",
+          "ms": 593,
+          "codecs": {
+            "programs": [
+              {
+                "streams": [
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "h264",
+                    "profile": "Main",
+                    "codec_type": "video"
+                  }
+                ]
+              },
+              {
+                "streams": [
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "h264",
+                    "profile": "Main",
+                    "codec_type": "video"
+                  }
+                ]
+              },
+              {
+                "streams": [
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "h264",
+                    "profile": "Main",
+                    "codec_type": "video"
+                  }
+                ]
+              }
+            ],
+            "streams": [
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "h264",
+                "profile": "Main",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "h264",
+                "profile": "Main",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "h264",
+                "profile": "Main",
+                "codec_type": "video"
+              }
+            ],
+            "format": {
+              "format_name": "hls,applehttp"
+            }
+          }
+        },
+        {
+          "server": "VidStreaming (1080p)",
+          "hint": "m3u8",
+          "quality": "1080p",
+          "hls": true,
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "range": null,
+          "signature": "HLS",
+          "ms": 975,
+          "codecs": {
+            "programs": [
+              {
+                "streams": [
+                  {
+                    "codec_name": "h264",
+                    "profile": "Main",
+                    "codec_type": "video"
+                  }
+                ]
+              }
+            ],
+            "streams": [
+              {
+                "codec_name": "h264",
+                "profile": "Main",
+                "codec_type": "video"
+              }
+            ],
+            "format": {
+              "format_name": "hls,applehttp"
+            }
+          }
+        },
+        {
+          "server": "VidStreaming (720p)",
+          "hint": "m3u8",
+          "quality": "720p",
+          "hls": true,
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "range": null,
+          "signature": "HLS",
+          "ms": 1168,
+          "codecs": {
+            "programs": [
+              {
+                "streams": [
+                  {
+                    "codec_name": "h264",
+                    "profile": "Main",
+                    "codec_type": "video"
+                  }
+                ]
+              }
+            ],
+            "streams": [
+              {
+                "codec_name": "h264",
+                "profile": "Main",
+                "codec_type": "video"
+              }
+            ],
+            "format": {
+              "format_name": "hls,applehttp"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "kissKh",
+      "title": "Blossom in Darkness",
+      "group": "Blossom in Darkness",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 109,
+          "http": 200,
+          "count": 4,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 525,
+          "http": 200,
+          "count": 10,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "pass",
+          "ms": 465,
+          "http": 200,
+          "count": 2,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 358,
+          "http": 200,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "empty",
+          "ms": 905,
+          "http": 200,
+          "count": 0,
+          "trace": {
+            "requests": 6,
+            "statuses": {
+              "200": 6
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "kmMovies",
+      "title": "The Beast",
+      "group": "Encoded Version - 480p 480p 415.7MB",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 133,
+          "http": 200,
+          "count": 6,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 346,
+          "http": 200,
+          "count": 35,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 2,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "pass",
+          "ms": 899,
+          "http": 200,
+          "count": 11,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 2,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 397,
+          "http": 200,
+          "trace": {
+            "requests": 3,
+            "statuses": {
+              "200": 3
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "empty",
+          "ms": 7369,
+          "http": 200,
+          "count": 0,
+          "trace": {
+            "requests": 12,
+            "statuses": {
+              "200": 3,
+              "302": 8
+            },
+            "errors": [
+              "20",
+              "ERR_TLS_CERT_ALTNAME_INVALID"
+            ],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "luxMovies",
+      "title": "The Great Indian Kapil Show",
+      "group": "Season 5 {HiNDi-Series} 480p WEB-DL x264 [400MB/E]",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 56,
+          "http": 200,
+          "count": 9,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 605,
+          "http": 200,
+          "count": 22,
+          "trace": {
+            "requests": 3,
+            "statuses": {
+              "200": 2,
+              "301": 1
+            },
+            "errors": [
+              "20"
+            ],
+            "providerLogs": 25,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "empty",
+          "ms": 614,
+          "http": 200,
+          "count": 0,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 3,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 265,
+          "http": 200,
+          "trace": {
+            "requests": 3,
+            "statuses": {
+              "200": 3
+            },
+            "errors": [],
+            "providerLogs": 3,
+            "webViewCalls": 0
+          }
+        },
+        "episodes": {
+          "state": "pass",
+          "ms": 1177,
+          "http": 200,
+          "count": 8,
+          "trace": {
+            "requests": 10,
+            "statuses": {
+              "200": 2,
+              "404": 8
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 3767,
+          "http": 200,
+          "count": 2,
+          "trace": {
+            "requests": 5,
+            "statuses": {
+              "200": 3,
+              "302": 2
+            },
+            "errors": [
+              "20"
+            ],
+            "providerLogs": 6,
+            "webViewCalls": 0
+          }
+        }
+      },
+      "samples": [
+        {
+          "server": "CF Storage",
+          "hint": "mkv",
+          "hls": false,
+          "status": 206,
+          "contentType": "application/octet-stream",
+          "range": "bytes 0-4095/412626709",
+          "signature": "EBML",
+          "ms": 582,
+          "codecs": {
+            "programs": [],
+            "streams": [
+              {
+                "codec_name": "h264",
+                "profile": "High",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "subrip",
+                "codec_type": "subtitle"
+              }
+            ],
+            "format": {
+              "format_name": "matroska,webm"
+            }
+          }
+        },
+        {
+          "server": "Pixeldrain",
+          "hint": "mkv",
+          "hls": false,
+          "status": 206,
+          "contentType": "video/matroska",
+          "range": "bytes 0-4095/412626744",
+          "signature": "EBML",
+          "ms": 2024,
+          "codecs": {
+            "programs": [],
+            "streams": [
+              {
+                "codec_name": "h264",
+                "profile": "High",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "subrip",
+                "codec_type": "subtitle"
+              }
+            ],
+            "format": {
+              "format_name": "matroska,webm"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "marvel",
+      "results": {
+        "catalog": {
+          "state": "fail",
+          "ms": 25140,
+          "http": 504,
+          "error": "The provider took too long to respond.",
+          "trace": {
+            "requests": 12,
+            "statuses": {
+              "200": 11,
+              "301": 1
+            },
+            "errors": [
+              "20"
+            ],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "skipped",
+          "error": "No category returned"
+        },
+        "search": {
+          "state": "fail",
+          "ms": 25008,
+          "http": 504,
+          "error": "The provider took too long to respond.",
+          "trace": {
+            "requests": 11,
+            "statuses": {
+              "200": 10,
+              "301": 1
+            },
+            "errors": [
+              "20"
+            ],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "skipped",
+          "error": "No title from posts or search"
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "movieBoxWeb",
+      "title": "Lucifer [Hindi] S1-S6",
+      "group": "Original Audio",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 151,
+          "http": 200,
+          "count": 3,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 759,
+          "http": 200,
+          "count": 18,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "pass",
+          "ms": 395,
+          "http": 200,
+          "count": 6,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 180,
+          "http": 200,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "episodes": {
+          "state": "pass",
+          "ms": 23,
+          "http": 200,
+          "count": 93,
+          "trace": {
+            "requests": 0,
+            "statuses": {},
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 2090,
+          "http": 200,
+          "count": 4,
+          "trace": {
+            "requests": 5,
+            "statuses": {
+              "200": 5
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        }
+      },
+      "samples": [
+        {
+          "server": "Original Audio 360",
+          "hint": "mp4",
+          "quality": "360",
+          "hls": false,
+          "status": 206,
+          "contentType": "video/mp4",
+          "range": "bytes 0-4095/122899849",
+          "signature": "ISO BMFF",
+          "ms": 848,
+          "codecError": "ffprobe timed out"
+        },
+        {
+          "server": "Original Audio 480",
+          "hint": "mp4",
+          "quality": "480",
+          "hls": false,
+          "status": 206,
+          "contentType": "video/mp4",
+          "range": "bytes 0-4095/167378467",
+          "signature": "ISO BMFF",
+          "ms": 876,
+          "codecs": {
+            "programs": [],
+            "streams": [
+              {
+                "codec_name": "h264",
+                "profile": "High",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              }
+            ],
+            "format": {
+              "format_name": "mov,mp4,m4a,3gp,3g2,mj2"
+            }
+          }
+        },
+        {
+          "server": "Original Audio 720",
+          "hint": "mp4",
+          "quality": "720",
+          "hls": false,
+          "status": 206,
+          "contentType": "video/mp4",
+          "range": "bytes 0-4095/374134738",
+          "signature": "ISO BMFF",
+          "ms": 906,
+          "codecs": {
+            "programs": [],
+            "streams": [
+              {
+                "codec_name": "h264",
+                "profile": "High",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              }
+            ],
+            "format": {
+              "format_name": "mov,mp4,m4a,3gp,3g2,mj2"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "movielinkdb",
+      "title": "Bachelor Point",
+      "group": "720p",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 174,
+          "http": 200,
+          "count": 5,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 2000,
+          "http": 200,
+          "count": 20,
+          "trace": {
+            "requests": 5,
+            "statuses": {
+              "200": 2,
+              "301": 1,
+              "302": 2
+            },
+            "errors": [
+              "20"
+            ],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "pass",
+          "ms": 2703,
+          "http": 200,
+          "count": 15,
+          "trace": {
+            "requests": 5,
+            "statuses": {
+              "200": 2,
+              "301": 1,
+              "302": 2
+            },
+            "errors": [
+              "20"
+            ],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 2374,
+          "http": 200,
+          "trace": {
+            "requests": 4,
+            "statuses": {
+              "200": 1,
+              "301": 1,
+              "302": 2
+            },
+            "errors": [
+              "20"
+            ],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 12564,
+          "http": 200,
+          "count": 7,
+          "trace": {
+            "requests": 24,
+            "statuses": {
+              "200": 8,
+              "301": 8,
+              "302": 8
+            },
+            "errors": [
+              "20"
+            ],
+            "providerLogs": 40,
+            "webViewCalls": 0
+          }
+        }
+      },
+      "samples": [
+        {
+          "server": "mp4-entry",
+          "hint": "mp4",
+          "hls": false,
+          "status": 206,
+          "contentType": "video/mp4",
+          "range": "bytes 0-4095/1508444235",
+          "signature": "ISO BMFF",
+          "ms": 342,
+          "codecError": "ffprobe timed out"
+        },
+        {
+          "server": "fsl",
+          "hint": "mp4",
+          "hls": false,
+          "status": 502,
+          "contentType": "application/json",
+          "range": null,
+          "ms": 509
+        },
+        {
+          "server": "gp",
+          "hint": "mp4",
+          "hls": false,
+          "status": 502,
+          "contentType": "application/json",
+          "range": null,
+          "ms": 1536
+        }
+      ]
+    },
+    {
+      "id": "movies4u",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 148,
+          "http": 200,
+          "count": 2,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "fail",
+          "ms": 12072,
+          "http": 502,
+          "error": "The upstream catalog is unavailable. Try again.",
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [
+              "Movies4u posts failed: {}"
+            ],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "fail",
+          "ms": 10502,
+          "http": 502,
+          "error": "The upstream catalog is unavailable. Try again.",
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [
+              "UND_ERR_CONNECT_TIMEOUT",
+              "Movies4u search posts failed: {}"
+            ],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "skipped",
+          "error": "No title from posts or search"
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "moviesda",
+      "title": "Maaya Oviyan (2026) Tamil Full",
+      "group": "Maaya Oviyan (1080p HD)",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 64,
+          "http": 200,
+          "count": 6,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 642,
+          "http": 200,
+          "count": 20,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "empty",
+          "ms": 1183,
+          "http": 200,
+          "count": 0,
+          "trace": {
+            "requests": 9,
+            "statuses": {
+              "200": 9
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 873,
+          "http": 200,
+          "trace": {
+            "requests": 3,
+            "statuses": {
+              "200": 3
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 2889,
+          "http": 200,
+          "count": 2,
+          "trace": {
+            "requests": 5,
+            "statuses": {
+              "200": 5
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        }
+      },
+      "samples": [
+        {
+          "server": "Moviesda 1",
+          "hint": "mp4",
+          "quality": "1080",
+          "hls": false,
+          "status": 206,
+          "contentType": "video/mp4",
+          "range": "bytes 0-4095/3196601699",
+          "signature": "ISO BMFF",
+          "ms": 1244,
+          "codecError": "ffprobe timed out"
+        },
+        {
+          "server": "Moviesda 2",
+          "hint": "mp4",
+          "quality": "1080",
+          "hls": false,
+          "status": 206,
+          "contentType": "video/mp4",
+          "range": "bytes 0-4095/3196601699",
+          "signature": "ISO BMFF",
+          "ms": 1028,
+          "codecError": "ffprobe timed out"
+        }
+      ]
+    },
+    {
+      "id": "movieswood",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 155,
+          "http": 200,
+          "count": 5,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "fail",
+          "ms": 629,
+          "http": 502,
+          "error": "The upstream catalog is unavailable. Try again.",
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [
+              "MoviesWood posts failed: MoviesWood returned an empty catalog page."
+            ],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "fail",
+          "ms": 22,
+          "http": 502,
+          "error": "The upstream catalog is unavailable. Try again.",
+          "trace": {
+            "requests": 0,
+            "statuses": {},
+            "errors": [
+              "MoviesWood search failed: Search is unavailable. Browse the categories."
+            ],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "skipped",
+          "error": "No title from posts or search"
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "moviezwap",
+      "title": "Money Heist Telugu Dubbed Season (01 to 05) All Episodes HDRip ESub Full Movie Free Download HD MP4 Format for PC Laptop Android Mobile Tab",
+      "group": "Money Heist (2021) Telugu Season 05 Vol.2 Eps (06 to 10)",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 53,
+          "http": 200,
+          "count": 4,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 903,
+          "http": 200,
+          "count": 21,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "pass",
+          "ms": 847,
+          "http": 200,
+          "count": 4,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 925,
+          "http": 200,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 7,
+            "webViewCalls": 0
+          }
+        },
+        "episodes": {
+          "state": "pass",
+          "ms": 651,
+          "http": 200,
+          "count": 2,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 266,
+          "http": 200,
+          "count": 1,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        }
+      },
+      "samples": [
+        {
+          "server": "Fast Download",
+          "hint": "mp4",
+          "hls": false,
+          "status": 206,
+          "contentType": "video/mp4",
+          "range": "bytes 0-4095/1083856237",
+          "signature": "EBML",
+          "ms": 697,
+          "codecs": {
+            "programs": [],
+            "streams": [
+              {
+                "codec_name": "h264",
+                "profile": "High",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "HE-AAC",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "subrip",
+                "codec_type": "subtitle"
+              }
+            ],
+            "format": {
+              "format_name": "matroska,webm"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "multi",
+      "title": "Mononoke the Movie: Chapter 2 - The Ashes of Rage",
+      "group": "Mononoke the Movie: Chapter 2 - The Ashes of Rage",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 65,
+          "http": 200,
+          "count": 13,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 825,
+          "http": 200,
+          "count": 30,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 3,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "pass",
+          "ms": 973,
+          "http": 200,
+          "count": 23,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 3,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 614,
+          "http": 200,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "episodes": {
+          "state": "empty",
+          "ms": 588,
+          "http": 200,
+          "count": 0,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 4042,
+          "http": 200,
+          "count": 5,
+          "trace": {
+            "requests": 17,
+            "statuses": {
+              "200": 7,
+              "301": 1,
+              "404": 8,
+              "502": 1
+            },
+            "errors": [
+              "20"
+            ],
+            "providerLogs": 30,
+            "webViewCalls": 0
+          }
+        }
+      },
+      "samples": [
+        {
+          "server": "GD mirror / iqst (streamhg)",
+          "hint": "m3u8",
+          "hls": true,
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "range": null,
+          "signature": "HLS",
+          "ms": 1019,
+          "codecs": {
+            "programs": [
+              {
+                "streams": [
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "timed_id3",
+                    "codec_type": "data"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "timed_id3",
+                    "codec_type": "data"
+                  },
+                  {
+                    "codec_name": "h264",
+                    "profile": "High",
+                    "codec_type": "video"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "timed_id3",
+                    "codec_type": "data"
+                  }
+                ]
+              },
+              {
+                "streams": [
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "timed_id3",
+                    "codec_type": "data"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "timed_id3",
+                    "codec_type": "data"
+                  },
+                  {
+                    "codec_name": "h264",
+                    "profile": "High",
+                    "codec_type": "video"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "timed_id3",
+                    "codec_type": "data"
+                  }
+                ]
+              },
+              {
+                "streams": [
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "timed_id3",
+                    "codec_type": "data"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "timed_id3",
+                    "codec_type": "data"
+                  },
+                  {
+                    "codec_name": "h264",
+                    "profile": "High",
+                    "codec_type": "video"
+                  },
+                  {
+                    "codec_name": "aac",
+                    "profile": "LC",
+                    "codec_type": "audio"
+                  },
+                  {
+                    "codec_name": "timed_id3",
+                    "codec_type": "data"
+                  }
+                ]
+              }
+            ],
+            "streams": [
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "timed_id3",
+                "codec_type": "data"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "timed_id3",
+                "codec_type": "data"
+              },
+              {
+                "codec_name": "h264",
+                "profile": "High",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "timed_id3",
+                "codec_type": "data"
+              },
+              {
+                "codec_name": "h264",
+                "profile": "High",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "timed_id3",
+                "codec_type": "data"
+              },
+              {
+                "codec_name": "h264",
+                "profile": "High",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "timed_id3",
+                "codec_type": "data"
+              }
+            ],
+            "format": {
+              "format_name": "hls,applehttp"
+            }
+          }
+        },
+        {
+          "server": "GD mirror / iqst (streamhg)",
+          "hint": "m3u8",
+          "hls": true,
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "range": null,
+          "signature": "HLS",
+          "ms": 482,
+          "codecs": {
+            "programs": [
+              {
+                "streams": [
+                  {
+                    "codec_name": "png",
+                    "codec_type": "video"
+                  },
+                  {
+                    "codec_name": "png",
+                    "codec_type": "video"
+                  },
+                  {
+                    "codec_name": "png",
+                    "codec_type": "video"
+                  }
+                ]
+              },
+              {
+                "streams": [
+                  {
+                    "codec_name": "png",
+                    "codec_type": "video"
+                  },
+                  {
+                    "codec_name": "png",
+                    "codec_type": "video"
+                  },
+                  {
+                    "codec_name": "png",
+                    "codec_type": "video"
+                  }
+                ]
+              },
+              {
+                "streams": [
+                  {
+                    "codec_name": "png",
+                    "codec_type": "video"
+                  },
+                  {
+                    "codec_name": "png",
+                    "codec_type": "video"
+                  },
+                  {
+                    "codec_name": "png",
+                    "codec_type": "video"
+                  }
+                ]
+              }
+            ],
+            "streams": [
+              {
+                "codec_name": "png",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "png",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "png",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "png",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "png",
+                "codec_type": "video"
+              }
+            ],
+            "format": {
+              "format_name": "hls,applehttp"
+            }
+          }
+        },
+        {
+          "server": "GD mirror / iqst (earnvids)",
+          "hint": "m3u8",
+          "hls": true,
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "range": null,
+          "signature": "HLS",
+          "ms": 1125,
+          "codecError": "ffprobe timed out"
+        }
+      ]
+    },
+    {
+      "id": "mxplayer",
+      "title": "Ki & Ka",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 58,
+          "http": 200,
+          "count": 5,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 2134,
+          "http": 200,
+          "count": 20,
+          "trace": {
+            "requests": 3,
+            "statuses": {
+              "200": 2,
+              "302": 1
+            },
+            "errors": [
+              "20"
+            ],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "pass",
+          "ms": 1976,
+          "http": 200,
+          "count": 10,
+          "trace": {
+            "requests": 3,
+            "statuses": {
+              "200": 2,
+              "302": 1
+            },
+            "errors": [
+              "20"
+            ],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "fail",
+          "ms": 1034,
+          "http": 404,
+          "error": "This title is unavailable from the provider.",
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 1,
+              "302": 1
+            },
+            "errors": [
+              "20"
+            ],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "netflix",
+      "results": {
+        "catalog": {
+          "state": "fail",
+          "ms": 25059,
+          "http": 504,
+          "error": "The provider took too long to respond.",
+          "trace": {
+            "requests": 12,
+            "statuses": {
+              "200": 11,
+              "301": 1
+            },
+            "errors": [
+              "20"
+            ],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "skipped",
+          "error": "No category returned"
+        },
+        "search": {
+          "state": "fail",
+          "ms": 25007,
+          "http": 504,
+          "error": "The provider took too long to respond.",
+          "trace": {
+            "requests": 11,
+            "statuses": {
+              "200": 10,
+              "301": 1
+            },
+            "errors": [
+              "20"
+            ],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "skipped",
+          "error": "No title from posts or search"
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "pixar",
+      "results": {
+        "catalog": {
+          "state": "fail",
+          "ms": 25045,
+          "http": 504,
+          "error": "The provider took too long to respond.",
+          "trace": {
+            "requests": 12,
+            "statuses": {
+              "200": 11,
+              "301": 1
+            },
+            "errors": [
+              "20"
+            ],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "skipped",
+          "error": "No category returned"
+        },
+        "search": {
+          "state": "fail",
+          "ms": 25014,
+          "http": 504,
+          "error": "The provider took too long to respond.",
+          "trace": {
+            "requests": 11,
+            "statuses": {
+              "200": 10,
+              "301": 1
+            },
+            "errors": [
+              "20"
+            ],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "skipped",
+          "error": "No title from posts or search"
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "primeVideo",
+      "results": {
+        "catalog": {
+          "state": "fail",
+          "ms": 25157,
+          "http": 504,
+          "error": "The provider took too long to respond.",
+          "trace": {
+            "requests": 12,
+            "statuses": {
+              "200": 11,
+              "301": 1
+            },
+            "errors": [
+              "20"
+            ],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "skipped",
+          "error": "No category returned"
+        },
+        "search": {
+          "state": "fail",
+          "ms": 25016,
+          "http": 504,
+          "error": "The provider took too long to respond.",
+          "trace": {
+            "requests": 11,
+            "statuses": {
+              "200": 10,
+              "301": 1
+            },
+            "errors": [
+              "20"
+            ],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "skipped",
+          "error": "No title from posts or search"
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "showbox",
+      "title": "Ghost Soldier",
+      "group": "Ghost.Soldier.2026.camrip.1080p.mp4 (4.66 GB)",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 111,
+          "http": 200,
+          "count": 3,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 2183,
+          "http": 200,
+          "count": 80,
+          "trace": {
+            "requests": 3,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [
+              "ECONNRESET"
+            ],
+            "providerLogs": 82,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "pass",
+          "ms": 2735,
+          "http": 200,
+          "count": 32,
+          "trace": {
+            "requests": 3,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [
+              "ECONNRESET"
+            ],
+            "providerLogs": 34,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 1686,
+          "http": 200,
+          "trace": {
+            "requests": 4,
+            "statuses": {
+              "200": 4
+            },
+            "errors": [],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "episodes": {
+          "state": "pass",
+          "ms": 265,
+          "http": 200,
+          "count": 1,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "stream": {
+          "state": "fail",
+          "ms": 256,
+          "http": 502,
+          "error": "The upstream catalog is unavailable. Try again.",
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "404": 1
+            },
+            "errors": [
+              "ShowBox stream failed: HTTP 404 | URL [url]"
+            ],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "starWars",
+      "results": {
+        "catalog": {
+          "state": "fail",
+          "ms": 25043,
+          "http": 504,
+          "error": "The provider took too long to respond.",
+          "trace": {
+            "requests": 12,
+            "statuses": {
+              "200": 11,
+              "301": 1
+            },
+            "errors": [
+              "20"
+            ],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "skipped",
+          "error": "No category returned"
+        },
+        "search": {
+          "state": "fail",
+          "ms": 25018,
+          "http": 504,
+          "error": "The provider took too long to respond.",
+          "trace": {
+            "requests": 11,
+            "statuses": {
+              "200": 10,
+              "301": 1
+            },
+            "errors": [
+              "20"
+            ],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "skipped",
+          "error": "No title from posts or search"
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "torrentio",
+      "title": "Heart of the Beast",
+      "group": "Heart of the Beast",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 129,
+          "http": 200,
+          "count": 4,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 226,
+          "http": 200,
+          "count": 50,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 2,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "pass",
+          "ms": 262,
+          "http": 200,
+          "count": 40,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 53,
+          "http": 200,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "empty",
+          "ms": 371,
+          "http": 200,
+          "count": 0,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 2,
+            "webViewCalls": 0
+          }
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "uhd",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 63,
+          "http": 200,
+          "count": 9,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "fail",
+          "ms": 12092,
+          "http": 502,
+          "error": "The upstream catalog is unavailable. Try again.",
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [
+              "UHDMovies posts failed: {}"
+            ],
+            "providerLogs": 2,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "fail",
+          "ms": 10478,
+          "http": 502,
+          "error": "The upstream catalog is unavailable. Try again.",
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [
+              "UND_ERR_CONNECT_TIMEOUT",
+              "UHDMovies search posts failed: {}"
+            ],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "skipped",
+          "error": "No title from posts or search"
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "uniquestream",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 47,
+          "http": 200,
+          "count": 3,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "empty",
+          "ms": 12025,
+          "http": 200,
+          "count": 0,
+          "trace": {
+            "requests": 1,
+            "statuses": {},
+            "errors": [
+              "The operation was aborted due to timeout"
+            ],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "empty",
+          "ms": 10298,
+          "http": 200,
+          "count": 0,
+          "trace": {
+            "requests": 1,
+            "statuses": {},
+            "errors": [
+              "UND_ERR_CONNECT_TIMEOUT",
+              "fetch failed"
+            ],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "skipped",
+          "error": "No title from posts or search"
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "vega",
+      "title": "The Beast",
+      "group": "The Beast (2026) {Hindi-English} 480p WEB-DL x264 [360MB]",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 424,
+          "http": 200,
+          "count": 17,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 493,
+          "http": 200,
+          "count": 20,
+          "trace": {
+            "requests": 3,
+            "statuses": {
+              "200": 2,
+              "301": 1
+            },
+            "errors": [
+              "20"
+            ],
+            "providerLogs": 23,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "pass",
+          "ms": 703,
+          "http": 200,
+          "count": 15,
+          "trace": {
+            "requests": 2,
+            "statuses": {
+              "200": 2
+            },
+            "errors": [],
+            "providerLogs": 3,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 329,
+          "http": 200,
+          "trace": {
+            "requests": 3,
+            "statuses": {
+              "200": 3
+            },
+            "errors": [],
+            "providerLogs": 3,
+            "webViewCalls": 0
+          }
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 7356,
+          "http": 200,
+          "count": 3,
+          "trace": {
+            "requests": 23,
+            "statuses": {
+              "200": 12,
+              "301": 5,
+              "302": 6
+            },
+            "errors": [
+              "20"
+            ],
+            "providerLogs": 4,
+            "webViewCalls": 0
+          }
+        }
+      },
+      "samples": [
+        {
+          "server": "Instant (Google CDN)",
+          "hint": "mkv",
+          "hls": false,
+          "status": 200,
+          "contentType": "video/mp4",
+          "range": null,
+          "signature": "ISO BMFF",
+          "ms": 1868,
+          "codecs": {
+            "programs": [],
+            "streams": [
+              {
+                "codec_name": "h264",
+                "profile": "High",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "LC",
+                "codec_type": "audio"
+              }
+            ],
+            "format": {
+              "format_name": "mov,mp4,m4a,3gp,3g2,mj2"
+            }
+          }
+        },
+        {
+          "server": "CF Worker",
+          "hint": "mkv",
+          "hls": false,
+          "status": 206,
+          "contentType": "application/octet-stream",
+          "range": "bytes 0-4095/377754503",
+          "signature": "EBML",
+          "ms": 325,
+          "codecs": {
+            "programs": [],
+            "streams": [
+              {
+                "codec_name": "h264",
+                "profile": "High",
+                "codec_type": "video"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "HE-AACv2",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "aac",
+                "profile": "HE-AACv2",
+                "codec_type": "audio"
+              },
+              {
+                "codec_name": "subrip",
+                "codec_type": "subtitle"
+              },
+              {
+                "codec_name": "subrip",
+                "codec_type": "subtitle"
+              }
+            ],
+            "format": {
+              "format_name": "matroska,webm"
+            }
+          }
+        },
+        {
+          "server": "filepress",
+          "hint": "mkv",
+          "hls": false,
+          "status": 206,
+          "contentType": "video/matroska",
+          "range": "bytes 0-4095/377754496",
+          "signature": "EBML",
+          "ms": 11151,
+          "codecError": "ffprobe timed out"
+        }
+      ]
+    },
+    {
+      "id": "zeefliz",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 141,
+          "http": 200,
+          "count": 2,
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "fail",
+          "ms": 80,
+          "http": 502,
+          "error": "The upstream catalog is unavailable. Try again.",
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [
+              "ZeeFliz posts failed: {\"code\":\"ERR_INVALID_URL\",\"input\":\"\"}"
+            ],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "search": {
+          "state": "fail",
+          "ms": 77,
+          "http": 502,
+          "error": "The upstream catalog is unavailable. Try again.",
+          "trace": {
+            "requests": 1,
+            "statuses": {
+              "200": 1
+            },
+            "errors": [
+              "ZeeFliz search posts failed: {\"code\":\"ERR_INVALID_URL\",\"input\":\"/?s=Batman\"}"
+            ],
+            "providerLogs": 1,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "skipped",
+          "error": "No title from posts or search"
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "disneyMirror",
+      "results": {
+        "catalog": {
+          "state": "fail",
+          "ms": 1,
+          "http": 404,
+          "error": "Provider is unavailable.",
+          "trace": {
+            "requests": 0,
+            "statuses": {},
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "skipped",
+          "error": "No category returned"
+        },
+        "search": {
+          "state": "fail",
+          "ms": 1,
+          "http": 404,
+          "error": "Provider is unavailable.",
+          "trace": {
+            "requests": 0,
+            "statuses": {},
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "skipped",
+          "error": "No title from posts or search"
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "netflixMirror",
+      "results": {
+        "catalog": {
+          "state": "fail",
+          "ms": 1,
+          "http": 404,
+          "error": "Provider is unavailable.",
+          "trace": {
+            "requests": 0,
+            "statuses": {},
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "skipped",
+          "error": "No category returned"
+        },
+        "search": {
+          "state": "fail",
+          "ms": 1,
+          "http": 404,
+          "error": "Provider is unavailable.",
+          "trace": {
+            "requests": 0,
+            "statuses": {},
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "skipped",
+          "error": "No title from posts or search"
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "primeMirror",
+      "results": {
+        "catalog": {
+          "state": "fail",
+          "ms": 1,
+          "http": 404,
+          "error": "Provider is unavailable.",
+          "trace": {
+            "requests": 0,
+            "statuses": {},
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "skipped",
+          "error": "No category returned"
+        },
+        "search": {
+          "state": "fail",
+          "ms": 1,
+          "http": 404,
+          "error": "Provider is unavailable.",
+          "trace": {
+            "requests": 0,
+            "statuses": {},
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "skipped",
+          "error": "No title from posts or search"
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "youtube",
+      "results": {
+        "catalog": {
+          "state": "fail",
+          "ms": 1,
+          "http": 404,
+          "error": "Provider is unavailable.",
+          "trace": {
+            "requests": 0,
+            "statuses": {},
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "skipped",
+          "error": "No category returned"
+        },
+        "search": {
+          "state": "fail",
+          "ms": 1,
+          "http": 404,
+          "error": "Provider is unavailable.",
+          "trace": {
+            "requests": 0,
+            "statuses": {},
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "skipped",
+          "error": "No title from posts or search"
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "moviesApi",
+      "results": {
+        "catalog": {
+          "state": "fail",
+          "ms": 1,
+          "http": 404,
+          "error": "Provider is unavailable.",
+          "trace": {
+            "requests": 0,
+            "statuses": {},
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "posts": {
+          "state": "skipped",
+          "error": "No category returned"
+        },
+        "search": {
+          "state": "fail",
+          "ms": 1,
+          "http": 404,
+          "error": "Provider is unavailable.",
+          "trace": {
+            "requests": 0,
+            "statuses": {},
+            "errors": [],
+            "providerLogs": 0,
+            "webViewCalls": 0
+          }
+        },
+        "meta": {
+          "state": "skipped",
+          "error": "No title from posts or search"
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    }
+  ]
+}

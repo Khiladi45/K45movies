@@ -1,0 +1,46 @@
+{
+  "browser": "157.0.8103.51",
+  "activation": {
+    "installed": [
+      "Vega"
+    ],
+    "providerOps": [
+      [
+        "fixture",
+        "catalog"
+      ]
+    ],
+    "notice": "Could not activate Fixture Provider. Try again."
+  },
+  "formats": [
+    {
+      "type": "video/mp4; codecs=\"avc1.640028,mp4a.40.2\"",
+      "canPlayType": "probably",
+      "mse": true
+    },
+    {
+      "type": "video/mp4; codecs=\"hvc1.1.6.L120.B0\"",
+      "canPlayType": "probably",
+      "mse": true
+    },
+    {
+      "type": "audio/mp4; codecs=\"ac-3\"",
+      "canPlayType": "",
+      "mse": false
+    },
+    {
+      "type": "audio/mp4; codecs=\"ec-3\"",
+      "canPlayType": "",
+      "mse": false
+    },
+    {
+      "type": "video/x-matroska; codecs=\"avc1.640028,mp4a.40.2\"",
+      "canPlayType": "probably",
+      "mse": false
+    }
+  ],
+  "movieBasedBaseline": {
+    "status": 503,
+    "error": "Movie Based needs a TMDB API key on the server."
+  }
+}

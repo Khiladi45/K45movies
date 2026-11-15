@@ -1,0 +1,249 @@
+[
+  {
+    "width": 1440,
+    "title": "The Beast",
+    "browser": "157.0.8103.51",
+    "screens": {
+      "Home": {
+        "title": "K45movies",
+        "viewportWidth": 1440,
+        "pageWidth": 1440,
+        "pageHeight": 7046
+      },
+      "Detail": {
+        "title": "K45movies",
+        "viewportWidth": 1440,
+        "pageWidth": 1440,
+        "pageHeight": 1130
+      },
+      "Player": {
+        "title": "K45movies",
+        "viewportWidth": 1440,
+        "pageWidth": 1440,
+        "pageHeight": 1130
+      },
+      "Settings": {
+        "title": "Settings | K45movies",
+        "viewportWidth": 1440,
+        "pageWidth": 1440,
+        "pageHeight": 900
+      }
+    },
+    "events": [
+      {
+        "ms": 1794725297818,
+        "event": "selected server clicked"
+      },
+      {
+        "ms": 1794725298192,
+        "event": "media request",
+        "method": "HEAD"
+      },
+      {
+        "ms": 1794725298193,
+        "event": "media request",
+        "method": "HEAD"
+      },
+      {
+        "ms": 1794725298234,
+        "event": "media request",
+        "method": "GET"
+      }
+    ],
+    "groups": [
+      "The Beast (2026) {Hindi-English} 480p WEB-DL x264 [360MB]",
+      "The Beast (2026) {Hindi-English} 720p WEB-DL DD5.1 x264 [912MB]",
+      "The Beast (2026) {Hindi-English} 1080p 10Bit WEB-DL DD5.1 HEVC x265 [1.5GB]",
+      "The Beast (2026) {Hindi-English} 1080p WEB-DL DD5.1 x264 [2GB]",
+      "The Beast (2026) {Hindi-English} 1080p WEB-DL DDP5.1 H.264 [4.6GB]",
+      "The Beast (2026) {Hindi-English} 2160p 4K SDR WEB-DL DDP5.1 H.265 [11.3GB]"
+    ],
+    "entry": " Movie",
+    "servers": [
+      " Play Instant (Google CDN)",
+      " Play CF Worker",
+      " Play filepress"
+    ],
+    "media": {
+      "time": 0.224841,
+      "readyState": 4,
+      "videoWidth": 720,
+      "videoHeight": 300
+    },
+    "playerPickers": [
+      "Speed",
+      "Server",
+      "Subtitle track",
+      "Zoom and fit",
+      "Font",
+      "Weight",
+      "Alignment",
+      "Outline and shadow"
+    ]
+  },
+  {
+    "width": 1024,
+    "title": "The Beast",
+    "browser": "157.0.8103.51",
+    "screens": {
+      "Home": {
+        "title": "K45movies",
+        "viewportWidth": 1024,
+        "pageWidth": 1024,
+        "pageHeight": 6251
+      },
+      "Detail": {
+        "title": "K45movies",
+        "viewportWidth": 1024,
+        "pageWidth": 1024,
+        "pageHeight": 1130
+      },
+      "Player": {
+        "title": "K45movies",
+        "viewportWidth": 1024,
+        "pageWidth": 1024,
+        "pageHeight": 1130
+      },
+      "Settings": {
+        "title": "Settings | K45movies",
+        "viewportWidth": 1024,
+        "pageWidth": 1024,
+        "pageHeight": 900
+      }
+    },
+    "events": [
+      {
+        "ms": 1794725312292,
+        "event": "selected server clicked"
+      },
+      {
+        "ms": 1794725312679,
+        "event": "media request",
+        "method": "HEAD"
+      },
+      {
+        "ms": 1794725312680,
+        "event": "media request",
+        "method": "HEAD"
+      },
+      {
+        "ms": 1794725312689,
+        "event": "media request",
+        "method": "GET"
+      }
+    ],
+    "groups": [
+      "The Beast (2026) {Hindi-English} 480p WEB-DL x264 [360MB]",
+      "The Beast (2026) {Hindi-English} 720p WEB-DL DD5.1 x264 [912MB]",
+      "The Beast (2026) {Hindi-English} 1080p 10Bit WEB-DL DD5.1 HEVC x265 [1.5GB]",
+      "The Beast (2026) {Hindi-English} 1080p WEB-DL DD5.1 x264 [2GB]",
+      "The Beast (2026) {Hindi-English} 1080p WEB-DL DDP5.1 H.264 [4.6GB]",
+      "The Beast (2026) {Hindi-English} 2160p 4K SDR WEB-DL DDP5.1 H.265 [11.3GB]"
+    ],
+    "entry": " Movie",
+    "servers": [
+      " Play Instant (Google CDN)",
+      " Play CF Worker",
+      " Play filepress"
+    ],
+    "media": {
+      "time": 0.245556,
+      "readyState": 4,
+      "videoWidth": 720,
+      "videoHeight": 300
+    },
+    "playerPickers": [
+      "Speed",
+      "Server",
+      "Subtitle track",
+      "Zoom and fit",
+      "Font",
+      "Weight",
+      "Alignment",
+      "Outline and shadow"
+    ]
+  },
+  {
+    "width": 390,
+    "title": "The Beast",
+    "browser": "157.0.8103.51",
+    "screens": {
+      "Home": {
+        "title": "K45movies",
+        "viewportWidth": 390,
+        "pageWidth": 390,
+        "pageHeight": 6117
+      },
+      "Detail": {
+        "title": "K45movies",
+        "viewportWidth": 390,
+        "pageWidth": 564,
+        "pageHeight": 1336
+      },
+      "Player": {
+        "title": "K45movies",
+        "viewportWidth": 390,
+        "pageWidth": 564,
+        "pageHeight": 1336
+      },
+      "Settings": {
+        "title": "Settings | K45movies",
+        "viewportWidth": 390,
+        "pageWidth": 390,
+        "pageHeight": 851
+      }
+    },
+    "events": [
+      {
+        "ms": 1794725457387,
+        "event": "selected server clicked"
+      },
+      {
+        "ms": 1794725457765,
+        "event": "media request",
+        "method": "HEAD"
+      },
+      {
+        "ms": 1794725457766,
+        "event": "media request",
+        "method": "HEAD"
+      },
+      {
+        "ms": 1794725457981,
+        "event": "media request",
+        "method": "GET"
+      }
+    ],
+    "groups": [
+      "The Beast (2026) {Hindi-English} 480p WEB-DL x264 [360MB]",
+      "The Beast (2026) {Hindi-English} 720p WEB-DL DD5.1 x264 [912MB]",
+      "The Beast (2026) {Hindi-English} 1080p 10Bit WEB-DL DD5.1 HEVC x265 [1.5GB]",
+      "The Beast (2026) {Hindi-English} 1080p WEB-DL DD5.1 x264 [2GB]",
+      "The Beast (2026) {Hindi-English} 1080p WEB-DL DDP5.1 H.264 [4.6GB]",
+      "The Beast (2026) {Hindi-English} 2160p 4K SDR WEB-DL DDP5.1 H.265 [11.3GB]"
+    ],
+    "entry": " Movie",
+    "servers": [
+      " Play Instant (Google CDN)",
+      " Play CF Worker",
+      " Play filepress"
+    ],
+    "media": {
+      "time": 0.224462,
+      "readyState": 4,
+      "videoWidth": 720,
+      "videoHeight": 300
+    },
+    "pointerSettings": false,
+    "playerPickers": [
+      "Speed",
+      "Server",
+      "Subtitle track",
+      "Zoom and fit",
+      "Font",
+      "Weight",
+      "Alignment",
+      "Outline and shadow"
+    ]
+  }
+]
