@@ -9,6 +9,7 @@ import { decodeReference, encodeReference } from "./references";
 import { createMediaLink } from "./media";
 import { HttpError } from "./http";
 import { providerStore } from "./provider-store";
+import { providerResult } from "./provider-cache";
 
 const defaultBase = "https://raw.githubusercontent.com/Khiladi45/K45movies-api/fce60ad0758822f734f505ef08661f837a450cbb/";
 const androidHeaders = { "User-Agent": "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36" };
@@ -219,7 +220,16 @@ function sources(value: unknown): Source[] {
   }).slice(0, 100);
 }
 
-export async function runProvider(input: z.infer<typeof providerRequest>, signal: AbortSignal) {
+const cacheTtl = { catalog: 300_000, title: 180_000, episodes: 90_000 };
+
+export function runProvider(input: z.infer<typeof providerRequest>, signal: AbortSignal) {
+  if (input.op === "catalog" || input.op === "title" || input.op === "episodes") {
+    return providerResult(JSON.stringify(input), cacheTtl[input.op], signal, (shared) => resolveProvider(input, shared));
+  }
+  return resolveProvider(input, signal);
+}
+
+async function resolveProvider(input: z.infer<typeof providerRequest>, signal: AbortSignal): Promise<Category[] | Post[] | ProviderDetail | Episode[] | Source[]> {
   const id = input.id;
   switch (input.op) {
     case "catalog":

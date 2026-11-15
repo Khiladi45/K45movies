@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { ArrowUpDown, ExternalLink, Play } from "lucide-react";
 import { providers, tmdb } from "@/lib/catalog-api";
@@ -141,9 +141,8 @@ function MovieChoices({ title, season, episode }: { title: TitleDetail; season: 
   const installed = useLibrary((state) => state.installed);
   const language = useLibrary((state) => state.language);
   const [selected, setSelected] = useState<Choice | null>(null);
-  const [checked, setChecked] = useState(3);
   const manifest = useQuery({ queryKey: ["manifest"], queryFn: ({ signal }) => providers.manifest(signal) });
-  const matching = useQueries({ queries: installed.slice(0,checked).map((provider) => ({
+  const matching = useQueries({ queries: installed.map((provider) => ({
     queryKey: ["title-match", provider, title.mediaType, title.id],
     queryFn: ({ signal }: { signal: AbortSignal }) => matchProvider(provider, title, signal),
   })) });
@@ -156,11 +155,6 @@ function MovieChoices({ title, season, episode }: { title: TitleDetail; season: 
     Number(b.languages.includes(language)) - Number(a.languages.includes(language)));
   const pending = matching.some((entry, i) => entry.isPending || (entry.isSuccess && choices[i].isPending));
 
-  useEffect(() => {
-    if (pending || checked >= installed.length) return;
-    const timer = window.setTimeout(() => setChecked((current) => current + 3), 0);
-    return () => window.clearTimeout(timer);
-  }, [checked, installed.length, pending]);
 
   if (!installed.length) return <QueryMessage><Link href="/providers">Install a provider to find sources.</Link></QueryMessage>;
 
@@ -177,7 +171,6 @@ function MovieChoices({ title, season, episode }: { title: TitleDetail; season: 
         </li>;
       })}
     </ul>
-    {checked < installed.length && <p className="text-sm text-muted">{installed.length - checked} providers queued</p>}
     {!!items.length && <ul className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
       {items.map((choice) => <li key={choice.provider + choice.episode.ref}>
         <button type="button" className="list-row w-full text-left" aria-pressed={selected?.episode.ref === choice.episode.ref}

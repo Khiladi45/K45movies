@@ -1,4 +1,5 @@
 import { providers } from "./catalog-api";
+import { queueProviderRequest } from "./provider-queue";
 import type { Episode, LinkGroup, Post, ProviderDetail, TitleDetail } from "./catalog-types";
 import { fuzzyTitleScore, normalizeTitle, searchVariants } from "./fuzzy";
 import { normalizeLangCode, TEXT_LANGUAGE_ABBREVIATIONS, TEXT_LANGUAGE_NAMES } from "./languages";
@@ -28,7 +29,7 @@ export async function matchProvider(provider: string, title: TitleDetail, signal
   for (const query of variations) {
     signal.throwIfAborted();
     try {
-      const posts = await providers.search(provider, query, signal);
+      const posts = await queueProviderRequest(signal, () => providers.search(provider, query, signal));
       success = true;
       for (const post of posts) if (score(title, post) >= threshold) candidates.set(post.ref, post);
     } catch (error) { failure = error; }
@@ -36,7 +37,7 @@ export async function matchProvider(provider: string, title: TitleDetail, signal
   }
   if (!success && failure) throw failure;
   const ranked = [...candidates.values()].sort((a,b) => score(title,b) - score(title,a)).slice(0, title.mediaType === "movie" ? 2 : 4);
-  const details = await Promise.allSettled(ranked.map(async (post) => ({ post, detail: await providers.title(provider, post.ref, signal) })));
+  const details = await Promise.allSettled(ranked.map(async (post) => ({ post, detail: await queueProviderRequest(signal, () => providers.title(provider, post.ref, signal)) })));
   signal.throwIfAborted();
   if (details.length && details.every((entry) => entry.status === "rejected")) {
     const first = details[0];
@@ -91,7 +92,7 @@ export async function choicesFor(provider: string, matches: Match[], season: num
       signal.throwIfAborted();
       let items: Episode[];
       try {
-        items = await groupEpisodes(provider, group, signal);
+        items = group.episodesRef ? await queueProviderRequest(signal, () => groupEpisodes(provider, group, signal)) : group.directLinks;
       } catch (error) {
         failure = error;
         continue;

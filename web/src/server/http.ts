@@ -8,10 +8,13 @@ export class HttpError extends Error {
 
 const windows = new Map<string, { count: number; expires: number }>();
 
-export function rateLimit(request: Request, scope: string, limit: number) {
+export function trustedClient(request: Request) {
   // Set this only behind ingress that overwrites the named header.
   const header = process.env.K45_TRUSTED_CLIENT_IP_HEADER;
-  const client = header ? request.headers.get(header)?.split(",")[0].trim().slice(0, 100) : undefined;
+  return header ? request.headers.get(header)?.split(",")[0].trim().slice(0, 100) : undefined;
+}
+
+export function rateLimit(request: Request, scope: string, limit: number, client = trustedClient(request)) {
   const key = scope + ":" + (client || "shared");
   const now = Date.now();
   let entry = windows.get(key);
