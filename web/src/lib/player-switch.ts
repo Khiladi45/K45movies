@@ -76,7 +76,13 @@ export function orderBrowserSources(sources: Source[], language?: string) {
   if (typeof document === "undefined") return sources;
   const video = document.createElement("video");
   const preference = (source: Source) => language && language !== "none" && streamLanguages(source.languages).includes(language) ? 1 : 0;
-  return sources.map((source) => ({ source, capability: capability(source, video), preference: preference(source) }))
+  const options = sources.flatMap((source) => {
+    if (!source.compatibilityUrl) return [source];
+    return [source, { ...source, url: source.compatibilityUrl, compatibilityUrl: undefined, hls: false,
+      format: "mp4" as const, probe: source.probe ? { ...source.probe, format: "mp4" as const, audioCodec: undefined } : undefined,
+      server: source.server + " (MP4/AAC compatibility)", serverKey: source.serverKey ?? source.server }];
+  });
+  return options.map((source) => ({ source, capability: capability(source, video), preference: preference(source) }))
     .sort((a, b) => b.capability - a.capability || b.preference - a.preference)
     .map(({ source }) => source);
 }

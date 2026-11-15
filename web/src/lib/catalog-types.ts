@@ -12,7 +12,7 @@ export type QualityPreference = "auto" | "highest" | "lowest";
 export type StreamFormat = "mp4" | "hls" | "dash" | "mkv" | "webm" | "avi" | "other";
 export type StreamProbe = { status: "ok" | "failed" | "unknown"; httpStatus?: number; reason?: string; contentType?: string; format?: StreamFormat;
   codecs?: string[]; videoCodec?: "hevc" | "h264"; audioCodec?: "ac3" | "eac3" };
-export type Source = { url: string; hls: boolean; subtitles: SubtitleTrack[]; server: string; quality?: string; type?: string; label?: string; languages: string[]; serverKey?: string; format?: StreamFormat; probe?: StreamProbe };
+export type Source = { url: string; hls: boolean; subtitles: SubtitleTrack[]; server: string; quality?: string; type?: string; label?: string; languages: string[]; serverKey?: string; format?: StreamFormat; probe?: StreamProbe; compatibilityUrl?: string };
 export type MediaType = "movie" | "tv";
 export type Title = {
   id: number; mediaType: MediaType; title: string; originalTitle: string; year: string;

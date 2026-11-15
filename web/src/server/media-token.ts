@@ -3,7 +3,7 @@ import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:
 import { HttpError } from "./http";
 import { referenceKey } from "./references";
 
-type MediaKind = "media" | "subtitle" | "key";
+type MediaKind = "compatibility" | "media" | "subtitle" | "key";
 
 export type MediaTarget = {
   url: string;

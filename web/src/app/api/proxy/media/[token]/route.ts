@@ -1,6 +1,7 @@
 import { streamUpstream } from "@/server/provider-network";
 import { mediaTarget } from "@/server/media-token";
 import { limitedText, rewritePlaylist, toWebVtt } from "@/server/media";
+import { compatibleMedia } from "@/server/media-compatibility";
 import { HttpError, jsonResponse, rateLimit } from "@/server/http";
 
 export const runtime = "nodejs";
@@ -11,6 +12,7 @@ async function serve(request: Request, token: string) {
   try {
     rateLimit(request, "media", 1000);
     const target = mediaTarget(token);
+    if (target.kind === "compatibility") return await compatibleMedia(target, request);
     const headers = new Headers(target.headers);
     headers.set("accept-encoding", "identity");
     const range = request.headers.get("range");

@@ -285,6 +285,7 @@ async function sources(value: unknown, preference: QualityPreference, signal: Ab
     }).slice(0, 40);
     return {
       url, subtitles, server, serverKey, quality, format, probe, hls: format === "hls",
+      compatibilityUrl: format === "mkv" && process.env.K45_FFMPEG_PATH ? createMediaLink(stream.url, headers, "compatibility") : undefined,
       type: stream.type || undefined, label: text(raw.tag),
       languages: [...strings(raw.languages), ...strings(raw.audioLanguages), ...strings(raw.tags)],
     };
