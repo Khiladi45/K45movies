@@ -42,7 +42,7 @@ export function CatalogSkeleton({ rail = false, wide = false }: { rail?: boolean
     <div className={(rail ? "poster-rail" : "poster-grid") + " motion-safe:animate-pulse"} role="status" aria-label="Loading titles">
       {Array.from({ length: 6 }, (_, i) => <div key={i}>
           <div className={(wide ? "aspect-video" : "aspect-[2/3]") + " rounded-xl bg-surface"} />
-          {rail && <div className="mt-2 h-5 w-3/4 rounded bg-surface" />}
+          <div className="mt-2 h-5 w-3/4 rounded bg-surface" />
         </div>)}
     </div>
   );

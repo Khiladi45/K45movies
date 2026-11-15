@@ -107,8 +107,7 @@ function MovieSearch({ q }: { q: string }) {
 export function SearchResults({ q }: { q: string }) {
   const ready = useCatalogReady();
   const layout = useAppearance((state) => state.layout);
-  if (!ready) return <CatalogSkeleton />;
-  return <><BrowseModes />{q.length < 2 ? <SearchHistory /> : layout === "movie" ? <MovieSearch q={q} /> :
+  return <><BrowseModes />{!ready ? <CatalogSkeleton /> : q.length < 2 ? <SearchHistory /> : layout === "movie" ? <MovieSearch q={q} /> :
     layout === "youtube" ? <YouTubeSearch query={q} /> : <ProviderSearch q={q} />}</>;
 }
 
