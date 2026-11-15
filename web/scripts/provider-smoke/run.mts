@@ -78,7 +78,7 @@ Script.prototype.runInContext = function (context, options) {
 const args = process.argv.slice(2);
 const flag = args.indexOf("--url");
 const remote = flag < 0 ? undefined : new URL(args.splice(flag, 2)[1] ?? "");
-if (remote && (!["https:", "http:"].includes(remote.protocol) || remote.username || remote.password || remote.search || remote.hash)) {
+if (remote && (!["https:", "http:"].includes(remote.protocol) || remote.username || remote.password || remote.search || remote.hash || remote.pathname !== "/")) {
   throw new Error("--url must be the HTTP(S) origin of the deployed website.");
 }
 const localRoutes = remote ? undefined : await Promise.all([
@@ -132,10 +132,11 @@ async function media(source: Source) {
   const url = new URL(source.url, baseUrl || "http://localhost");
   const headers = { Range: "bytes=0-4095" };
   const signal = AbortSignal.timeout(12_000);
-  const metadata = { server: source.server, hint: source.type, quality: source.quality, hls: source.hls };
+  const metadata = { server: source.server, hint: source.type, quality: source.quality, hls: source.hls, format: source.format, probe: source.probe };
   try {
+    if (url.origin !== new URL(baseUrl || "http://localhost").origin) throw Error("Media response left the website origin.");
     const response = baseUrl
-      ? await fetch(url, { headers, signal })
+      ? await fetch(url, { headers, signal, redirect: "error" })
       : await localRoutes![1].GET(new Request(url, { headers, signal }), { params: Promise.resolve({ token: url.pathname.split("/").at(-1)! }) });
     const reader = response.body?.getReader();
     const prefix = (await reader?.read())?.value?.slice(0, 4096) ?? new Uint8Array();

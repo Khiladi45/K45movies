@@ -148,6 +148,15 @@ async function execute(input: z.infer<typeof providerRequest>, args: Record<stri
       const issue = new ProviderError(timeout ? 504 : 502, message, "upstream", status);
       if (status || !upstream?.upstreamStatus) upstream = issue;
     });
+    if (input.op === "sources" && Object.hasOwn(mirrorNames, input.id)) {
+      http.interceptors.response.use((result) => {
+        const url = URL.parse(result.request?.responseURL ?? "");
+        if (url?.pathname === "/newtv/player.php" && item(result.data).status === "otp") {
+          verification = new ProviderError(503, "The mirror requires one-time verification before playback.", "verification", result.status);
+        }
+        return result;
+      });
+    }
     const observe = (...values: unknown[]) => {
       logged = values.map(providerMessage).find(Boolean) || logged;
     };
