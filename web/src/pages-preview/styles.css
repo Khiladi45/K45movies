@@ -11,7 +11,7 @@
 .preview-modes a:is(:hover, :focus-visible) { color: #fff; }
 .preview-description { margin-block: .8rem 0; color: var(--color-muted); font-size: .9rem; }
 @media (max-width: 640px) {
-  .pages-preview .site-nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pages-preview .site-nav { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .preview-modes { display: grid; }
   .preview-modes a { padding-inline: .3rem; gap: .3rem; text-align: center; font-size: .75rem; }
   .preview-search .field { width: min(10rem, 38vw); }

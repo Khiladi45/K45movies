@@ -1,6 +1,6 @@
 import { createRoot } from "react-dom/client";
 import { useEffect, useState, useSyncExternalStore, type FormEvent } from "react";
-import { ArrowLeft, Film, House, Play, Puzzle, Search } from "lucide-react";
+import { ArrowLeft, Film, House, Play, Puzzle, Search, Settings } from "lucide-react";
 import { Artwork, QueryMessage, type Card } from "../components/catalog-ui";
 import { HomeHero, HomeHeroSkeleton, type HomeFeature } from "../components/home-hero";
 import { HomeShelf } from "../components/home-rail";
@@ -35,6 +35,21 @@ const modes = [
   { key: "youtube", label: "YouTube", icon: Play },
 ] as const;
 type Mode = typeof modes[number]["key"];
+const supportedIds = ["kickAssAnime", "youtube"] as const;
+type ProviderId = typeof supportedIds[number];
+type Preferences = { installed: ProviderId[]; home: Mode };
+const preferencesKey = "k45-pages-preferences-v1";
+function readPreferences(): Preferences {
+  const defaults: Preferences = { installed: [...supportedIds], home: "provider" };
+  try {
+    const saved = JSON.parse(localStorage.getItem(preferencesKey) ?? "null");
+    if (saved) return {
+      installed: Array.isArray(saved.installed) ? supportedIds.filter((id) => saved.installed.includes(id)) : defaults.installed,
+      home: modes.find(({ key }) => key === saved.home)?.key ?? defaults.home,
+    };
+  } catch { /* Storage is optional. */ }
+  return defaults;
+}
 const has = (value: unknown): value is string => typeof value === "string" && value.length > 0;
 const match = (title: string, q: string) => title.toLocaleLowerCase().includes(q.toLocaleLowerCase());
 const animeCard = (show: AnimeTitle): HomeFeature => ({
@@ -163,16 +178,58 @@ function YouTubeDetail({ id, play }: { id: string; play: boolean }) {
   </Detail>;
 }
 
-function ProviderList({ result }: { result: Load<Awaited<ReturnType<typeof registry>>> }) {
+type RegistryLoad = Load<Awaited<ReturnType<typeof registry>>>;
+function ProviderList({ result, installed, toggle }: { result: RegistryLoad; installed: ProviderId[]; toggle: (id: ProviderId) => void }) {
+  const compatible = supportedIds.filter((id) => id === "youtube" || result.data?.anime);
+  const records = result.data?.providers ?? [];
+  const available = compatible.map((id) => ({ id, name: id === "youtube" ? "YouTube" : "KickAssAnime" }));
+  const unavailable = records.filter(({ id }) => !available.some((entry) => entry.id === id));
   return <>
     <h1 className="page-heading">Providers</h1>
-    {result.error ? <QueryMessage>{result.error}</QueryMessage> : !result.data ? <p role="status">Loading provider manifest…</p> :
-      <ul className="grid gap-2 md:grid-cols-2">{result.data.providers.map(({ id, name }) => {
-        const status = id === "youtube" ? "YouTube embeds" :
-          id === "kickAssAnime" && result.data?.anime ? "Browse and search · play on provider" : "Unavailable in this preview";
-        return <li className="list-row flex-wrap justify-between" key={id}><strong>{name}</strong><span className="chip">{status}</span></li>;
-      })}</ul>}
+    <p className="preview-description">Install or remove the providers supported on GitHub Pages. Your choices are saved in this browser.</p>
+    <h2 className="mt-6 mb-3">Works on GitHub Pages</h2>
+    <ul className="grid gap-2 md:grid-cols-2">{available.map(({ id, name }) => {
+      const active = installed.includes(id);
+      return <li className="list-row flex-wrap justify-between" key={id}>
+        <div><strong>{name}</strong><p className="preview-description">{id === "youtube" ? "YouTube embeds" : "Browse and search · play on provider"}</p></div>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="chip" role="status">{active ? "Installed" : "Not installed"}</span>
+          <button className={active ? "secondary-button" : "primary-button"} aria-label={(active ? "Remove " : "Install ") + name} onClick={() => toggle(id)}>{active ? "Remove" : "Install"}</button>
+          {active && <a className="secondary-button" href={id === "youtube" ? "#/youtube" : "#/provider"}>Browse {name}</a>}
+        </div>
+      </li>;
+    })}</ul>
+    {result.error ? <QueryMessage>{result.error}</QueryMessage> : !result.data ? <p role="status">Checking the live provider registry…</p> :
+      unavailable.length > 0 && <>
+        <h2 className="mt-6 mb-3">Unavailable on GitHub Pages</h2>
+        <p className="preview-description mb-3">These providers cannot be installed here. GitHub Pages does not run the website’s provider server.</p>
+        <ul className="grid gap-2 md:grid-cols-2">{unavailable.map(({ id, name }) =>
+          <li className="list-row flex-wrap justify-between" key={id}><strong>{name}</strong><span className="chip">{id === "kickAssAnime" ? "Address needs browser verification" : "Unavailable in this preview"}</span></li>
+        )}</ul>
+      </>}
   </>;
+}
+
+function SettingsPage({ home, setHome }: { home: Mode; setHome: (home: Mode) => void }) {
+  return <>
+    <h1 className="page-heading">Settings</h1>
+    <p className="preview-description">Settings apply to this browser.</p>
+    <div className="list-row mt-4 flex-wrap justify-between">
+      <label htmlFor="preview-home-layout">Default Home layout</label>
+      <select id="preview-home-layout" className="field" value={home} onChange={(event) => {
+        const next = modes.find(({ key }) => key === event.target.value);
+        if (next) setHome(next.key);
+      }}>{modes.map(({ key, label }) => <option key={key} value={key}>{label}</option>)}</select>
+    </div>
+    <a className="secondary-button mt-4" href="#/providers">Manage providers</a>
+  </>;
+}
+
+function InstallPrompt({ mode }: { mode: "provider" | "youtube" }) {
+  return <div>
+    <QueryMessage>{mode === "youtube" ? "YouTube" : "No catalog provider"} is installed in this browser.</QueryMessage>
+    <a className="secondary-button mt-4" href="#/providers">Manage providers</a>
+  </div>;
 }
 function SearchForm({ mode, current }: { mode: Mode; current: string }) {
   const [value, setValue] = useState(current);
@@ -192,16 +249,22 @@ function App() {
   const [path, query] = route.split("?");
   const segments = path.split("/").filter(Boolean);
   const params = new URLSearchParams(query);
-  const mode: Mode = segments[0] === "movie" || segments[0] === "youtube" ? segments[0] : "provider";
+  const [preferences, setPreferences] = useState(readPreferences);
+  const mode = modes.find(({ key }) => key === segments[0])?.key ?? preferences.home;
   const providerPage = segments[0] === "providers";
+  const settingsPage = segments[0] === "settings";
   const search = (params.get("q") ?? "").trim().slice(0, 120);
   const manifest = useLoad("registry", registry);
+  const installed = mode === "movie" || preferences.installed.includes(mode === "provider" ? "kickAssAnime" : "youtube");
   useEffect(() => { window.scrollTo(0, 0); }, [route]);
+  useEffect(() => {
+    try { localStorage.setItem(preferencesKey, JSON.stringify(preferences)); } catch { /* Still works until reload. */ }
+  }, [preferences]);
 
   return <div className="site-shell pages-preview">
     <a className="skip-link" href="#preview-main" onClick={(event) => { event.preventDefault(); document.querySelector<HTMLElement>("#preview-main")?.focus(); }}>Skip to content</a>
     <header className="site-header">
-      <a className="brand" href="#/provider">
+      <a className="brand" href="#/">
         {/* eslint-disable-next-line @next/next/no-img-element -- The static logo is already a small local asset. */}
         <img src="./brand.png" alt="" width={35} height={35} />
         K45movies
@@ -209,12 +272,17 @@ function App() {
       <SearchForm key={mode + search} mode={mode} current={search} />
     </header>
     <nav className="site-nav" aria-label="Navigation">
-      <a href="#/" aria-label="Home" aria-current={!providerPage ? "page" : undefined}><House size={20} aria-hidden="true" /><span>Home</span></a>
+      <a href="#/" aria-label="Home" aria-current={!providerPage && !settingsPage ? "page" : undefined}><House size={20} aria-hidden="true" /><span>Home</span></a>
       <a href="#/providers" aria-label="Providers" aria-current={providerPage ? "page" : undefined}><Puzzle size={20} aria-hidden="true" /><span>Providers</span></a>
+      <a href="#/settings" aria-label="Settings" aria-current={settingsPage ? "page" : undefined}><Settings size={20} aria-hidden="true" /><span>Settings</span></a>
     </nav>
     <div className="site-content">
       <main id="preview-main" tabIndex={-1}>
-        {providerPage ? <ProviderList result={manifest} /> :
+        {providerPage ? <ProviderList result={manifest} installed={preferences.installed} toggle={(id) => setPreferences((current) => ({
+          ...current, installed: current.installed.includes(id) ? current.installed.filter((item) => item !== id) : [...current.installed, id],
+        }))} /> : settingsPage ? <SettingsPage home={preferences.home} setHome={(home) => setPreferences((current) => ({ ...current, home }))} /> :
+          segments.length > 1 && !installed ? <InstallPrompt mode={mode} /> :
+          segments.length > 1 && mode === "provider" && manifest.error ? <QueryMessage>{manifest.error}</QueryMessage> :
           segments.length > 1 ? mode === "provider" ? <AnimeDetail key={path} slug={segments[1]} enabled={manifest.data?.anime} /> :
             mode === "movie" ? <MovieDetail type={segments[1]} id={segments[2]} /> : <YouTubeDetail id={segments[1]} play={params.has("play")} /> :
             <div className="home-view">
@@ -223,9 +291,11 @@ function App() {
                 {modes.map(({ key, label, icon: Icon }) => <a key={key} href={"#/" + key} aria-current={key === mode ? "page" : undefined}><Icon size={16} aria-hidden="true" />{label}</a>)}
               </nav>
               <div className="home-route" key={mode}>
-                {search.length >= 2 ? <SearchResults key={mode + search} mode={mode} query={search} enabled={manifest.data?.anime} /> :
+                {!installed ? <InstallPrompt mode={mode} /> :
+                  mode === "provider" && manifest.error ? <QueryMessage>{manifest.error}</QueryMessage> :
+                  search.length >= 2 ? <SearchResults key={mode + search} mode={mode} query={search} enabled={manifest.data?.anime} /> :
                   mode === "movie" ? <MovieHome /> : mode === "youtube" ? <YouTubeHome /> :
-                  manifest.error ? <QueryMessage>{manifest.error}</QueryMessage> : <AnimeHome enabled={manifest.data?.anime} />}
+                  <AnimeHome enabled={manifest.data?.anime} />}
               </div>
             </div>}
       </main>

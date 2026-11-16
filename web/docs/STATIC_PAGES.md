@@ -1,6 +1,6 @@
 # GitHub Pages preview
 
-This static build reuses the redesigned Home UI and reads the existing K45movies-api manifest and URL registry. The live `gh-pages` deployment continues to serve the old demo. The Next.js app remains the full version.
+The [live GitHub Pages site](https://khiladi45.github.io/K45movies/) reuses the redesigned Home UI and reads the existing K45movies-api manifest and URL registry. The Next.js app remains the full version.
 
 ## Run locally
 
@@ -19,7 +19,8 @@ Open [the static preview](http://127.0.0.1:3201/K45movies/) on the same PC. The 
 | Provider Based | Live KickAssAnime trending, popular and recent catalogs, metadata and the first Japanese episode page. If direct search is unavailable, search filters those catalog pages. | Open on the provider’s site. Its frame policy blocks embedding from GitHub Pages. |
 | Movie Based | Movie and series discovery and search in a dated TMDB snapshot | Links to TMDB title pages |
 | YouTube | Browse and search the video snapshot | Standard embeds where YouTube allows them, plus links to YouTube |
-| Providers | Live manifest with browser eligibility shown for every listed entry | Providers without an adapter are marked unavailable in this preview |
+| Providers | Install, remove or open KickAssAnime and YouTube. Both are enabled by default for new visitors. | The remaining providers require the Next.js server and cannot be installed on Pages. |
+| Settings | Choose the default layout for the Home button and open provider management | Preferences and installations stay in the current browser. |
 
 The preview needs no changes to K45movies-api. It reads JSON and does not execute JavaScript downloaded from the provider manifest. The KickAssAnime adapter runs only while the registry publishes the tested HTTPS origin. The build ships no browser extension, CORS proxy, TMDB key or provider session.
 
