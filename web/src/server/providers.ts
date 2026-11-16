@@ -13,6 +13,8 @@ import { HttpError } from "./http";
 import { providerStore } from "./provider-store";
 import { providerCookieSession } from "./provider-cookies";
 import { providerResult } from "./provider-cache";
+import { persistentCatalog } from "./provider-catalog";
+import registryKeys from "../../docs/provider-network-parity/registry-keys.json";
 import { ProviderError, providerMessage } from "./provider-errors";
 import { normalizeStreams, preferredStreams } from "@/lib/streams";
 import { probeCandidates, probePlayback } from "@/lib/stream-probe";
@@ -34,6 +36,8 @@ function base() {
 const vendorDir = resolve("vendor/android/src/providers");
 const mirrorNames: Record<string, string> = { disneyMirror: "Disney Mirror", netflixMirror: "Netflix Mirror", primeMirror: "Prime Mirror" };
 const noBundledSearch = new Set(["dvdplay", "movieswood"]);
+const requiredRegistryKeys = new Map(registryKeys.bundles.filter(({ id, keys }) => id !== "castle" && keys.length).map(({ id, keys }) => [id, keys]));
+const noAddress = "No upstream address is published for this provider yet";
 let vendoredIds: Promise<string[]> | undefined;
 
 function localProviders() {
@@ -76,6 +80,14 @@ export function getProviders() {
   const task = (async () => {
     const apiOnly = process.env.K45_PROVIDER_SOURCE === "api";
     const local = apiOnly ? [] : await localProviders();
+    const registry = local.length ? providerNetwork(AbortSignal.timeout(5000)).request(
+      "https://raw.githubusercontent.com/Khiladi45/K45movies-api/main/urls.json",
+    ).then(async (res) => {
+      if (!res.ok) return undefined;
+      const data: unknown = await res.json();
+      const urls = item(data);
+      return Object.values(urls).some((entry) => text(item(entry).url)) ? urls : undefined;
+    }).catch(() => undefined) : undefined;
     const remote = await artifact("manifest.json").then(async (res) => {
       const data = await res.json();
       const parsed = manifestShape.parse(Array.isArray(data) ? { providers: data } : data);
@@ -86,16 +98,20 @@ export function getProviders() {
       return [];
     });
     const metadata = new Map(remote.map((entry) => [entry.id, entry]));
+    const published = await registry;
     const builtIn = new Set(local);
     return [...new Set([...remote.map(({ id }) => id), ...local])]
       .filter((id) => !["moviesApi", "youtube"].includes(id))
       .map((id): Provider => {
         const entry = metadata.get(id);
+        const originKeys = requiredRegistryKeys.get(id);
         return {
           id, name: entry?.name ?? (Object.hasOwn(mirrorNames, id) ? mirrorNames[id] : id),
           version: entry?.version ?? undefined, description: entry?.description ?? undefined,
           type: entry?.type ?? undefined, icon: image(entry?.icon), bundleSource: builtIn.has(id) ? "vendored" : "api",
           searchUnavailable: builtIn.has(id) && noBundledSearch.has(id) ? "Search is unavailable in the bundled version." : undefined,
+          addressUnavailable: builtIn.has(id) && published && originKeys?.every((key) =>
+            !text(item(published[key]).url)) ? noAddress : undefined,
         };
       });
   })();
@@ -135,6 +151,10 @@ export const providerRequest = z.discriminatedUnion("op", [
 let activeExecutions = 0;
 
 async function execute(input: z.infer<typeof providerRequest>, args: Record<string, unknown>, requestSignal: AbortSignal) {
+  if (input.op === "posts" || input.op === "search") {
+    const provider = (await getProviders()).find(({ id }) => id === input.id);
+    if (provider?.addressUnavailable) throw new ProviderError(503, provider.addressUnavailable, "registry");
+  }
   if (activeExecutions >= 24) throw new ProviderError(503, "Provider service is busy. Try again shortly.", "runtime", undefined, "2");
   activeExecutions++;
   try {
@@ -278,6 +298,8 @@ function details(provider: string, ref: string, value: unknown): ProviderDetail 
 
 async function sources(provider: string, value: unknown, preference: QualityPreference, signal: AbortSignal): Promise<SourceReport> {
   const streams = preferredStreams(normalizeStreams(value), preference);
+  const entries = Array.isArray(value) ? value : [value];
+  const torrentOnly = entries.length > 0 && entries.every((entry) => /^magnet:/i.test(text(item(entry).link) ?? ""));
   const session = streams.length ? await providerCookieSession(provider) : undefined;
   const attempts = new Map<string, SourceAttempt>();
   const verified = await probeCandidates(streams, async (stream, deadline): Promise<Source | undefined> => {
@@ -332,32 +354,34 @@ async function sources(provider: string, value: unknown, preference: QualityPref
     }),
     issue: verified.length ? undefined : {
       provider, operation: "sources", stage: streams.length ? "probe" : "normalize",
-      message: streams.length ? "None of the checked servers returned verified media." :
+      message: torrentOnly ? "Torrent only, not playable in a browser." : streams.length ? "None of the checked servers returned verified media." :
         "The bundle returned no eligible HTTP video streams for this selection.",
     },
   };
 }
 
-const cacheTtl = { catalog: 300_000, title: 180_000, episodes: 90_000 };
+const cacheTtl = { title: 180_000, episodes: 90_000 };
 
-export function runProvider(input: z.infer<typeof providerRequest>, signal: AbortSignal) {
-  if (input.op === "catalog" || input.op === "title" || input.op === "episodes") {
+export function runProvider(input: z.infer<typeof providerRequest>, signal: AbortSignal): Promise<Category[] | Post[] | ProviderDetail | Episode[] | Source[] | SourceReport> {
+  if (input.op === "catalog") return persistentCatalog(input.id, signal, (shared) => loadProviderCatalog(input.id, shared));
+  if (input.op === "title" || input.op === "episodes") {
     return providerResult(JSON.stringify(input), cacheTtl[input.op], signal, (shared) => resolveProvider(input, shared));
   }
   return resolveProvider(input, signal);
 }
 
-async function resolveProvider(input: z.infer<typeof providerRequest>, signal: AbortSignal): Promise<Category[] | Post[] | ProviderDetail | Episode[] | Source[] | SourceReport> {
+export async function loadProviderCatalog(id: string, signal: AbortSignal) {
+  const result = categories(await execute({ id, op: "catalog" }, {}, signal));
+  if (!result.length) throw new ProviderError(502, "The provider returned no usable catalog categories.", "normalize");
+  return result;
+}
+
+async function resolveProvider(input: Exclude<z.infer<typeof providerRequest>, { op: "catalog" }>, signal: AbortSignal): Promise<Post[] | ProviderDetail | Episode[] | Source[] | SourceReport> {
   const id = input.id;
   if (id === "youtube" && (input.op === "sources" || input.op === "episodes")) {
     throw new ProviderError(422, "YouTube playback uses the embedded video player.", "request");
   }
   switch (input.op) {
-    case "catalog": {
-      const result = categories(await execute(input, {}, signal));
-      if (!result.length) throw new ProviderError(502, "The provider returned no usable catalog categories.", "normalize");
-      return result;
-    }
     case "posts": {
       const allowed = await runProvider({ id, op: "catalog" }, signal) as Category[];
       if (!allowed.some(({ filter }) => filter === input.filter)) throw new HttpError(400, "Unknown provider category.");

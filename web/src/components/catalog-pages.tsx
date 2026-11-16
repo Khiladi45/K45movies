@@ -64,7 +64,7 @@ function SearchHistory() {
 function ProviderSearch({ q }: { q: string }) {
   const installed = useLibrary((state) => state.installed);
   const manifest = useQuery({ queryKey: ["manifest"], queryFn: ({ signal }) => providers.manifest(signal) });
-  const unavailable = manifest.data?.filter((provider) => installed.includes(provider.id) && provider.searchUnavailable) ?? [];
+  const unavailable = manifest.data?.filter((provider) => installed.includes(provider.id) && (provider.addressUnavailable || provider.searchUnavailable)) ?? [];
   const searchable = installed.filter((id) => !unavailable.some((provider) => provider.id === id));
   const results = useQueries({ queries: (manifest.isPending ? [] : searchable).map((id) => ({
     queryKey: ["provider-search", id, q],
@@ -90,7 +90,7 @@ function ProviderSearch({ q }: { q: string }) {
     {!pending && !failed.length && !items.length && <QueryMessage>{searchable.length ? <>No titles match “{q}”.</> : "None of your installed providers support search."}</QueryMessage>}
     {!!unavailable.length && <details className="mt-4 text-sm text-muted">
       <summary>Providers without search</summary>
-      <ul className="mt-2 list-inside list-disc">{unavailable.map((provider) => <li key={provider.id}>{provider.name} · {provider.searchUnavailable}</li>)}</ul>
+      <ul className="mt-2 list-inside list-disc">{unavailable.map((provider) => <li key={provider.id}>{provider.name} · {provider.addressUnavailable || provider.searchUnavailable}</li>)}</ul>
     </details>}
   </>;
 }

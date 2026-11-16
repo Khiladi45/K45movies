@@ -122,7 +122,8 @@ function ProviderHome() {
   const active = useLibrary((state) => state.activeProvider);
   const activate = useLibrary((state) => state.activate);
   const manifest = useQuery({ queryKey: ["manifest"], queryFn: ({ signal }) => providers.manifest(signal) });
-  const catalog = useQuery({ queryKey: ["catalog", active], queryFn: ({ signal }) => providers.catalog(active!, signal), enabled: !!active });
+  const missing = manifest.data?.find(({ id }) => id === active)?.addressUnavailable;
+  const catalog = useQuery({ queryKey: ["catalog", active], queryFn: ({ signal }) => providers.catalog(active!, signal), enabled: !!active && !missing });
   const health = useQuery({ queryKey: ["provider-health"], queryFn: ({ signal }) => providers.health(signal) });
   const [index, setIndex] = useState(0);
   const featured = useQueries({ queries: (active ? catalog.data?.slice(0, 4) ?? [] : []).map(({ filter }) => ({
@@ -145,10 +146,11 @@ function ProviderHome() {
       {active && health.data?.[active] && <span className="chip capitalize" data-health={health.data[active].state}>{health.data[active].state}</span>}
       <Link href="/providers" className="secondary-button">Manage providers</Link>
     </div>
-    {active && (item ? <Hero item={{ ...item, href: providerLink(active, item.ref) }} subtitle={item.tag} change={rotation.length > 1 ? (offset) => setIndex((current) => (current + offset + rotation.length) % rotation.length) : undefined} /> :
+    {active && !missing && (item ? <Hero item={{ ...item, href: providerLink(active, item.ref) }} subtitle={item.tag} change={rotation.length > 1 ? (offset) => setIndex((current) => (current + offset + rotation.length) % rotation.length) : undefined} /> :
       (catalog.isPending || featured.some((query) => query.isPending)) && <HeroSkeleton />)}
     <ContinueWatching />
     {!active ? <QueryMessage>Install a provider to browse its catalog.</QueryMessage> :
+      missing ? <QueryMessage>{missing}</QueryMessage> :
       catalog.isPending ? <><ProviderWait message="Loading the provider catalog…" /><PendingRail /></> :
       catalog.isError ? <QueryMessage retry={() => void catalog.refetch()}>{catalog.error.message}</QueryMessage> :
       !catalog.data.length ? <QueryMessage>This provider has no categories.</QueryMessage> :

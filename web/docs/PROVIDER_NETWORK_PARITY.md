@@ -241,3 +241,36 @@ All seven legacy providers passed catalogs and verified sources. Their final fir
 All seven also started live HLS playback in both Chromium and Firefox. Each sample required decoded video and at least 0.5 seconds of playback. The playback run includes Disney Mickey Mouse Clubhouse, Valiant One, Captain America: The First Avenger, Squid Game, Inside Out 2, Deewane Huye Paagal and Star Wars: The Bad Batch. This establishes sample playback and leaves coverage of other titles and networks open. [Live legacy playback](provider-network-parity/priority-one-live-legacy.json)
 
 [Final HTTP smoke](provider-network-parity/priority-one-final.json) · [Provider Based Playwright](provider-network-parity/priority-one-e2e-provider.json) · [Movie Based Playwright](provider-network-parity/priority-one-e2e-movie.json) · [Queue, cookie and security tests](provider-network-parity/priority-one-server-tests.txt)
+
+## Priority 1b · Registry, session and title coverage
+
+The scanner inspected all 39 vendored bundles against K45movies-api revision 895578addb410981a042f7ce908867b4dc5d494d. Twenty-six use urls.json. The only missing literal/resolved lookup keys are `consumet` (HiAnime) and `zeefliz` (ZeeFliz). The app now reports “No upstream address is published for this provider yet” from the live registry, without inventing fallback addresses. Castle retains its bundle-defined fallback. [Registry scan](provider-network-parity/registry-keys.json)
+
+| Legacy provider | Cold with DoH | Warm catalog | Warm session, uncached catalog |
+| --- | ---: | ---: | ---: |
+| disneyPlus | 38550 ms | 0 ms | 310 ms |
+| hotstar | 38650 ms | 0 ms | 343 ms |
+| marvel | 38502 ms | 0 ms | 302 ms |
+| netflix | 37429 ms | 0 ms | 354 ms |
+| pixar | 37802 ms | 0 ms | 304 ms |
+| primeVideo | 39324 ms | 0 ms | 653 ms |
+| starWars | 40631 ms | 0 ms | 617 ms |
+
+Each cold session produced 17 requests. Most were serial session checks. Each HTTP response was usually a few hundred milliseconds, and the gaps between polls accounted for most of the 37–41 seconds. For a fresh Netflix process, the 25-second ceiling cut off the session after 11 requests, while the 75-second budget completed in 37.43 s using DoH and 37.87 s with system DNS. A warm session made the full uncached catalog request in 354 ms with DoH or 285 ms with system DNS. The immediate cache repeat rounded to 0 ms in process. These runs separate the timeout and DNS controls for Netflix and the warm session from the catalog cache for all seven. They did not test a live Redis service or a cross-machine warm session. Catalogs are fresh for 15 minutes, served stale while one background request refreshes them for up to 24 hours, and eligible for optional Redis-backed persistence. [Timing traces](provider-network-parity/1b-legacy-timings.json)
+
+| Provider | Published categories sampled | Title search | Verified sources |
+| --- | ---: | --- | --- |
+| 1tamilblasters | 3 | pass / pass / pass | empty / fail / empty |
+| animesub | 3 | pass / pass / pass | empty / empty / empty |
+| drive | 3 | pass / pass / pass | empty / pass / fail |
+| Joya9tv | 2 | pass / pass | empty / pass |
+| kmMovies | 3 | pass / pass / pass | empty / empty / pass |
+| hdmovieslife | 3 | pass / pass / pass | pass / pass / pass |
+| moviesda | 3 | empty / empty / empty | pass / pass / pass |
+| luxMovies | 3 | pass / pass / pass | pass / pass / pass |
+| uniquestream | 3 | empty / empty / empty | pass / empty / pass |
+| animesalt | 0 | – | – |
+
+The sample used distinct titles from different categories where categories yielded posts. Joya9tv supplied two distinct categories and an additional search returned results. Animesalt returned no posts in three attempted categories and no results for three alternative search queries, so no titles could be inspected there. Individual titles, timings and upstream/probe errors are in the trace. [Real-title samples](provider-network-parity/1b-category-titles.json)
+
+A provider receives a healthy status only after a source probe has passed. Torrent-only responses identify the browser limitation without exposing magnet links. The mirror OTP classification continues to display Needs verification. A normal authenticated TLS probe previously established HTTP 403 at bzzhr.co, but the response did not establish a fingerprint cause. No third-party TLS impersonation feature was added.

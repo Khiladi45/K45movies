@@ -1,0 +1,1133 @@
+{
+  "measuredAt": "2026-11-16T09:45:10.298Z",
+  "rows": [
+    {
+      "id": "1tamilblasters",
+      "catalog": {
+        "http": 200,
+        "ms": 23,
+        "state": "pass",
+        "count": 9
+      },
+      "titles": [
+        {
+          "category": "Latest",
+          "title": "John Doe (2026)",
+          "search": {
+            "http": 200,
+            "ms": 10511,
+            "state": "pass",
+            "count": 1
+          },
+          "meta": {
+            "http": 200,
+            "ms": 108,
+            "state": "pass"
+          },
+          "stream": {
+            "http": 200,
+            "ms": 469,
+            "state": "empty",
+            "count": 0,
+            "issue": {
+              "provider": "1tamilblasters",
+              "operation": "sources",
+              "stage": "normalize",
+              "message": "The bundle returned no eligible HTTP video streams for this selection."
+            },
+            "attempts": []
+          }
+        },
+        {
+          "category": "Tamil Movies 2026",
+          "title": "BIGG BOSS Tamil (2026) S010 EP71 – DAY 70",
+          "search": {
+            "http": 200,
+            "ms": 10229,
+            "state": "pass",
+            "count": 1
+          },
+          "meta": {
+            "http": 200,
+            "ms": 171,
+            "state": "pass"
+          },
+          "stream": {
+            "http": 502,
+            "ms": 259,
+            "error": "Upstream request failed (ENOTFOUND).",
+            "details": {
+              "provider": "1tamilblasters",
+              "operation": "sources",
+              "stage": "upstream",
+              "message": "Upstream request failed (ENOTFOUND)."
+            },
+            "state": "fail",
+            "count": 0
+          }
+        },
+        {
+          "category": "Tamil Movies 2025",
+          "title": "LBW (Love Beyond Cricket) (2025) S01EP(01-120) [Tam + Tel + Hin + Mal + Kan]",
+          "search": {
+            "http": 200,
+            "ms": 6572,
+            "state": "pass",
+            "count": 1
+          },
+          "meta": {
+            "http": 200,
+            "ms": 707,
+            "state": "pass"
+          },
+          "stream": {
+            "http": 200,
+            "ms": 535,
+            "state": "empty",
+            "count": 0,
+            "issue": {
+              "provider": "1tamilblasters",
+              "operation": "sources",
+              "stage": "normalize",
+              "message": "The bundle returned no eligible HTTP video streams for this selection."
+            },
+            "attempts": []
+          }
+        }
+      ],
+      "gaps": [],
+      "alternativeSearches": []
+    },
+    {
+      "id": "animesub",
+      "catalog": {
+        "http": 200,
+        "ms": 23,
+        "state": "pass",
+        "count": 4
+      },
+      "titles": [
+        {
+          "category": "Top Airing",
+          "title": "Steel Ball Run: JoJo no Kimyou na Bouken",
+          "search": {
+            "http": 200,
+            "ms": 2007,
+            "state": "pass",
+            "count": 20
+          },
+          "meta": {
+            "http": 200,
+            "ms": 2638,
+            "state": "pass"
+          },
+          "stream": {
+            "http": 200,
+            "ms": 1448,
+            "state": "empty",
+            "count": 0,
+            "issue": {
+              "provider": "animesub",
+              "operation": "sources",
+              "stage": "normalize",
+              "message": "The bundle returned no eligible HTTP video streams for this selection."
+            },
+            "attempts": []
+          }
+        },
+        {
+          "category": "Current Season",
+          "title": "Kusuriya no Hitorigoto 3rd Season",
+          "search": {
+            "http": 200,
+            "ms": 567,
+            "state": "pass",
+            "count": 2
+          },
+          "meta": {
+            "http": 200,
+            "ms": 2415,
+            "state": "pass"
+          },
+          "stream": {
+            "http": 200,
+            "ms": 1438,
+            "state": "empty",
+            "count": 0,
+            "issue": {
+              "provider": "animesub",
+              "operation": "sources",
+              "stage": "normalize",
+              "message": "The bundle returned no eligible HTTP video streams for this selection."
+            },
+            "attempts": []
+          }
+        },
+        {
+          "category": "Most Popular",
+          "title": "Shingeki no Kyojin",
+          "search": {
+            "http": 200,
+            "ms": 540,
+            "state": "pass",
+            "count": 23
+          },
+          "meta": {
+            "http": 200,
+            "ms": 1379,
+            "state": "pass"
+          },
+          "stream": {
+            "http": 200,
+            "ms": 1452,
+            "state": "empty",
+            "count": 0,
+            "issue": {
+              "provider": "animesub",
+              "operation": "sources",
+              "stage": "normalize",
+              "message": "The bundle returned no eligible HTTP video streams for this selection."
+            },
+            "attempts": []
+          }
+        }
+      ],
+      "gaps": [],
+      "alternativeSearches": []
+    },
+    {
+      "id": "drive",
+      "catalog": {
+        "http": 200,
+        "ms": 48,
+        "state": "pass",
+        "count": 7
+      },
+      "titles": [
+        {
+          "category": "Latest",
+          "title": "Avengers Endgame: Encore (2026) IMAX [Hindi – English – Tamil – Telugu] 480p | 720p | 1080p | 2160p 4K SDR [x264/ESubs] | Full Movie",
+          "search": {
+            "http": 200,
+            "ms": 2417,
+            "state": "pass",
+            "count": 1
+          },
+          "meta": {
+            "http": 200,
+            "ms": 707,
+            "state": "pass"
+          },
+          "stream": {
+            "http": 200,
+            "ms": 33048,
+            "state": "empty",
+            "count": 0,
+            "issue": {
+              "provider": "drive",
+              "operation": "sources",
+              "stage": "normalize",
+              "message": "The bundle returned no eligible HTTP video streams for this selection."
+            },
+            "attempts": []
+          }
+        },
+        {
+          "category": "Anime",
+          "title": "One Year to Live, Buy a Man (2026) WEB-DL [Hindi + English] 480p | 720p | 1080p [x264/ESubs] | Full Movie",
+          "search": {
+            "http": 200,
+            "ms": 357,
+            "state": "pass",
+            "count": 1
+          },
+          "meta": {
+            "http": 200,
+            "ms": 718,
+            "state": "pass"
+          },
+          "stream": {
+            "http": 200,
+            "ms": 5612,
+            "state": "pass",
+            "count": 2,
+            "attempts": [
+              {
+                "server": "CF Storage",
+                "quality": "480p",
+                "probe": {
+                  "status": "ok",
+                  "httpStatus": 206,
+                  "contentType": "application/octet-stream",
+                  "format": "mkv",
+                  "videoCodec": "h264"
+                }
+              },
+              {
+                "server": "Pixeldrain",
+                "probe": {
+                  "status": "ok",
+                  "httpStatus": 206,
+                  "contentType": "video/matroska",
+                  "format": "mkv",
+                  "videoCodec": "h264"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "category": "Netflix",
+          "title": "Raakaasa (2026) UNCUT WEB-DL [Hindi (DD2.0) & Telugu] 480p | 720p | 1080p | 2160p 4K SDR [x264/ESubs] | Full Movie",
+          "search": {
+            "http": 200,
+            "ms": 1573,
+            "state": "pass",
+            "count": 1
+          },
+          "meta": {
+            "http": 200,
+            "ms": 1174,
+            "state": "pass"
+          },
+          "stream": {
+            "http": 504,
+            "ms": 30007,
+            "error": "Upstream request timed out.",
+            "details": {
+              "provider": "drive",
+              "operation": "sources",
+              "stage": "upstream",
+              "message": "Upstream request timed out."
+            },
+            "state": "fail",
+            "count": 0
+          }
+        }
+      ],
+      "gaps": [],
+      "alternativeSearches": []
+    },
+    {
+      "id": "Joya9tv",
+      "catalog": {
+        "http": 200,
+        "ms": 13,
+        "state": "pass",
+        "count": 2
+      },
+      "titles": [
+        {
+          "category": "Hollywood-Movies",
+          "title": "Transformers: The Last Knight (2017) Dual Audio [Hindi ORG-English] BluRay H264 AAC 1080p 720p 480p ESub",
+          "search": {
+            "http": 200,
+            "ms": 583,
+            "state": "pass",
+            "count": 1
+          },
+          "meta": {
+            "http": 200,
+            "ms": 153,
+            "state": "pass"
+          },
+          "stream": {
+            "http": 200,
+            "ms": 4502,
+            "state": "empty",
+            "count": 0,
+            "issue": {
+              "provider": "Joya9tv",
+              "operation": "sources",
+              "stage": "probe",
+              "message": "None of the checked servers returned verified media."
+            },
+            "attempts": [
+              {
+                "server": "ResumeCloud",
+                "quality": "480p",
+                "probe": {
+                  "status": "failed",
+                  "httpStatus": 206,
+                  "contentType": "application/x-zip",
+                  "reason": "The response did not contain recognized video."
+                }
+              },
+              {
+                "server": "Instant Download",
+                "probe": {
+                  "status": "failed",
+                  "httpStatus": 400,
+                  "contentType": "text/html; charset=UTF-8",
+                  "reason": "HTTP 400"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "category": "Bangali-Movies",
+          "title": "Chupi Chupi (2026) Bengali BongoBD WEB-DL H264 AAC 1080p 720p Download",
+          "search": {
+            "http": 200,
+            "ms": 561,
+            "state": "pass",
+            "count": 1
+          },
+          "meta": {
+            "http": 200,
+            "ms": 201,
+            "state": "pass"
+          },
+          "stream": {
+            "http": 200,
+            "ms": 7284,
+            "state": "pass",
+            "count": 1,
+            "attempts": [
+              {
+                "server": "Instant Download",
+                "probe": {
+                  "status": "ok",
+                  "httpStatus": 200,
+                  "contentType": "video/mkv",
+                  "format": "mkv",
+                  "videoCodec": "h264"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "gaps": [],
+      "alternativeSearches": [
+        {
+          "q": "One Piece",
+          "http": 200,
+          "ms": 622,
+          "state": "pass",
+          "count": 7
+        }
+      ]
+    },
+    {
+      "id": "kmMovies",
+      "catalog": {
+        "http": 200,
+        "ms": 14,
+        "state": "pass",
+        "count": 6
+      },
+      "titles": [
+        {
+          "category": "Latest",
+          "title": "The Beast",
+          "search": {
+            "http": 200,
+            "ms": 1090,
+            "state": "pass",
+            "count": 15
+          },
+          "meta": {
+            "http": 200,
+            "ms": 707,
+            "state": "pass"
+          },
+          "stream": {
+            "http": 200,
+            "ms": 5480,
+            "state": "empty",
+            "count": 0,
+            "issue": {
+              "provider": "kmMovies",
+              "operation": "sources",
+              "stage": "probe",
+              "message": "None of the checked servers returned verified media."
+            },
+            "attempts": [
+              {
+                "server": "ZIP-ZAP",
+                "probe": {
+                  "status": "failed",
+                  "httpStatus": 200,
+                  "contentType": "text/html; charset=UTF-8",
+                  "reason": "The response did not contain recognized video."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "category": "Bollywood",
+          "title": "Big Hero 6",
+          "search": {
+            "http": 200,
+            "ms": 611,
+            "state": "pass",
+            "count": 4
+          },
+          "meta": {
+            "http": 200,
+            "ms": 1180,
+            "state": "pass"
+          },
+          "stream": {
+            "http": 200,
+            "ms": 2397,
+            "state": "empty",
+            "count": 0,
+            "issue": {
+              "provider": "kmMovies",
+              "operation": "sources",
+              "stage": "normalize",
+              "message": "The bundle returned no eligible HTTP video streams for this selection."
+            },
+            "attempts": []
+          }
+        },
+        {
+          "category": "Dual",
+          "title": "Hereditary",
+          "search": {
+            "http": 200,
+            "ms": 728,
+            "state": "pass",
+            "count": 1
+          },
+          "meta": {
+            "http": 200,
+            "ms": 264,
+            "state": "pass"
+          },
+          "stream": {
+            "http": 200,
+            "ms": 3551,
+            "state": "pass",
+            "count": 1,
+            "attempts": [
+              {
+                "server": "Gofile",
+                "quality": "480p",
+                "probe": {
+                  "status": "ok",
+                  "httpStatus": 206,
+                  "contentType": "video/x-matroska",
+                  "format": "mkv",
+                  "videoCodec": "h264"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "gaps": [],
+      "alternativeSearches": []
+    },
+    {
+      "id": "hdmovieslife",
+      "catalog": {
+        "http": 200,
+        "ms": 25,
+        "state": "pass",
+        "count": 6
+      },
+      "titles": [
+        {
+          "category": "Latest Movies",
+          "title": "The Beast",
+          "search": {
+            "http": 200,
+            "ms": 246,
+            "state": "pass",
+            "count": 1
+          },
+          "meta": {
+            "http": 200,
+            "ms": 340,
+            "state": "pass"
+          },
+          "stream": {
+            "http": 200,
+            "ms": 8612,
+            "state": "pass",
+            "count": 1,
+            "attempts": [
+              {
+                "server": "HDMoviesLife PixelDrain",
+                "probe": {
+                  "status": "ok",
+                  "httpStatus": 206,
+                  "contentType": "video/matroska",
+                  "format": "mkv",
+                  "videoCodec": "h264"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "category": "Latest Series",
+          "title": "India's Got Latent",
+          "search": {
+            "http": 200,
+            "ms": 252,
+            "state": "pass",
+            "count": 1
+          },
+          "meta": {
+            "http": 200,
+            "ms": 286,
+            "state": "pass"
+          },
+          "episodes": {
+            "http": 200,
+            "ms": 1433,
+            "state": "pass",
+            "count": 10
+          },
+          "stream": {
+            "http": 200,
+            "ms": 6313,
+            "state": "pass",
+            "count": 1,
+            "attempts": [
+              {
+                "server": "HDMoviesLife PixelDrain",
+                "probe": {
+                  "status": "ok",
+                  "httpStatus": 206,
+                  "contentType": "video/matroska",
+                  "format": "mkv",
+                  "videoCodec": "h264",
+                  "audioCodec": "eac3"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "category": "4K UHD",
+          "title": "Doctor Strange in the Multiverse of Madness",
+          "search": {
+            "http": 200,
+            "ms": 272,
+            "state": "pass",
+            "count": 1
+          },
+          "meta": {
+            "http": 200,
+            "ms": 383,
+            "state": "pass"
+          },
+          "stream": {
+            "http": 200,
+            "ms": 6894,
+            "state": "pass",
+            "count": 1,
+            "attempts": [
+              {
+                "server": "HDMoviesLife PixelDrain",
+                "probe": {
+                  "status": "ok",
+                  "httpStatus": 206,
+                  "contentType": "video/matroska",
+                  "format": "mkv",
+                  "videoCodec": "h264"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "gaps": [],
+      "alternativeSearches": []
+    },
+    {
+      "id": "moviesda",
+      "catalog": {
+        "http": 200,
+        "ms": 13,
+        "state": "pass",
+        "count": 6
+      },
+      "titles": [
+        {
+          "category": "Tamil 2026 Movies",
+          "title": "John Doe (2026)",
+          "search": {
+            "http": 200,
+            "ms": 740,
+            "state": "empty",
+            "count": 0
+          },
+          "meta": {
+            "http": 200,
+            "ms": 755,
+            "state": "pass"
+          },
+          "stream": {
+            "http": 200,
+            "ms": 4159,
+            "state": "pass",
+            "count": 2,
+            "attempts": [
+              {
+                "server": "Moviesda 1",
+                "quality": "1080p",
+                "probe": {
+                  "status": "ok",
+                  "httpStatus": 206,
+                  "contentType": "video/mp4",
+                  "format": "mp4",
+                  "videoCodec": "h264"
+                }
+              },
+              {
+                "server": "Moviesda 2",
+                "quality": "1080p",
+                "probe": {
+                  "status": "ok",
+                  "httpStatus": 206,
+                  "contentType": "video/mp4",
+                  "format": "mp4",
+                  "videoCodec": "h264"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "category": "Tamil 2025 Movies",
+          "title": "(Tamil 2026 Movies) (தமிழ் 2026 திரைப்படங்களுக்கு)",
+          "search": {
+            "http": 200,
+            "ms": 4,
+            "state": "empty",
+            "count": 0
+          },
+          "meta": {
+            "http": 200,
+            "ms": 3211,
+            "state": "pass"
+          },
+          "stream": {
+            "http": 200,
+            "ms": 7735,
+            "state": "pass",
+            "count": 2,
+            "attempts": [
+              {
+                "server": "Moviesda 1",
+                "quality": "720p",
+                "probe": {
+                  "status": "ok",
+                  "httpStatus": 206,
+                  "contentType": "video/mp4",
+                  "format": "mp4",
+                  "videoCodec": "h264"
+                }
+              },
+              {
+                "server": "Moviesda 2",
+                "quality": "720p",
+                "probe": {
+                  "status": "ok",
+                  "httpStatus": 200,
+                  "contentType": "video/mp4",
+                  "format": "mp4",
+                  "videoCodec": "hevc"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "category": "Tamil 2024 Movies",
+          "title": "(Tamil 2025 Movies) (தமிழ் 2025 திரைப்படங்களுக்கு)",
+          "search": {
+            "http": 200,
+            "ms": 8,
+            "state": "empty",
+            "count": 0
+          },
+          "meta": {
+            "http": 200,
+            "ms": 3598,
+            "state": "pass"
+          },
+          "stream": {
+            "http": 200,
+            "ms": 7813,
+            "state": "pass",
+            "count": 2,
+            "attempts": [
+              {
+                "server": "Moviesda 1",
+                "quality": "360p",
+                "probe": {
+                  "status": "ok",
+                  "httpStatus": 200,
+                  "contentType": "video/mp4",
+                  "format": "mp4",
+                  "videoCodec": "h264"
+                }
+              },
+              {
+                "server": "Moviesda 2",
+                "quality": "720p",
+                "probe": {
+                  "status": "ok",
+                  "httpStatus": 206,
+                  "contentType": "video/mp4",
+                  "format": "mp4",
+                  "videoCodec": "h264"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "gaps": [],
+      "alternativeSearches": []
+    },
+    {
+      "id": "luxMovies",
+      "catalog": {
+        "http": 200,
+        "ms": 16,
+        "state": "pass",
+        "count": 9
+      },
+      "titles": [
+        {
+          "category": "New",
+          "title": "India’s Got Latent {S02E10 Added} Reality Talent-Comedy Hindi Show 480p 720p 1080p WEB-DL x264 – (Bonus Episode 1-4 Added)",
+          "search": {
+            "http": 200,
+            "ms": 320,
+            "state": "pass",
+            "count": 1
+          },
+          "meta": {
+            "http": 200,
+            "ms": 136,
+            "state": "pass"
+          },
+          "episodes": {
+            "http": 200,
+            "ms": 571,
+            "state": "pass",
+            "count": 11
+          },
+          "stream": {
+            "http": 200,
+            "ms": 8961,
+            "state": "pass",
+            "count": 1,
+            "attempts": [
+              {
+                "server": "CF Storage",
+                "quality": "480p",
+                "probe": {
+                  "status": "failed",
+                  "httpStatus": 451,
+                  "contentType": "text/html; charset=UTF-8",
+                  "reason": "HTTP 451"
+                }
+              },
+              {
+                "server": "Pixeldrain",
+                "probe": {
+                  "status": "ok",
+                  "httpStatus": 206,
+                  "contentType": "video/x-matroska",
+                  "format": "mkv",
+                  "videoCodec": "h264"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "category": "Netflix",
+          "title": "Daayra (2026)",
+          "search": {
+            "http": 200,
+            "ms": 865,
+            "state": "pass",
+            "count": 1
+          },
+          "meta": {
+            "http": 200,
+            "ms": 1577,
+            "state": "pass"
+          },
+          "stream": {
+            "http": 200,
+            "ms": 5568,
+            "state": "pass",
+            "count": 1,
+            "attempts": [
+              {
+                "server": "CF Worker",
+                "probe": {
+                  "status": "ok",
+                  "httpStatus": 206,
+                  "contentType": "application/octet-stream",
+                  "format": "mkv",
+                  "videoCodec": "h264"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "category": "Tamil",
+          "title": "The Third Murder (2026)",
+          "search": {
+            "http": 200,
+            "ms": 323,
+            "state": "pass",
+            "count": 1
+          },
+          "meta": {
+            "http": 200,
+            "ms": 173,
+            "state": "pass"
+          },
+          "stream": {
+            "http": 200,
+            "ms": 10592,
+            "state": "pass",
+            "count": 1,
+            "attempts": [
+              {
+                "server": "CF Worker",
+                "probe": {
+                  "status": "ok",
+                  "httpStatus": 206,
+                  "contentType": "application/octet-stream",
+                  "format": "mkv",
+                  "videoCodec": "h264"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "gaps": [],
+      "alternativeSearches": []
+    },
+    {
+      "id": "uniquestream",
+      "catalog": {
+        "http": 200,
+        "ms": 24,
+        "state": "pass",
+        "count": 3
+      },
+      "titles": [
+        {
+          "category": "New",
+          "title": "Dragon Ball Super: Beerus",
+          "search": {
+            "http": 200,
+            "ms": 390,
+            "state": "empty",
+            "count": 0
+          },
+          "meta": {
+            "http": 200,
+            "ms": 416,
+            "state": "pass"
+          },
+          "episodes": {
+            "http": 200,
+            "ms": 363,
+            "state": "pass",
+            "count": 6
+          },
+          "stream": {
+            "http": 200,
+            "ms": 2937,
+            "state": "pass",
+            "count": 2,
+            "attempts": [
+              {
+                "server": "uniquestream (RAW - ja-JP)",
+                "probe": {
+                  "status": "ok",
+                  "httpStatus": 200,
+                  "contentType": "application/vnd.apple.mpegurl",
+                  "format": "hls",
+                  "codecs": [
+                    "avc1.640028",
+                    "mp4a.40.2"
+                  ],
+                  "videoCodec": "h264"
+                }
+              },
+              {
+                "server": "uniquestream (Dub - en-US)",
+                "probe": {
+                  "status": "ok",
+                  "httpStatus": 200,
+                  "contentType": "application/vnd.apple.mpegurl",
+                  "format": "hls",
+                  "codecs": [
+                    "avc1.640028",
+                    "mp4a.40.2"
+                  ],
+                  "videoCodec": "h264"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "category": "Trending",
+          "title": "Cha A School (Season 4)",
+          "search": {
+            "http": 200,
+            "ms": 377,
+            "state": "empty",
+            "count": 0
+          },
+          "meta": {
+            "http": 200,
+            "ms": 393,
+            "state": "pass"
+          },
+          "episodes": {
+            "http": 200,
+            "ms": 386,
+            "state": "pass",
+            "count": 14
+          },
+          "stream": {
+            "http": 200,
+            "ms": 4946,
+            "state": "empty",
+            "count": 0,
+            "issue": {
+              "provider": "uniquestream",
+              "operation": "sources",
+              "stage": "probe",
+              "message": "None of the checked servers returned verified media."
+            },
+            "attempts": [
+              {
+                "server": "uniquestream (RAW - zh-CN)",
+                "probe": {
+                  "status": "unknown",
+                  "reason": "Stream probe timed out."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "category": "Popular",
+          "title": "One Piece",
+          "search": {
+            "http": 200,
+            "ms": 335,
+            "state": "empty",
+            "count": 0
+          },
+          "meta": {
+            "http": 200,
+            "ms": 460,
+            "state": "pass"
+          },
+          "episodes": {
+            "http": 200,
+            "ms": 1810,
+            "state": "pass",
+            "count": 61
+          },
+          "stream": {
+            "http": 200,
+            "ms": 875,
+            "state": "pass",
+            "count": 1,
+            "attempts": [
+              {
+                "server": "uniquestream (RAW - ja-JP)",
+                "probe": {
+                  "status": "ok",
+                  "httpStatus": 200,
+                  "contentType": "application/vnd.apple.mpegurl",
+                  "format": "hls",
+                  "codecs": [
+                    "avc1.640032",
+                    "mp4a.40.2"
+                  ],
+                  "videoCodec": "h264"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "gaps": [],
+      "alternativeSearches": []
+    },
+    {
+      "id": "animesalt",
+      "catalog": {
+        "http": 200,
+        "ms": 7,
+        "state": "pass",
+        "count": 3
+      },
+      "titles": [],
+      "gaps": [
+        {
+          "category": "Trending",
+          "http": 200,
+          "ms": 2642,
+          "state": "empty",
+          "count": 0
+        },
+        {
+          "category": "Series",
+          "http": 200,
+          "ms": 595,
+          "state": "empty",
+          "count": 0
+        },
+        {
+          "category": "Movies",
+          "http": 200,
+          "ms": 520,
+          "state": "empty",
+          "count": 0
+        }
+      ],
+      "alternativeSearches": [
+        {
+          "q": "One Piece",
+          "http": 200,
+          "ms": 619,
+          "state": "empty",
+          "count": 0
+        },
+        {
+          "q": "The Avengers",
+          "http": 200,
+          "ms": 698,
+          "state": "empty",
+          "count": 0
+        },
+        {
+          "q": "Naruto",
+          "http": 200,
+          "ms": 559,
+          "state": "empty",
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

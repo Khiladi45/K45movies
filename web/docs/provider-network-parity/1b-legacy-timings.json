@@ -1,0 +1,961 @@
+[
+  {
+    "mode": "doh",
+    "rows": [
+      {
+        "id": "disneyPlus",
+        "cold": {
+          "ms": 38550,
+          "count": 12,
+          "requests": [
+            {
+              "stage": "other",
+              "status": 200,
+              "ms": 303
+            },
+            {
+              "stage": "catalog or session bootstrap",
+              "status": 200,
+              "ms": 620
+            },
+            {
+              "stage": "session checks",
+              "status": 301,
+              "ms": 225
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 230
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 231
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 234
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 554
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 233
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 231
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 233
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 578
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 235
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 232
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 235
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 316
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 235
+            },
+            {
+              "stage": "catalog or session bootstrap",
+              "status": 200,
+              "ms": 732
+            }
+          ]
+        },
+        "warm": {
+          "ms": 0,
+          "count": 12,
+          "requests": []
+        },
+        "warmUncached": {
+          "ms": 310,
+          "count": 12,
+          "requests": [
+            {
+              "stage": "catalog or session bootstrap",
+              "status": 200,
+              "ms": 283
+            }
+          ]
+        }
+      },
+      {
+        "id": "hotstar",
+        "cold": {
+          "ms": 38650,
+          "count": 5,
+          "requests": [
+            {
+              "stage": "other",
+              "status": 200,
+              "ms": 304
+            },
+            {
+              "stage": "catalog or session bootstrap",
+              "status": 200,
+              "ms": 713
+            },
+            {
+              "stage": "session checks",
+              "status": 301,
+              "ms": 229
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 236
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 231
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 232
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 472
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 235
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 232
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 233
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 573
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 233
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 233
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 236
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 333
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 244
+            },
+            {
+              "stage": "catalog or session bootstrap",
+              "status": 200,
+              "ms": 941
+            }
+          ]
+        },
+        "warm": {
+          "ms": 0,
+          "count": 5,
+          "requests": []
+        },
+        "warmUncached": {
+          "ms": 343,
+          "count": 5,
+          "requests": [
+            {
+              "stage": "catalog or session bootstrap",
+              "status": 200,
+              "ms": 319
+            }
+          ]
+        }
+      },
+      {
+        "id": "marvel",
+        "cold": {
+          "ms": 38502,
+          "count": 10,
+          "requests": [
+            {
+              "stage": "other",
+              "status": 200,
+              "ms": 281
+            },
+            {
+              "stage": "catalog or session bootstrap",
+              "status": 200,
+              "ms": 613
+            },
+            {
+              "stage": "session checks",
+              "status": 301,
+              "ms": 251
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 232
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 229
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 264
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 550
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 238
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 232
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 233
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 578
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 233
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 320
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 231
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 252
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 235
+            },
+            {
+              "stage": "catalog or session bootstrap",
+              "status": 200,
+              "ms": 730
+            }
+          ]
+        },
+        "warm": {
+          "ms": 0,
+          "count": 10,
+          "requests": []
+        },
+        "warmUncached": {
+          "ms": 302,
+          "count": 10,
+          "requests": [
+            {
+              "stage": "catalog or session bootstrap",
+              "status": 200,
+              "ms": 278
+            }
+          ]
+        }
+      },
+      {
+        "id": "netflix",
+        "cold": {
+          "ms": 37429,
+          "count": 18,
+          "requests": [
+            {
+              "stage": "other",
+              "status": 200,
+              "ms": 74
+            },
+            {
+              "stage": "catalog or session bootstrap",
+              "status": 200,
+              "ms": 233
+            },
+            {
+              "stage": "session checks",
+              "status": 301,
+              "ms": 245
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 429
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 240
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 244
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 231
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 238
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 292
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 805
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 246
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 236
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 230
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 234
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 229
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 235
+            },
+            {
+              "stage": "catalog or session bootstrap",
+              "status": 200,
+              "ms": 243
+            }
+          ]
+        },
+        "warm": {
+          "ms": 0,
+          "count": 18,
+          "requests": []
+        },
+        "warmUncached": {
+          "ms": 354,
+          "count": 18,
+          "requests": [
+            {
+              "stage": "catalog or session bootstrap",
+              "status": 200,
+              "ms": 312
+            }
+          ]
+        }
+      },
+      {
+        "id": "pixar",
+        "cold": {
+          "ms": 37802,
+          "count": 4,
+          "requests": [
+            {
+              "stage": "other",
+              "status": 200,
+              "ms": 298
+            },
+            {
+              "stage": "catalog or session bootstrap",
+              "status": 200,
+              "ms": 233
+            },
+            {
+              "stage": "session checks",
+              "status": 301,
+              "ms": 225
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 243
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 233
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 242
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 234
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 234
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 238
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 807
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 246
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 233
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 232
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 232
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 231
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 233
+            },
+            {
+              "stage": "catalog or session bootstrap",
+              "status": 200,
+              "ms": 640
+            }
+          ]
+        },
+        "warm": {
+          "ms": 0,
+          "count": 4,
+          "requests": []
+        },
+        "warmUncached": {
+          "ms": 304,
+          "count": 4,
+          "requests": [
+            {
+              "stage": "catalog or session bootstrap",
+              "status": 200,
+              "ms": 288
+            }
+          ]
+        }
+      },
+      {
+        "id": "primeVideo",
+        "cold": {
+          "ms": 39324,
+          "count": 18,
+          "requests": [
+            {
+              "stage": "other",
+              "status": 200,
+              "ms": 317
+            },
+            {
+              "stage": "catalog or session bootstrap",
+              "status": 200,
+              "ms": 445
+            },
+            {
+              "stage": "session checks",
+              "status": 301,
+              "ms": 1133
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 236
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 922
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 546
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 249
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 223
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 234
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 233
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 232
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 215
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 231
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 243
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 243
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 482
+            },
+            {
+              "stage": "catalog or session bootstrap",
+              "status": 200,
+              "ms": 354
+            }
+          ]
+        },
+        "warm": {
+          "ms": 0,
+          "count": 18,
+          "requests": []
+        },
+        "warmUncached": {
+          "ms": 653,
+          "count": 18,
+          "requests": [
+            {
+              "stage": "catalog or session bootstrap",
+              "status": 200,
+              "ms": 595
+            }
+          ]
+        }
+      },
+      {
+        "id": "starWars",
+        "cold": {
+          "ms": 40631,
+          "count": 6,
+          "requests": [
+            {
+              "stage": "other",
+              "status": 200,
+              "ms": 324
+            },
+            {
+              "stage": "catalog or session bootstrap",
+              "status": 200,
+              "ms": 1346
+            },
+            {
+              "stage": "session checks",
+              "status": 301,
+              "ms": 683
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 471
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 235
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 511
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 224
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 233
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 624
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 231
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 236
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 353
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 650
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 232
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 882
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 305
+            },
+            {
+              "stage": "catalog or session bootstrap",
+              "status": 200,
+              "ms": 397
+            }
+          ]
+        },
+        "warm": {
+          "ms": 0,
+          "count": 6,
+          "requests": []
+        },
+        "warmUncached": {
+          "ms": 617,
+          "count": 6,
+          "requests": [
+            {
+              "stage": "catalog or session bootstrap",
+              "status": 200,
+              "ms": 599
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "mode": "system",
+    "rows": [
+      {
+        "id": "netflix",
+        "cold": {
+          "ms": 37866,
+          "count": 18,
+          "requests": [
+            {
+              "stage": "other",
+              "status": 200,
+              "ms": 23
+            },
+            {
+              "stage": "catalog or session bootstrap",
+              "status": 200,
+              "ms": 816
+            },
+            {
+              "stage": "session checks",
+              "status": 301,
+              "ms": 276
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 525
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 230
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 553
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 230
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 235
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 224
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 231
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 231
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 237
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 300
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 229
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 328
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 218
+            },
+            {
+              "stage": "catalog or session bootstrap",
+              "status": 200,
+              "ms": 242
+            }
+          ]
+        },
+        "warm": {
+          "ms": 0,
+          "count": 18,
+          "requests": []
+        },
+        "warmUncached": {
+          "ms": 285,
+          "count": 18,
+          "requests": [
+            {
+              "stage": "catalog or session bootstrap",
+              "status": 200,
+              "ms": 241
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "mode": "short",
+    "rows": [
+      {
+        "id": "netflix",
+        "cold": {
+          "ms": 25290,
+          "error": "The provider exceeded the operation deadline.",
+          "requests": [
+            {
+              "stage": "other",
+              "status": 200,
+              "ms": 277
+            },
+            {
+              "stage": "catalog or session bootstrap",
+              "status": 200,
+              "ms": 273
+            },
+            {
+              "stage": "session checks",
+              "status": 301,
+              "ms": 252
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 241
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 517
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 232
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 235
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 220
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 237
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 230
+            },
+            {
+              "stage": "session checks",
+              "status": 200,
+              "ms": 972
+            }
+          ]
+        }
+      }
+    ]
+  }
+]

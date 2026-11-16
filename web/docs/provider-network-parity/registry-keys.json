@@ -1,0 +1,336 @@
+{
+  "registry": "https://raw.githubusercontent.com/Khiladi45/K45movies-api/895578addb410981a042f7ce908867b4dc5d494d/urls.json",
+  "scanned": 39,
+  "bundles": [
+    {
+      "id": "1flex",
+      "registryUsed": false,
+      "keys": [],
+      "missing": [],
+      "unresolved": []
+    },
+    {
+      "id": "1tamilblasters",
+      "registryUsed": true,
+      "keys": [
+        "1tamilblasters"
+      ],
+      "missing": [],
+      "unresolved": []
+    },
+    {
+      "id": "1tamilmv",
+      "registryUsed": true,
+      "keys": [
+        "1tamilmv"
+      ],
+      "missing": [],
+      "unresolved": []
+    },
+    {
+      "id": "4khdhub",
+      "registryUsed": true,
+      "keys": [
+        "4khdhub"
+      ],
+      "missing": [],
+      "unresolved": []
+    },
+    {
+      "id": "Joya9tv",
+      "registryUsed": true,
+      "keys": [
+        "joya9tv"
+      ],
+      "missing": [],
+      "unresolved": []
+    },
+    {
+      "id": "anikoto",
+      "registryUsed": false,
+      "keys": [],
+      "missing": [],
+      "unresolved": []
+    },
+    {
+      "id": "animesalt",
+      "registryUsed": true,
+      "keys": [
+        "animesalt"
+      ],
+      "missing": [],
+      "unresolved": []
+    },
+    {
+      "id": "animesub",
+      "registryUsed": false,
+      "keys": [],
+      "missing": [],
+      "unresolved": []
+    },
+    {
+      "id": "animeworld",
+      "registryUsed": true,
+      "keys": [
+        "animeworld"
+      ],
+      "missing": [],
+      "unresolved": []
+    },
+    {
+      "id": "autoEmbed",
+      "registryUsed": false,
+      "keys": [],
+      "missing": [],
+      "unresolved": []
+    },
+    {
+      "id": "castle",
+      "registryUsed": true,
+      "keys": [
+        "castle"
+      ],
+      "missing": [],
+      "unresolved": []
+    },
+    {
+      "id": "disneyMirror",
+      "registryUsed": false,
+      "keys": [],
+      "missing": [],
+      "unresolved": []
+    },
+    {
+      "id": "drive",
+      "registryUsed": true,
+      "keys": [
+        "drive"
+      ],
+      "missing": [],
+      "unresolved": []
+    },
+    {
+      "id": "dvdplay",
+      "registryUsed": true,
+      "keys": [
+        "dvdplay"
+      ],
+      "missing": [],
+      "unresolved": []
+    },
+    {
+      "id": "gokuHD",
+      "registryUsed": true,
+      "keys": [
+        "gokuHD"
+      ],
+      "missing": [],
+      "unresolved": []
+    },
+    {
+      "id": "hdhub4u",
+      "registryUsed": true,
+      "keys": [
+        "hdhub"
+      ],
+      "missing": [],
+      "unresolved": []
+    },
+    {
+      "id": "hdmovieslife",
+      "registryUsed": true,
+      "keys": [
+        "hdmovieslife"
+      ],
+      "missing": [],
+      "unresolved": []
+    },
+    {
+      "id": "hiAnime",
+      "registryUsed": true,
+      "keys": [
+        "consumet"
+      ],
+      "missing": [
+        "consumet"
+      ],
+      "unresolved": []
+    },
+    {
+      "id": "kickAssAnime",
+      "registryUsed": false,
+      "keys": [],
+      "missing": [],
+      "unresolved": []
+    },
+    {
+      "id": "kissKh",
+      "registryUsed": true,
+      "keys": [
+        "kissKh"
+      ],
+      "missing": [],
+      "unresolved": []
+    },
+    {
+      "id": "kmMovies",
+      "registryUsed": true,
+      "keys": [
+        "kmmovies"
+      ],
+      "missing": [],
+      "unresolved": []
+    },
+    {
+      "id": "luxMovies",
+      "registryUsed": true,
+      "keys": [
+        "lux"
+      ],
+      "missing": [],
+      "unresolved": []
+    },
+    {
+      "id": "movieBoxWeb",
+      "registryUsed": false,
+      "keys": [],
+      "missing": [],
+      "unresolved": []
+    },
+    {
+      "id": "movielinkdb",
+      "registryUsed": true,
+      "keys": [
+        "movielinkbd",
+        "movielinkdb"
+      ],
+      "missing": [],
+      "unresolved": []
+    },
+    {
+      "id": "movies4u",
+      "registryUsed": true,
+      "keys": [
+        "movies4u"
+      ],
+      "missing": [],
+      "unresolved": []
+    },
+    {
+      "id": "moviesda",
+      "registryUsed": true,
+      "keys": [
+        "moviesda"
+      ],
+      "missing": [],
+      "unresolved": []
+    },
+    {
+      "id": "movieswood",
+      "registryUsed": true,
+      "keys": [
+        "movieswood"
+      ],
+      "missing": [],
+      "unresolved": []
+    },
+    {
+      "id": "moviezwap",
+      "registryUsed": true,
+      "keys": [
+        "moviezwap"
+      ],
+      "missing": [],
+      "unresolved": []
+    },
+    {
+      "id": "multi",
+      "registryUsed": true,
+      "keys": [
+        "multi"
+      ],
+      "missing": [],
+      "unresolved": []
+    },
+    {
+      "id": "mxplayer",
+      "registryUsed": false,
+      "keys": [],
+      "missing": [],
+      "unresolved": []
+    },
+    {
+      "id": "netflixMirror",
+      "registryUsed": false,
+      "keys": [],
+      "missing": [],
+      "unresolved": []
+    },
+    {
+      "id": "primeMirror",
+      "registryUsed": false,
+      "keys": [],
+      "missing": [],
+      "unresolved": []
+    },
+    {
+      "id": "showbox",
+      "registryUsed": true,
+      "keys": [
+        "showbox"
+      ],
+      "missing": [],
+      "unresolved": []
+    },
+    {
+      "id": "torrentio",
+      "registryUsed": false,
+      "keys": [],
+      "missing": [],
+      "unresolved": []
+    },
+    {
+      "id": "uhd",
+      "registryUsed": true,
+      "keys": [
+        "UhdMovies"
+      ],
+      "missing": [],
+      "unresolved": []
+    },
+    {
+      "id": "uniquestream",
+      "registryUsed": false,
+      "keys": [],
+      "missing": [],
+      "unresolved": []
+    },
+    {
+      "id": "vega",
+      "registryUsed": true,
+      "keys": [
+        "Vega"
+      ],
+      "missing": [],
+      "unresolved": []
+    },
+    {
+      "id": "youtube",
+      "registryUsed": false,
+      "keys": [],
+      "missing": [],
+      "unresolved": []
+    },
+    {
+      "id": "zeefliz",
+      "registryUsed": true,
+      "keys": [
+        "zeefliz"
+      ],
+      "missing": [
+        "zeefliz"
+      ],
+      "unresolved": []
+    }
+  ]
+}

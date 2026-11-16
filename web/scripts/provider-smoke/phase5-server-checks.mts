@@ -8,6 +8,32 @@ import { GET } from "../../src/app/api/proxy/providers/route";
 import { enqueueProvider } from "../../src/server/provider-client-queue";
 import { providerCookieSession } from "../../src/server/provider-cookies";
 import { providerStore } from "../../src/server/provider-store";
+import { persistentCatalog } from "../../src/server/provider-catalog";
+import { getProviderHealth, recordProviderHealth } from "../../src/server/provider-errors";
+
+test("legacy catalog serves stale categories while one background fetch refreshes the shared cache", async () => {
+  const store = providerStore("starWars", "network");
+  await store.set("catalog", { items: [{ title: "Old", filter: "old" }], checkedAt: Date.now() - 16 * 60_000 });
+  const pending = Promise.withResolvers<{ title: string; filter: string }[]>();
+  let requests = 0;
+  const load = () => { requests++; return pending.promise; };
+  const signal = new AbortController().signal;
+  const [one, two] = await Promise.all([persistentCatalog("starWars", signal, load), persistentCatalog("starWars", signal, load)]);
+  assert.equal(one[0].title, "Old");
+  assert.equal(two[0].title, "Old");
+  assert.equal(requests, 1);
+  pending.resolve([{ title: "New", filter: "new" }]);
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal((await store.get("catalog")).items[0].title, "New");
+});
+
+test("only a verified sources operation marks a provider healthy", () => {
+  recordProviderHealth("health-fixture", "catalog");
+  recordProviderHealth("health-fixture", "search");
+  assert.equal(getProviderHealth()["health-fixture"], undefined);
+  recordProviderHealth("health-fixture", "sources");
+  assert.equal(getProviderHealth()["health-fixture"].state, "healthy");
+});
 
 test("provider queue limits each client to three active and 32 waiting operations", async () => {
   const signal = new AbortController().signal;

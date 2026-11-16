@@ -75,6 +75,7 @@ export function ProviderSettings() {
           <strong>{provider.name}</strong>
           {provider.version && <span className="ml-2 text-xs text-muted">v{provider.version}</span>}
           {provider.description && <p className="text-sm text-muted">{provider.description}</p>}
+          {provider.addressUnavailable && <p className="text-sm text-muted">{provider.addressUnavailable}</p>}
           {state?.issue && <p className="break-words text-sm text-muted">{providerIssueText(state.issue)}</p>}
         </div>
         <span className="chip capitalize" data-health={state?.state}>{state?.state ?? "unchecked"}</span>
