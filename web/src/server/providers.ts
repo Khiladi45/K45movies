@@ -32,6 +32,7 @@ function base() {
 
 const vendorDir = resolve("vendor/android/src/providers");
 const mirrorNames: Record<string, string> = { disneyMirror: "Disney Mirror", netflixMirror: "Netflix Mirror", primeMirror: "Prime Mirror" };
+const noBundledSearch = new Set(["dvdplay", "movieswood"]);
 let vendoredIds: Promise<string[]> | undefined;
 
 function localProviders() {
@@ -93,7 +94,7 @@ export function getProviders() {
           id, name: entry?.name ?? (Object.hasOwn(mirrorNames, id) ? mirrorNames[id] : id),
           version: entry?.version ?? undefined, description: entry?.description ?? undefined,
           type: entry?.type ?? undefined, icon: image(entry?.icon), bundleSource: builtIn.has(id) ? "vendored" : "api",
-          searchUnavailable: id === "dvdplay" && builtIn.has(id) ? "Search is unavailable in the bundled version." : undefined,
+          searchUnavailable: builtIn.has(id) && noBundledSearch.has(id) ? "Search is unavailable in the bundled version." : undefined,
         };
       });
   })();

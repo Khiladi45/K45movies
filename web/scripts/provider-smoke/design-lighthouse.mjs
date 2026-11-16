@@ -36,7 +36,7 @@ try {
       if (window.top !== window || location.origin !== origin) return;
       if (!localStorage.getItem("k45-web-library")) {
         localStorage.setItem("k45-web-library", JSON.stringify({ version: 0,
-          state: { installed: ["vega", "dvdplay", "animeworld", "movieBoxWeb"], activeProvider: "vega", providersInitialized: true, watchlist: saved } }));
+          state: { installed: ["vega", "dvdplay", "movieswood", "animeworld", "movieBoxWeb"], activeProvider: "vega", providersInitialized: true, watchlist: saved } }));
         localStorage.setItem("k45-web-appearance", JSON.stringify({ version: 0, state: { layout } }));
       }
     }, { saved, origin: new URL(site).origin, layout: /Movie Based|Watchlist/.test(name) ? "movie" : "provider" });
