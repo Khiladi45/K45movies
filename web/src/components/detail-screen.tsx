@@ -25,7 +25,7 @@ function DetailHero({ title, image, backdrop, synopsis, tags, children }: {
   children: React.ReactNode;
 }) {
   return <section className="detail-hero">
-    {backdrop && <Artwork src={backdrop} className="detail-backdrop" />}
+    {backdrop && <Artwork src={backdrop} className="detail-backdrop" backdrop />}
     <Artwork src={image} className="detail-poster" />
     <div className="detail-copy">
       <h1>{title}</h1>
