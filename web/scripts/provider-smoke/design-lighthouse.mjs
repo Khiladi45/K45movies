@@ -24,20 +24,22 @@ const saved = tmdb.items.slice(0, 6).map(({ id, mediaType, title, image, year })
 const chrome = await puppeteer.launch({ headless: true, executablePath, args: ["--autoplay-policy=no-user-gesture-required"] });
 const metrics = [];
 try {
-  const routes = [["Home", "/"], ["Detail", detailPath], ["Search", "/search?q=Batman"], ["Watchlist", "/watchlist"],
+  const routes = [["Home", "/"], ["Detail", detailPath], ["Search", "/search?q=Batman"], ["Search (Movie Based)", "/search?q=Batman"], ["Watchlist", "/watchlist"],
     ["Providers", "/providers"], ["Settings", "/settings"]];
+  const selection = process.env.K45_LIGHTHOUSE_PAGES?.split(",");
   for (const [name, path] of routes) {
-    const page = await chrome.newPage();
+    if (selection && !selection.includes(name)) continue;
+    const context = await chrome.createBrowserContext();
+    const page = await context.newPage();
     await page.setViewport({ width: 1440, height: 900, deviceScaleFactor: 1 });
-    await page.evaluateOnNewDocument(({ saved, origin }) => {
+    await page.evaluateOnNewDocument(({ saved, origin, layout }) => {
       if (window.top !== window || location.origin !== origin) return;
       if (!localStorage.getItem("k45-web-library")) {
         localStorage.setItem("k45-web-library", JSON.stringify({ version: 0,
           state: { installed: ["vega", "dvdplay", "animeworld", "movieBoxWeb"], activeProvider: "vega", providersInitialized: true, watchlist: saved } }));
-        const layout = /^\/(search|watchlist)/.test(location.pathname) ? "movie" : "provider";
         localStorage.setItem("k45-web-appearance", JSON.stringify({ version: 0, state: { layout } }));
       }
-    }, { saved, origin: new URL(site).origin });
+    }, { saved, origin: new URL(site).origin, layout: /Movie Based|Watchlist/.test(name) ? "movie" : "provider" });
     const flow = await startFlow(page, {
       name,
       config: { extends: "lighthouse:default", settings: {
@@ -64,11 +66,15 @@ try {
         lcpMs: metric("largest-contentful-paint"), tbtMs: metric("total-blocking-time"), cls: metric("cumulative-layout-shift"),
         auditFailures: Object.values(lhr.audits).filter(({ score, scoreDisplayMode }) => score === 0 &&
           scoreDisplayMode === "binary").map(({ id }) => id),
+        consoleErrors: lhr.audits["errors-in-console"]?.details?.items?.map(({ description, source }) => ({
+          description: description?.replace(/https?:\/\/[^\s]+/g, "[URL]"),
+          origin: URL.parse(source?.url ?? "")?.origin,
+        })),
         runtimeError: lhr.runtimeError?.code,
       });
     }
     console.log(name, metrics.filter((record) => record.name === name).at(-1)?.scores);
     await writeFile(output, JSON.stringify({ lighthouse: require("lighthouse/package.json").version, desktop: true, metrics }, null, 2) + "\n");
-    await page.close();
+    await context.close();
   }
 } finally { await chrome.close(); }

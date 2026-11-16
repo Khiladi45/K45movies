@@ -63,17 +63,19 @@ function SearchHistory() {
 
 function ProviderSearch({ q }: { q: string }) {
   const installed = useLibrary((state) => state.installed);
-  const results = useQueries({ queries: installed.map((id) => ({
+  const manifest = useQuery({ queryKey: ["manifest"], queryFn: ({ signal }) => providers.manifest(signal) });
+  const unavailable = manifest.data?.filter((provider) => installed.includes(provider.id) && provider.searchUnavailable) ?? [];
+  const searchable = installed.filter((id) => !unavailable.some((provider) => provider.id === id));
+  const results = useQueries({ queries: (manifest.isPending ? [] : searchable).map((id) => ({
     queryKey: ["provider-search", id, q],
     queryFn: ({ signal }: { signal: AbortSignal }) => queueProviderRequest(signal, () => providers.search(id, q, signal)),
   })) });
-  const manifest = useQuery({ queryKey: ["manifest"], queryFn: ({ signal }) => providers.manifest(signal) });
   const items = unique(results.flatMap((result, index) => {
-    const id = installed[index];
+    const id = searchable[index];
     return (result.data ?? []).map((post) => ({ ...post, href: providerLink(id, post.ref), note: manifest.data?.find((provider) => provider.id === id)?.name ?? id }));
   }));
-  const pending = results.some((result) => result.isPending);
-  const failed = results.flatMap((result, index) => result.isError ? [{ result, provider: installed[index] }] : []);
+  const pending = manifest.isPending || results.some((result) => result.isPending);
+  const failed = results.flatMap((result, index) => result.isError ? [{ result, provider: searchable[index] }] : []);
   if (!installed.length) return <QueryMessage><Link href="/providers">Install a provider to search.</Link></QueryMessage>;
   return <>
     {!!items.length && <CardGrid items={items} />}
@@ -85,7 +87,11 @@ function ProviderSearch({ q }: { q: string }) {
         <ul className="list-inside list-disc">{failed.map(({ result, provider }) => <li key={provider}>{provider} · {result.error?.message}</li>)}</ul>
       </details>
     </QueryMessage>}
-    {!pending && !failed.length && !items.length && <QueryMessage>No titles match “{q}”.</QueryMessage>}
+    {!pending && !failed.length && !items.length && <QueryMessage>{searchable.length ? <>No titles match “{q}”.</> : "None of your installed providers support search."}</QueryMessage>}
+    {!!unavailable.length && <details className="mt-4 text-sm text-muted">
+      <summary>Providers without search</summary>
+      <ul className="mt-2 list-inside list-disc">{unavailable.map((provider) => <li key={provider.id}>{provider.name} · {provider.searchUnavailable}</li>)}</ul>
+    </details>}
   </>;
 }
 

@@ -93,6 +93,7 @@ export function getProviders() {
           id, name: entry?.name ?? (Object.hasOwn(mirrorNames, id) ? mirrorNames[id] : id),
           version: entry?.version ?? undefined, description: entry?.description ?? undefined,
           type: entry?.type ?? undefined, icon: image(entry?.icon), bundleSource: builtIn.has(id) ? "vendored" : "api",
+          searchUnavailable: id === "dvdplay" && builtIn.has(id) ? "Search is unavailable in the bundled version." : undefined,
         };
       });
   })();
