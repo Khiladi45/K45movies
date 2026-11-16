@@ -1,0 +1,1892 @@
+{
+  "measuredAt": "2026-11-16T07:13:33.971Z",
+  "traceStarted": "2026-11-16T07:09:38.399Z",
+  "results": [
+    {
+      "hostname": "anime.uniquestream.net",
+      "system": {
+        "answers": [
+          {
+            "address": "13.127.247.216",
+            "public": true
+          }
+        ],
+        "ms": 73
+      },
+      "cloudflare": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.26.8.81",
+            "public": true
+          },
+          {
+            "address": "104.26.9.81",
+            "public": true
+          },
+          {
+            "address": "172.67.74.13",
+            "public": true
+          },
+          {
+            "address": "2606:4700:20::681a:851",
+            "public": true
+          },
+          {
+            "address": "2606:4700:20::681a:951",
+            "public": true
+          },
+          {
+            "address": "2606:4700:20::ac43:4a0d",
+            "public": true
+          }
+        ],
+        "ms": 270
+      },
+      "google": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.26.8.81",
+            "public": true
+          },
+          {
+            "address": "104.26.9.81",
+            "public": true
+          },
+          {
+            "address": "172.67.74.13",
+            "public": true
+          },
+          {
+            "address": "2606:4700:8398:b871:1a7:0:33e6:bdb8",
+            "public": true
+          }
+        ],
+        "ms": 337
+      }
+    },
+    {
+      "hostname": "animesalt.in",
+      "system": {
+        "answers": [
+          {
+            "address": "104.21.70.68",
+            "public": true
+          },
+          {
+            "address": "172.67.221.19",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3031::6815:4644",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3037::ac43:dd13",
+            "public": true
+          }
+        ],
+        "ms": 201
+      },
+      "cloudflare": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.21.70.68",
+            "public": true
+          },
+          {
+            "address": "172.67.221.19",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3031::6815:4644",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3037::ac43:dd13",
+            "public": true
+          }
+        ],
+        "ms": 341
+      },
+      "google": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.21.70.68",
+            "public": true
+          },
+          {
+            "address": "172.67.221.19",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3031::6815:4644",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3037::ac43:dd13",
+            "public": true
+          }
+        ],
+        "ms": 334
+      }
+    },
+    {
+      "hostname": "animesub.duckdns.org",
+      "system": {
+        "answers": [
+          {
+            "address": "193.70.84.6",
+            "public": true
+          },
+          {
+            "address": "2001:41d0:305:2100::1:31e8",
+            "public": true
+          }
+        ],
+        "ms": 105
+      },
+      "cloudflare": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "193.70.84.6",
+            "public": true
+          },
+          {
+            "address": "2001:41d0:305:2100::1:31e8",
+            "public": true
+          }
+        ],
+        "ms": 558
+      },
+      "google": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "193.70.84.6",
+            "public": true
+          },
+          {
+            "address": "2001:41d0:305:2100::1:31e8",
+            "public": true
+          }
+        ],
+        "ms": 615
+      }
+    },
+    {
+      "hostname": "api.aniskip.com",
+      "system": {
+        "answers": [
+          {
+            "address": "104.21.85.51",
+            "public": true
+          },
+          {
+            "address": "172.67.202.120",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3037::6815:5533",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3037::ac43:ca78",
+            "public": true
+          }
+        ],
+        "ms": 172
+      },
+      "cloudflare": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.21.85.51",
+            "public": true
+          },
+          {
+            "address": "172.67.202.120",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3037::6815:5533",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3037::ac43:ca78",
+            "public": true
+          }
+        ],
+        "ms": 357
+      },
+      "google": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.21.85.51",
+            "public": true
+          },
+          {
+            "address": "172.67.202.120",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3037::6815:5533",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3037::ac43:ca78",
+            "public": true
+          }
+        ],
+        "ms": 417
+      }
+    },
+    {
+      "hostname": "bzzhr.co",
+      "system": {
+        "answers": [
+          {
+            "address": "125.21.240.67",
+            "public": true
+          },
+          {
+            "address": "2404:a800:ff00:1::203d",
+            "public": true
+          }
+        ],
+        "ms": 4
+      },
+      "cloudflare": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.18.2.146",
+            "public": true
+          },
+          {
+            "address": "104.18.3.146",
+            "public": true
+          },
+          {
+            "address": "2606:4700::6812:292",
+            "public": true
+          },
+          {
+            "address": "2606:4700::6812:392",
+            "public": true
+          }
+        ],
+        "ms": 125
+      },
+      "google": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.18.2.146",
+            "public": true
+          },
+          {
+            "address": "104.18.3.146",
+            "public": true
+          },
+          {
+            "address": "2606:4700:9763:7a5d:3e9e:0:9247:111f",
+            "public": true
+          }
+        ],
+        "ms": 159
+      }
+    },
+    {
+      "hostname": "dvdplay.singles",
+      "system": {
+        "answers": [
+          {
+            "address": "104.21.44.58",
+            "public": true
+          },
+          {
+            "address": "172.67.195.221",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3034::6815:2c3a",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3035::ac43:c3dd",
+            "public": true
+          }
+        ],
+        "ms": 4
+      },
+      "cloudflare": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.21.44.58",
+            "public": true
+          },
+          {
+            "address": "172.67.195.221",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3034::6815:2c3a",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3035::ac43:c3dd",
+            "public": true
+          }
+        ],
+        "ms": 62
+      },
+      "google": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.21.44.58",
+            "public": true
+          },
+          {
+            "address": "172.67.195.221",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3034::6815:2c3a",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3035::ac43:c3dd",
+            "public": true
+          }
+        ],
+        "ms": 93
+      }
+    },
+    {
+      "hostname": "gamerxyt.com",
+      "system": {
+        "answers": [
+          {
+            "address": "104.21.92.172",
+            "public": true
+          },
+          {
+            "address": "172.67.196.147",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3030::ac43:c493",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3035::6815:5cac",
+            "public": true
+          }
+        ],
+        "ms": 4
+      },
+      "cloudflare": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.21.92.172",
+            "public": true
+          },
+          {
+            "address": "172.67.196.147",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3030::ac43:c493",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3035::6815:5cac",
+            "public": true
+          }
+        ],
+        "ms": 63
+      },
+      "google": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.21.92.172",
+            "public": true
+          },
+          {
+            "address": "172.67.196.147",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3030::ac43:c493",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3035::6815:5cac",
+            "public": true
+          }
+        ],
+        "ms": 100
+      }
+    },
+    {
+      "hostname": "hdmovies.blog",
+      "system": {
+        "answers": [
+          {
+            "address": "104.21.17.159",
+            "public": true
+          },
+          {
+            "address": "172.67.177.20",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3030::ac43:b114",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3037::6815:119f",
+            "public": true
+          }
+        ],
+        "ms": 3
+      },
+      "cloudflare": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.21.17.159",
+            "public": true
+          },
+          {
+            "address": "172.67.177.20",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3030::ac43:b114",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3037::6815:119f",
+            "public": true
+          }
+        ],
+        "ms": 71
+      },
+      "google": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.21.17.159",
+            "public": true
+          },
+          {
+            "address": "172.67.177.20",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3030::ac43:b114",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3037::6815:119f",
+            "public": true
+          }
+        ],
+        "ms": 99
+      }
+    },
+    {
+      "hostname": "hubcloud.cloudflarefb.workers.dev",
+      "system": {
+        "answers": [
+          {
+            "address": "104.21.29.115",
+            "public": true
+          },
+          {
+            "address": "172.67.171.121",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3032::6815:1d73",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3034::ac43:ab79",
+            "public": true
+          }
+        ],
+        "ms": 3
+      },
+      "cloudflare": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.21.29.115",
+            "public": true
+          },
+          {
+            "address": "172.67.171.121",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3032::6815:1d73",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3034::ac43:ab79",
+            "public": true
+          }
+        ],
+        "ms": 81
+      },
+      "google": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.21.29.115",
+            "public": true
+          },
+          {
+            "address": "172.67.171.121",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3032::6815:1d73",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3034::ac43:ab79",
+            "public": true
+          }
+        ],
+        "ms": 112
+      }
+    },
+    {
+      "hostname": "hubcloud.pw",
+      "system": {
+        "answers": [
+          {
+            "address": "104.21.61.123",
+            "public": true
+          },
+          {
+            "address": "172.67.210.73",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3034::6815:3d7b",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3035::ac43:d249",
+            "public": true
+          }
+        ],
+        "ms": 3
+      },
+      "cloudflare": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.21.61.123",
+            "public": true
+          },
+          {
+            "address": "172.67.210.73",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3034::6815:3d7b",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3035::ac43:d249",
+            "public": true
+          }
+        ],
+        "ms": 79
+      },
+      "google": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.21.61.123",
+            "public": true
+          },
+          {
+            "address": "172.67.210.73",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3034::6815:3d7b",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3035::ac43:d249",
+            "public": true
+          }
+        ],
+        "ms": 111
+      }
+    },
+    {
+      "hostname": "lplaygo.com",
+      "system": {
+        "answers": [
+          {
+            "address": "104.21.11.23",
+            "public": true
+          },
+          {
+            "address": "172.67.165.17",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3034::6815:b17",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3034::ac43:a511",
+            "public": true
+          }
+        ],
+        "ms": 81
+      },
+      "cloudflare": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.21.11.23",
+            "public": true
+          },
+          {
+            "address": "172.67.165.17",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3034::6815:b17",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3034::ac43:a511",
+            "public": true
+          }
+        ],
+        "ms": 76
+      },
+      "google": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.21.11.23",
+            "public": true
+          },
+          {
+            "address": "172.67.165.17",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3034::6815:b17",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3034::ac43:a511",
+            "public": true
+          }
+        ],
+        "ms": 110
+      }
+    },
+    {
+      "hostname": "m1.multimovies.courses",
+      "system": {
+        "answers": [
+          {
+            "address": "104.21.6.188",
+            "public": true
+          },
+          {
+            "address": "172.67.135.46",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3030::6815:6bc",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3035::ac43:872e",
+            "public": true
+          }
+        ],
+        "ms": 80
+      },
+      "cloudflare": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.21.6.188",
+            "public": true
+          },
+          {
+            "address": "172.67.135.46",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3030::6815:6bc",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3035::ac43:872e",
+            "public": true
+          }
+        ],
+        "ms": 73
+      },
+      "google": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.21.6.188",
+            "public": true
+          },
+          {
+            "address": "172.67.135.46",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3030::6815:6bc",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3035::ac43:872e",
+            "public": true
+          }
+        ],
+        "ms": 107
+      }
+    },
+    {
+      "hostname": "mobiledetects.com",
+      "system": {
+        "answers": [
+          {
+            "address": "23.158.232.41",
+            "public": true
+          }
+        ],
+        "ms": 66
+      },
+      "cloudflare": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "23.158.232.41",
+            "public": true
+          }
+        ],
+        "ms": 68
+      },
+      "google": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "23.158.232.41",
+            "public": true
+          }
+        ],
+        "ms": 81
+      }
+    },
+    {
+      "hostname": "moviezda.co",
+      "system": {
+        "answers": [
+          {
+            "address": "104.21.30.85",
+            "public": true
+          },
+          {
+            "address": "172.67.172.134",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3032::6815:1e55",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3035::ac43:ac86",
+            "public": true
+          }
+        ],
+        "ms": 42
+      },
+      "cloudflare": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.21.30.85",
+            "public": true
+          },
+          {
+            "address": "172.67.172.134",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3032::6815:1e55",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3035::ac43:ac86",
+            "public": true
+          }
+        ],
+        "ms": 67
+      },
+      "google": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.21.30.85",
+            "public": true
+          },
+          {
+            "address": "172.67.172.134",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3032::6815:1e55",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3035::ac43:ac86",
+            "public": true
+          }
+        ],
+        "ms": 107
+      }
+    },
+    {
+      "hostname": "net52.cc",
+      "system": {
+        "answers": [
+          {
+            "address": "104.26.0.214",
+            "public": true
+          },
+          {
+            "address": "104.26.1.214",
+            "public": true
+          },
+          {
+            "address": "172.67.71.108",
+            "public": true
+          },
+          {
+            "address": "2606:4700:83b9:8e87:3774:a5e:367e:90b5",
+            "public": true
+          }
+        ],
+        "ms": 86
+      },
+      "cloudflare": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.26.0.214",
+            "public": true
+          },
+          {
+            "address": "104.26.1.214",
+            "public": true
+          },
+          {
+            "address": "172.67.71.108",
+            "public": true
+          },
+          {
+            "address": "2606:4700:20::681a:1d6",
+            "public": true
+          },
+          {
+            "address": "2606:4700:20::681a:d6",
+            "public": true
+          },
+          {
+            "address": "2606:4700:20::ac43:476c",
+            "public": true
+          }
+        ],
+        "ms": 73
+      },
+      "google": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.26.0.214",
+            "public": true
+          },
+          {
+            "address": "104.26.1.214",
+            "public": true
+          },
+          {
+            "address": "172.67.71.108",
+            "public": true
+          },
+          {
+            "address": "2606:4700:8399:8e87:37a7:0:367e:90b5",
+            "public": true
+          }
+        ],
+        "ms": 84
+      }
+    },
+    {
+      "hostname": "one.kmcloud.lol",
+      "system": {
+        "answers": [
+          {
+            "address": "104.21.11.142",
+            "public": true
+          },
+          {
+            "address": "172.67.166.40",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3036::6815:b8e",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3037::ac43:a628",
+            "public": true
+          }
+        ],
+        "ms": 66
+      },
+      "cloudflare": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.21.11.142",
+            "public": true
+          },
+          {
+            "address": "172.67.166.40",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3036::6815:b8e",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3037::ac43:a628",
+            "public": true
+          }
+        ],
+        "ms": 72
+      },
+      "google": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.21.11.142",
+            "public": true
+          },
+          {
+            "address": "172.67.166.40",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3036::6815:b8e",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3037::ac43:a628",
+            "public": true
+          }
+        ],
+        "ms": 134
+      }
+    },
+    {
+      "hostname": "playdrive.vip",
+      "system": {
+        "answers": [
+          {
+            "address": "104.21.55.27",
+            "public": true
+          },
+          {
+            "address": "172.67.144.37",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3032::6815:371b",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3032::ac43:9025",
+            "public": true
+          }
+        ],
+        "ms": 57
+      },
+      "cloudflare": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.21.55.27",
+            "public": true
+          },
+          {
+            "address": "172.67.144.37",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3032::6815:371b",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3032::ac43:9025",
+            "public": true
+          }
+        ],
+        "ms": 73
+      },
+      "google": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.21.55.27",
+            "public": true
+          },
+          {
+            "address": "172.67.144.37",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3032::6815:371b",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3032::ac43:9025",
+            "public": true
+          }
+        ],
+        "ms": 94
+      }
+    },
+    {
+      "hostname": "postimages.org",
+      "system": {
+        "answers": [
+          {
+            "address": "167.17.70.186",
+            "public": true
+          }
+        ],
+        "ms": 95
+      },
+      "cloudflare": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "167.17.70.186",
+            "public": true
+          }
+        ],
+        "ms": 71
+      },
+      "google": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "167.17.70.186",
+            "public": true
+          }
+        ],
+        "ms": 134
+      }
+    },
+    {
+      "hostname": "raw.githubusercontent.com",
+      "system": {
+        "answers": [
+          {
+            "address": "185.199.108.133",
+            "public": true
+          },
+          {
+            "address": "185.199.109.133",
+            "public": true
+          },
+          {
+            "address": "185.199.110.133",
+            "public": true
+          },
+          {
+            "address": "185.199.111.133",
+            "public": true
+          },
+          {
+            "address": "2606:50c0:8000::154",
+            "public": true
+          },
+          {
+            "address": "2606:50c0:8001::154",
+            "public": true
+          },
+          {
+            "address": "2606:50c0:8002::154",
+            "public": true
+          },
+          {
+            "address": "2606:50c0:8003::154",
+            "public": true
+          }
+        ],
+        "ms": 56
+      },
+      "cloudflare": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "185.199.108.133",
+            "public": true
+          },
+          {
+            "address": "185.199.109.133",
+            "public": true
+          },
+          {
+            "address": "185.199.110.133",
+            "public": true
+          },
+          {
+            "address": "185.199.111.133",
+            "public": true
+          },
+          {
+            "address": "2606:50c0:8000::154",
+            "public": true
+          },
+          {
+            "address": "2606:50c0:8001::154",
+            "public": true
+          },
+          {
+            "address": "2606:50c0:8002::154",
+            "public": true
+          },
+          {
+            "address": "2606:50c0:8003::154",
+            "public": true
+          }
+        ],
+        "ms": 70
+      },
+      "google": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "185.199.108.133",
+            "public": true
+          },
+          {
+            "address": "185.199.109.133",
+            "public": true
+          },
+          {
+            "address": "185.199.110.133",
+            "public": true
+          },
+          {
+            "address": "185.199.111.133",
+            "public": true
+          },
+          {
+            "address": "2606:50c0:8000::154",
+            "public": true
+          },
+          {
+            "address": "2606:50c0:8001::154",
+            "public": true
+          },
+          {
+            "address": "2606:50c0:8002::154",
+            "public": true
+          },
+          {
+            "address": "2606:50c0:8003::154",
+            "public": true
+          }
+        ],
+        "ms": 74
+      }
+    },
+    {
+      "hostname": "rogmovies.cyou",
+      "system": {
+        "answers": [
+          {
+            "address": "104.21.76.132",
+            "public": true
+          },
+          {
+            "address": "172.67.195.186",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3030::6815:4c84",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3037::ac43:c3ba",
+            "public": true
+          }
+        ],
+        "ms": 56
+      },
+      "cloudflare": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.21.76.132",
+            "public": true
+          },
+          {
+            "address": "172.67.195.186",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3030::6815:4c84",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3037::ac43:c3ba",
+            "public": true
+          }
+        ],
+        "ms": 69
+      },
+      "google": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.21.76.132",
+            "public": true
+          },
+          {
+            "address": "172.67.195.186",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3030::6815:4c84",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3037::ac43:c3ba",
+            "public": true
+          }
+        ],
+        "ms": 88
+      }
+    },
+    {
+      "hostname": "torrentio.strem.fun",
+      "system": {
+        "answers": [
+          {
+            "address": "104.21.10.254",
+            "public": true
+          },
+          {
+            "address": "172.67.164.220",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3033::6815:afe",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3033::ac43:a4dc",
+            "public": true
+          }
+        ],
+        "ms": 62
+      },
+      "cloudflare": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.21.10.254",
+            "public": true
+          },
+          {
+            "address": "172.67.164.220",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3033::6815:afe",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3033::ac43:a4dc",
+            "public": true
+          }
+        ],
+        "ms": 115
+      },
+      "google": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.21.10.254",
+            "public": true
+          },
+          {
+            "address": "172.67.164.220",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3033::6815:afe",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3033::ac43:a4dc",
+            "public": true
+          }
+        ],
+        "ms": 100
+      }
+    },
+    {
+      "hostname": "tv.imgcdn.kim",
+      "system": {
+        "answers": [
+          {
+            "address": "104.26.2.88",
+            "public": true
+          },
+          {
+            "address": "104.26.3.88",
+            "public": true
+          },
+          {
+            "address": "172.67.72.14",
+            "public": true
+          },
+          {
+            "address": "2606:4700:83bb:507e:2174:a5e:2917:646d",
+            "public": true
+          }
+        ],
+        "ms": 57
+      },
+      "cloudflare": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.26.2.88",
+            "public": true
+          },
+          {
+            "address": "104.26.3.88",
+            "public": true
+          },
+          {
+            "address": "172.67.72.14",
+            "public": true
+          },
+          {
+            "address": "2606:4700:20::681a:258",
+            "public": true
+          },
+          {
+            "address": "2606:4700:20::681a:358",
+            "public": true
+          },
+          {
+            "address": "2606:4700:20::ac43:480e",
+            "public": true
+          }
+        ],
+        "ms": 60
+      },
+      "google": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.26.2.88",
+            "public": true
+          },
+          {
+            "address": "104.26.3.88",
+            "public": true
+          },
+          {
+            "address": "172.67.72.14",
+            "public": true
+          },
+          {
+            "address": "2606:4700:90cb:507e:21a7:0:2917:646d",
+            "public": true
+          }
+        ],
+        "ms": 91
+      }
+    },
+    {
+      "hostname": "userver.net52.cc",
+      "system": {
+        "answers": [
+          {
+            "address": "104.26.0.214",
+            "public": true
+          },
+          {
+            "address": "104.26.1.214",
+            "public": true
+          },
+          {
+            "address": "172.67.71.108",
+            "public": true
+          },
+          {
+            "address": "2606:4700:83b9:8e87:37fe:a5e:367e:90b5",
+            "public": true
+          }
+        ],
+        "ms": 57
+      },
+      "cloudflare": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.26.0.214",
+            "public": true
+          },
+          {
+            "address": "104.26.1.214",
+            "public": true
+          },
+          {
+            "address": "172.67.71.108",
+            "public": true
+          },
+          {
+            "address": "2606:4700:20::681a:1d6",
+            "public": true
+          },
+          {
+            "address": "2606:4700:20::681a:d6",
+            "public": true
+          },
+          {
+            "address": "2606:4700:20::ac43:476c",
+            "public": true
+          }
+        ],
+        "ms": 60
+      },
+      "google": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.26.0.214",
+            "public": true
+          },
+          {
+            "address": "104.26.1.214",
+            "public": true
+          },
+          {
+            "address": "172.67.71.108",
+            "public": true
+          },
+          {
+            "address": "2606:4700:90d9:8e87:3742:0:367e:90b5",
+            "public": true
+          }
+        ],
+        "ms": 91
+      }
+    },
+    {
+      "hostname": "www.mxplayer.in",
+      "system": {
+        "answers": [
+          {
+            "address": "18.161.246.43",
+            "public": true
+          },
+          {
+            "address": "18.161.246.56",
+            "public": true
+          },
+          {
+            "address": "18.161.246.81",
+            "public": true
+          },
+          {
+            "address": "18.161.246.83",
+            "public": true
+          }
+        ],
+        "ms": 59
+      },
+      "cloudflare": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "18.161.246.43",
+            "public": true
+          },
+          {
+            "address": "18.161.246.56",
+            "public": true
+          },
+          {
+            "address": "18.161.246.81",
+            "public": true
+          },
+          {
+            "address": "18.161.246.83",
+            "public": true
+          }
+        ],
+        "ms": 62
+      },
+      "google": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "18.161.246.43",
+            "public": true
+          },
+          {
+            "address": "18.161.246.56",
+            "public": true
+          },
+          {
+            "address": "18.161.246.81",
+            "public": true
+          },
+          {
+            "address": "18.161.246.83",
+            "public": true
+          }
+        ],
+        "ms": 100
+      }
+    },
+    {
+      "hostname": "www.primevideo.com",
+      "system": {
+        "answers": [
+          {
+            "address": "108.158.251.206",
+            "public": true
+          }
+        ],
+        "ms": 6
+      },
+      "cloudflare": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "108.158.251.206",
+            "public": true
+          }
+        ],
+        "ms": 63
+      },
+      "google": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "108.158.251.206",
+            "public": true
+          }
+        ],
+        "ms": 96
+      }
+    },
+    {
+      "hostname": "www.showbox.media",
+      "system": {
+        "answers": [
+          {
+            "address": "40.160.33.57",
+            "public": true
+          }
+        ],
+        "ms": 95
+      },
+      "cloudflare": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "40.160.33.57",
+            "public": true
+          }
+        ],
+        "ms": 62
+      },
+      "google": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "40.160.33.57",
+            "public": true
+          }
+        ],
+        "ms": 188
+      }
+    },
+    {
+      "hostname": "z1.kmphotos.cv",
+      "system": {
+        "answers": [
+          {
+            "address": "104.21.85.191",
+            "public": true
+          },
+          {
+            "address": "172.67.209.140",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3032::6815:55bf",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3035::ac43:d18c",
+            "public": true
+          }
+        ],
+        "ms": 5
+      },
+      "cloudflare": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.21.85.191",
+            "public": true
+          },
+          {
+            "address": "172.67.209.140",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3032::6815:55bf",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3035::ac43:d18c",
+            "public": true
+          }
+        ],
+        "ms": 61
+      },
+      "google": {
+        "status": [
+          0,
+          0
+        ],
+        "answers": [
+          {
+            "address": "104.21.85.191",
+            "public": true
+          },
+          {
+            "address": "172.67.209.140",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3032::6815:55bf",
+            "public": true
+          },
+          {
+            "address": "2606:4700:3035::ac43:d18c",
+            "public": true
+          }
+        ],
+        "ms": 135
+      }
+    }
+  ]
+}

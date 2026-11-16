@@ -1,0 +1,924 @@
+{
+  "started": "2026-11-16T07:18:20.521Z",
+  "finished": "2026-11-16T07:20:07.823Z",
+  "operations": [
+    {
+      "id": "disneyPlus",
+      "op": "catalog",
+      "state": "fail",
+      "ms": 25085,
+      "http": 504,
+      "error": "The provider exceeded the operation deadline.",
+      "details": {
+        "provider": "disneyPlus",
+        "operation": "catalog",
+        "stage": "runtime",
+        "message": "The provider exceeded the operation deadline."
+      },
+      "origins": {
+        "https://raw.githubusercontent.com": 1,
+        "https://net52.cc": 9,
+        "https://userver.net52.cc": 1
+      },
+      "statuses": {
+        "200": 10,
+        "301": 1
+      },
+      "wireRequests": 11,
+      "wireErrors": []
+    },
+    {
+      "id": "disneyPlus",
+      "op": "search",
+      "state": "fail",
+      "ms": 25001,
+      "http": 504,
+      "error": "The provider exceeded the operation deadline.",
+      "details": {
+        "provider": "disneyPlus",
+        "operation": "search",
+        "stage": "runtime",
+        "message": "The provider exceeded the operation deadline."
+      },
+      "origins": {
+        "https://net52.cc": 9,
+        "https://userver.net52.cc": 1
+      },
+      "statuses": {
+        "200": 9,
+        "301": 1
+      },
+      "wireRequests": 10,
+      "wireErrors": []
+    },
+    {
+      "id": "hotstar",
+      "op": "catalog",
+      "state": "fail",
+      "ms": 25094,
+      "http": 504,
+      "error": "The provider exceeded the operation deadline.",
+      "details": {
+        "provider": "hotstar",
+        "operation": "catalog",
+        "stage": "runtime",
+        "message": "The provider exceeded the operation deadline."
+      },
+      "origins": {
+        "https://raw.githubusercontent.com": 1,
+        "https://net52.cc": 9,
+        "https://userver.net52.cc": 1
+      },
+      "statuses": {
+        "200": 10,
+        "301": 1
+      },
+      "wireRequests": 11,
+      "wireErrors": []
+    },
+    {
+      "id": "hotstar",
+      "op": "search",
+      "state": "fail",
+      "ms": 25003,
+      "http": 504,
+      "error": "The provider exceeded the operation deadline.",
+      "details": {
+        "provider": "hotstar",
+        "operation": "search",
+        "stage": "runtime",
+        "message": "The provider exceeded the operation deadline."
+      },
+      "origins": {
+        "https://net52.cc": 9,
+        "https://userver.net52.cc": 1
+      },
+      "statuses": {
+        "200": 9,
+        "301": 1
+      },
+      "wireRequests": 10,
+      "wireErrors": []
+    },
+    {
+      "id": "marvel",
+      "op": "catalog",
+      "state": "fail",
+      "ms": 25072,
+      "http": 504,
+      "error": "The provider exceeded the operation deadline.",
+      "details": {
+        "provider": "marvel",
+        "operation": "catalog",
+        "stage": "runtime",
+        "message": "The provider exceeded the operation deadline."
+      },
+      "origins": {
+        "https://raw.githubusercontent.com": 1,
+        "https://net52.cc": 9,
+        "https://userver.net52.cc": 1
+      },
+      "statuses": {
+        "200": 10,
+        "301": 1
+      },
+      "wireRequests": 11,
+      "wireErrors": []
+    },
+    {
+      "id": "marvel",
+      "op": "search",
+      "state": "fail",
+      "ms": 25007,
+      "http": 504,
+      "error": "The provider exceeded the operation deadline.",
+      "details": {
+        "provider": "marvel",
+        "operation": "search",
+        "stage": "runtime",
+        "message": "The provider exceeded the operation deadline."
+      },
+      "origins": {
+        "https://net52.cc": 9,
+        "https://userver.net52.cc": 1
+      },
+      "statuses": {
+        "200": 9,
+        "301": 1
+      },
+      "wireRequests": 10,
+      "wireErrors": []
+    },
+    {
+      "id": "netflix",
+      "op": "catalog",
+      "state": "fail",
+      "ms": 25101,
+      "http": 504,
+      "error": "The provider exceeded the operation deadline.",
+      "details": {
+        "provider": "netflix",
+        "operation": "catalog",
+        "stage": "runtime",
+        "message": "The provider exceeded the operation deadline."
+      },
+      "origins": {
+        "https://raw.githubusercontent.com": 1,
+        "https://net52.cc": 9,
+        "https://userver.net52.cc": 1
+      },
+      "statuses": {
+        "200": 10,
+        "301": 1
+      },
+      "wireRequests": 11,
+      "wireErrors": []
+    },
+    {
+      "id": "netflix",
+      "op": "search",
+      "state": "fail",
+      "ms": 25016,
+      "http": 504,
+      "error": "The provider exceeded the operation deadline.",
+      "details": {
+        "provider": "netflix",
+        "operation": "search",
+        "stage": "runtime",
+        "message": "The provider exceeded the operation deadline."
+      },
+      "origins": {
+        "https://net52.cc": 9,
+        "https://userver.net52.cc": 1
+      },
+      "statuses": {
+        "200": 9,
+        "301": 1
+      },
+      "wireRequests": 10,
+      "wireErrors": []
+    },
+    {
+      "id": "pixar",
+      "op": "catalog",
+      "state": "fail",
+      "ms": 25421,
+      "http": 504,
+      "error": "The provider exceeded the operation deadline.",
+      "details": {
+        "provider": "pixar",
+        "operation": "catalog",
+        "stage": "runtime",
+        "message": "The provider exceeded the operation deadline."
+      },
+      "origins": {
+        "https://raw.githubusercontent.com": 1,
+        "https://net52.cc": 9,
+        "https://userver.net52.cc": 1
+      },
+      "statuses": {
+        "200": 10,
+        "301": 1
+      },
+      "wireRequests": 11,
+      "wireErrors": []
+    },
+    {
+      "id": "pixar",
+      "op": "search",
+      "state": "fail",
+      "ms": 25003,
+      "http": 504,
+      "error": "The provider exceeded the operation deadline.",
+      "details": {
+        "provider": "pixar",
+        "operation": "search",
+        "stage": "runtime",
+        "message": "The provider exceeded the operation deadline."
+      },
+      "origins": {
+        "https://net52.cc": 9,
+        "https://userver.net52.cc": 1
+      },
+      "statuses": {
+        "200": 9,
+        "301": 1
+      },
+      "wireRequests": 10,
+      "wireErrors": []
+    },
+    {
+      "id": "primeVideo",
+      "op": "catalog",
+      "state": "fail",
+      "ms": 25483,
+      "http": 504,
+      "error": "The provider exceeded the operation deadline.",
+      "details": {
+        "provider": "primeVideo",
+        "operation": "catalog",
+        "stage": "runtime",
+        "message": "The provider exceeded the operation deadline."
+      },
+      "origins": {
+        "https://raw.githubusercontent.com": 1,
+        "https://net52.cc": 9,
+        "https://userver.net52.cc": 1
+      },
+      "statuses": {
+        "200": 10,
+        "301": 1
+      },
+      "wireRequests": 11,
+      "wireErrors": []
+    },
+    {
+      "id": "primeVideo",
+      "op": "search",
+      "state": "fail",
+      "ms": 25004,
+      "http": 504,
+      "error": "The provider exceeded the operation deadline.",
+      "details": {
+        "provider": "primeVideo",
+        "operation": "search",
+        "stage": "runtime",
+        "message": "The provider exceeded the operation deadline."
+      },
+      "origins": {
+        "https://net52.cc": 9,
+        "https://userver.net52.cc": 1
+      },
+      "statuses": {
+        "200": 9,
+        "301": 1
+      },
+      "wireRequests": 10,
+      "wireErrors": []
+    },
+    {
+      "id": "starWars",
+      "op": "catalog",
+      "state": "fail",
+      "ms": 25198,
+      "http": 504,
+      "error": "The provider exceeded the operation deadline.",
+      "details": {
+        "provider": "starWars",
+        "operation": "catalog",
+        "stage": "runtime",
+        "message": "The provider exceeded the operation deadline."
+      },
+      "origins": {
+        "https://raw.githubusercontent.com": 1,
+        "https://net52.cc": 9,
+        "https://userver.net52.cc": 1
+      },
+      "statuses": {
+        "200": 10,
+        "301": 1
+      },
+      "wireRequests": 11,
+      "wireErrors": []
+    },
+    {
+      "id": "starWars",
+      "op": "search",
+      "state": "fail",
+      "ms": 25018,
+      "http": 504,
+      "error": "The provider exceeded the operation deadline.",
+      "details": {
+        "provider": "starWars",
+        "operation": "search",
+        "stage": "runtime",
+        "message": "The provider exceeded the operation deadline."
+      },
+      "origins": {
+        "https://net52.cc": 9,
+        "https://userver.net52.cc": 1
+      },
+      "statuses": {
+        "200": 9,
+        "301": 1
+      },
+      "wireRequests": 10,
+      "wireErrors": []
+    },
+    {
+      "id": "gokuHD",
+      "op": "posts",
+      "state": "fail",
+      "ms": 10536,
+      "http": 504,
+      "error": "Upstream request timed out.",
+      "details": {
+        "provider": "gokuHD",
+        "operation": "posts",
+        "stage": "upstream",
+        "message": "Upstream request timed out."
+      },
+      "upstream": {
+        "origin": "https://gokuhd.com",
+        "targetFingerprint": "8a5edab282632443",
+        "method": "GET",
+        "headers": {
+          "accept": "application/json, text/plain, */*",
+          "user-agent": "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
+          "accept-language": "*",
+          "sec-fetch-mode": "cors",
+          "accept-encoding": "br, gzip, deflate, zstd"
+        },
+        "headerNames": [
+          "accept",
+          "referer",
+          "user-agent",
+          "accept-language",
+          "sec-fetch-mode",
+          "accept-encoding"
+        ],
+        "ms": 10111,
+        "error": "UND_ERR_CONNECT_TIMEOUT"
+      },
+      "origins": {
+        "https://raw.githubusercontent.com": 1,
+        "https://gokuhd.com": 1
+      },
+      "statuses": {
+        "200": 1
+      },
+      "wireRequests": 2,
+      "wireErrors": [
+        "UND_ERR_CONNECT_TIMEOUT",
+        "fetch failed"
+      ]
+    },
+    {
+      "id": "gokuHD",
+      "op": "search",
+      "state": "fail",
+      "ms": 12751,
+      "http": 502,
+      "error": "Upstream returned HTTP 403.",
+      "details": {
+        "provider": "gokuHD",
+        "operation": "search",
+        "stage": "upstream",
+        "upstreamStatus": 403,
+        "message": "Upstream returned HTTP 403."
+      },
+      "upstream": {
+        "origin": "https://search.pingora.fyi",
+        "targetFingerprint": "debf19c0b6666ae8",
+        "method": "GET",
+        "headers": {
+          "accept": "application/json, text/plain, */*",
+          "user-agent": "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
+          "accept-language": "*",
+          "sec-fetch-mode": "cors",
+          "accept-encoding": "br, gzip, deflate, zstd"
+        },
+        "headerNames": [
+          "accept",
+          "origin",
+          "referer",
+          "user-agent",
+          "accept-language",
+          "sec-fetch-mode",
+          "accept-encoding"
+        ],
+        "ms": 323,
+        "status": 403
+      },
+      "origins": {
+        "https://raw.githubusercontent.com": 1,
+        "https://search.pingora.fyi": 1,
+        "https://gokuhd.com": 1
+      },
+      "statuses": {
+        "200": 1,
+        "403": 1
+      },
+      "wireRequests": 3,
+      "wireErrors": [
+        "The operation was aborted due to timeout"
+      ]
+    },
+    {
+      "id": "luxMovies",
+      "op": "posts",
+      "state": "fail",
+      "ms": 525,
+      "http": 502,
+      "error": "Upstream returned HTTP 403.",
+      "details": {
+        "provider": "luxMovies",
+        "operation": "posts",
+        "stage": "upstream",
+        "upstreamStatus": 403,
+        "message": "Upstream returned HTTP 403."
+      },
+      "upstream": {
+        "origin": "https://rogmovies.cyou",
+        "targetFingerprint": "53edc5dadf84fe4b",
+        "method": "GET",
+        "headers": {
+          "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+          "accept-language": "en-US,en;q=0.9",
+          "sec-fetch-mode": "cors",
+          "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0",
+          "accept-encoding": "br, gzip, deflate, zstd"
+        },
+        "headerNames": [
+          "accept",
+          "accept-language",
+          "cache-control",
+          "cookie",
+          "dnt",
+          "referer",
+          "sec-ch-ua",
+          "sec-ch-ua-mobile",
+          "sec-ch-ua-platform",
+          "sec-fetch-dest",
+          "sec-fetch-mode",
+          "sec-fetch-site",
+          "sec-fetch-user",
+          "upgrade-insecure-requests",
+          "user-agent",
+          "accept-encoding"
+        ],
+        "ms": 102,
+        "status": 403
+      },
+      "origins": {
+        "https://raw.githubusercontent.com": 1,
+        "https://rogmovies.cyou": 1
+      },
+      "statuses": {
+        "200": 1,
+        "403": 1
+      },
+      "wireRequests": 2,
+      "wireErrors": [
+        "LuxMovies posts failed: HTTP 403  | URL [url]"
+      ]
+    },
+    {
+      "id": "luxMovies",
+      "op": "search",
+      "state": "fail",
+      "ms": 434,
+      "http": 502,
+      "error": "Upstream returned HTTP 403.",
+      "details": {
+        "provider": "luxMovies",
+        "operation": "search",
+        "stage": "upstream",
+        "upstreamStatus": 403,
+        "message": "Upstream returned HTTP 403."
+      },
+      "upstream": {
+        "origin": "https://rogmovies.cyou",
+        "targetFingerprint": "4d1a222763d59d2e",
+        "method": "GET",
+        "headers": {
+          "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+          "accept-language": "en-US,en;q=0.9",
+          "sec-fetch-mode": "cors",
+          "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0",
+          "accept-encoding": "br, gzip, deflate, zstd"
+        },
+        "headerNames": [
+          "accept",
+          "accept-language",
+          "cache-control",
+          "cookie",
+          "dnt",
+          "referer",
+          "sec-ch-ua",
+          "sec-ch-ua-mobile",
+          "sec-ch-ua-platform",
+          "sec-fetch-dest",
+          "sec-fetch-mode",
+          "sec-fetch-site",
+          "sec-fetch-user",
+          "upgrade-insecure-requests",
+          "user-agent",
+          "accept-encoding"
+        ],
+        "ms": 296,
+        "status": 403
+      },
+      "origins": {
+        "https://raw.githubusercontent.com": 1,
+        "https://rogmovies.cyou": 1
+      },
+      "statuses": {
+        "200": 1,
+        "403": 1
+      },
+      "wireRequests": 2,
+      "wireErrors": [
+        "LuxMovies search posts failed: HTTP 403 | URL [url]"
+      ]
+    },
+    {
+      "id": "hiAnime",
+      "op": "posts",
+      "state": "fail",
+      "ms": 50,
+      "http": 502,
+      "error": "Upstream request failed (ERR_INVALID_URL).",
+      "details": {
+        "provider": "hiAnime",
+        "operation": "posts",
+        "stage": "upstream",
+        "message": "Upstream request failed (ERR_INVALID_URL)."
+      },
+      "origins": {
+        "https://raw.githubusercontent.com": 1
+      },
+      "statuses": {
+        "200": 1
+      },
+      "wireRequests": 1,
+      "wireErrors": []
+    },
+    {
+      "id": "hiAnime",
+      "op": "search",
+      "state": "fail",
+      "ms": 51,
+      "http": 502,
+      "error": "Upstream request failed (ERR_INVALID_URL).",
+      "details": {
+        "provider": "hiAnime",
+        "operation": "search",
+        "stage": "upstream",
+        "message": "Upstream request failed (ERR_INVALID_URL)."
+      },
+      "origins": {
+        "https://raw.githubusercontent.com": 1
+      },
+      "statuses": {
+        "200": 1
+      },
+      "wireRequests": 1,
+      "wireErrors": []
+    },
+    {
+      "id": "showbox",
+      "op": "stream",
+      "state": "fail",
+      "ms": 403,
+      "http": 502,
+      "error": "Upstream returned HTTP 404.",
+      "details": {
+        "provider": "showbox",
+        "operation": "sources",
+        "stage": "upstream",
+        "upstreamStatus": 404,
+        "message": "Upstream returned HTTP 404."
+      },
+      "upstream": {
+        "origin": "https://feb.8man.workers.dev",
+        "targetFingerprint": "063a664aa8222654",
+        "method": "GET",
+        "headers": {
+          "accept": "application/json, text/plain, */*",
+          "user-agent": "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
+          "accept-language": "*",
+          "sec-fetch-mode": "cors",
+          "accept-encoding": "br, gzip, deflate, zstd"
+        },
+        "headerNames": [
+          "accept",
+          "user-agent",
+          "accept-language",
+          "sec-fetch-mode",
+          "accept-encoding"
+        ],
+        "ms": 386,
+        "status": 404
+      },
+      "origins": {
+        "https://feb.8man.workers.dev": 1
+      },
+      "statuses": {
+        "404": 1
+      },
+      "wireRequests": 1,
+      "wireErrors": [
+        "ShowBox stream failed: HTTP 404 | URL [url]"
+      ]
+    },
+    {
+      "id": "movies4u",
+      "op": "posts",
+      "state": "fail",
+      "ms": 12271,
+      "http": 504,
+      "error": "Upstream request timed out.",
+      "details": {
+        "provider": "movies4u",
+        "operation": "posts",
+        "stage": "upstream",
+        "message": "Upstream request timed out."
+      },
+      "origins": {
+        "https://raw.githubusercontent.com": 1,
+        "https://movies4u.tc": 1
+      },
+      "statuses": {
+        "200": 1
+      },
+      "wireRequests": 2,
+      "wireErrors": [
+        "Movies4u posts failed: {}"
+      ]
+    },
+    {
+      "id": "movies4u",
+      "op": "search",
+      "state": "fail",
+      "ms": 10373,
+      "http": 504,
+      "error": "Upstream request timed out.",
+      "details": {
+        "provider": "movies4u",
+        "operation": "search",
+        "stage": "upstream",
+        "message": "Upstream request timed out."
+      },
+      "upstream": {
+        "origin": "https://movies4u.tc",
+        "targetFingerprint": "fd61ca46392164f7",
+        "method": "GET",
+        "headers": {
+          "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+          "accept-language": "en-US,en;q=0.9",
+          "sec-fetch-mode": "cors",
+          "user-agent": "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
+          "accept-encoding": "br, gzip, deflate, zstd"
+        },
+        "headerNames": [
+          "accept",
+          "accept-language",
+          "cache-control",
+          "cookie",
+          "pragma",
+          "priority",
+          "referer",
+          "sec-ch-ua",
+          "sec-ch-ua-mobile",
+          "sec-ch-ua-platform",
+          "sec-fetch-dest",
+          "sec-fetch-mode",
+          "sec-fetch-site",
+          "sec-fetch-user",
+          "upgrade-insecure-requests",
+          "user-agent",
+          "accept-encoding"
+        ],
+        "ms": 10184,
+        "error": "UND_ERR_CONNECT_TIMEOUT"
+      },
+      "origins": {
+        "https://raw.githubusercontent.com": 1,
+        "https://movies4u.tc": 1
+      },
+      "statuses": {
+        "200": 1
+      },
+      "wireRequests": 2,
+      "wireErrors": [
+        "UND_ERR_CONNECT_TIMEOUT",
+        "Movies4u search posts failed: {}"
+      ]
+    },
+    {
+      "id": "uhd",
+      "op": "posts",
+      "state": "fail",
+      "ms": 12260,
+      "http": 504,
+      "error": "Upstream request timed out.",
+      "details": {
+        "provider": "uhd",
+        "operation": "posts",
+        "stage": "upstream",
+        "message": "Upstream request timed out."
+      },
+      "origins": {
+        "https://raw.githubusercontent.com": 1,
+        "https://uhdmovies.beauty": 1
+      },
+      "statuses": {
+        "200": 1
+      },
+      "wireRequests": 2,
+      "wireErrors": [
+        "UHDMovies posts failed: {}"
+      ]
+    },
+    {
+      "id": "uhd",
+      "op": "search",
+      "state": "fail",
+      "ms": 10736,
+      "http": 504,
+      "error": "Upstream request timed out.",
+      "details": {
+        "provider": "uhd",
+        "operation": "search",
+        "stage": "upstream",
+        "message": "Upstream request timed out."
+      },
+      "upstream": {
+        "origin": "https://uhdmovies.beauty",
+        "targetFingerprint": "2f60578c290d4539",
+        "method": "GET",
+        "headers": {
+          "accept": "application/json, text/plain, */*",
+          "user-agent": "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
+          "accept-language": "*",
+          "sec-fetch-mode": "cors",
+          "accept-encoding": "br, gzip, deflate, zstd"
+        },
+        "headerNames": [
+          "accept",
+          "referer",
+          "user-agent",
+          "accept-language",
+          "sec-fetch-mode",
+          "accept-encoding"
+        ],
+        "ms": 10574,
+        "error": "UND_ERR_CONNECT_TIMEOUT"
+      },
+      "origins": {
+        "https://raw.githubusercontent.com": 1,
+        "https://uhdmovies.beauty": 1
+      },
+      "statuses": {
+        "200": 1
+      },
+      "wireRequests": 2,
+      "wireErrors": [
+        "UND_ERR_CONNECT_TIMEOUT",
+        "UHDMovies search posts failed: {}"
+      ]
+    },
+    {
+      "id": "uniquestream",
+      "op": "posts",
+      "state": "fail",
+      "ms": 12029,
+      "http": 504,
+      "error": "Upstream request timed out.",
+      "details": {
+        "provider": "uniquestream",
+        "operation": "posts",
+        "stage": "upstream",
+        "message": "Upstream request timed out."
+      },
+      "origins": {
+        "https://anime.uniquestream.net": 1
+      },
+      "statuses": {},
+      "wireRequests": 1,
+      "wireErrors": []
+    },
+    {
+      "id": "uniquestream",
+      "op": "search",
+      "state": "fail",
+      "ms": 10632,
+      "http": 504,
+      "error": "Upstream request timed out.",
+      "details": {
+        "provider": "uniquestream",
+        "operation": "search",
+        "stage": "upstream",
+        "message": "Upstream request timed out."
+      },
+      "upstream": {
+        "origin": "https://anime.uniquestream.net",
+        "targetFingerprint": "b705dec8c7e6dab7",
+        "method": "GET",
+        "headers": {
+          "accept": "application/json, text/plain, */*",
+          "user-agent": "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
+          "accept-language": "*",
+          "sec-fetch-mode": "cors",
+          "accept-encoding": "br, gzip, deflate, zstd"
+        },
+        "headerNames": [
+          "accept",
+          "user-agent",
+          "accept-language",
+          "sec-fetch-mode",
+          "accept-encoding"
+        ],
+        "ms": 10611,
+        "error": "UND_ERR_CONNECT_TIMEOUT"
+      },
+      "origins": {
+        "https://anime.uniquestream.net": 1
+      },
+      "statuses": {},
+      "wireRequests": 1,
+      "wireErrors": [
+        "UND_ERR_CONNECT_TIMEOUT"
+      ]
+    },
+    {
+      "id": "zeefliz",
+      "op": "posts",
+      "state": "fail",
+      "ms": 209,
+      "http": 502,
+      "error": "Upstream request failed (ERR_INVALID_URL).",
+      "details": {
+        "provider": "zeefliz",
+        "operation": "posts",
+        "stage": "upstream",
+        "message": "Upstream request failed (ERR_INVALID_URL)."
+      },
+      "origins": {
+        "https://raw.githubusercontent.com": 1
+      },
+      "statuses": {
+        "200": 1
+      },
+      "wireRequests": 1,
+      "wireErrors": [
+        "ZeeFliz posts failed: {\"code\":\"ERR_INVALID_URL\",\"input\":\"[redacted]\"}"
+      ]
+    },
+    {
+      "id": "zeefliz",
+      "op": "search",
+      "state": "fail",
+      "ms": 169,
+      "http": 502,
+      "error": "Upstream request failed (ERR_INVALID_URL).",
+      "details": {
+        "provider": "zeefliz",
+        "operation": "search",
+        "stage": "upstream",
+        "message": "Upstream request failed (ERR_INVALID_URL)."
+      },
+      "origins": {
+        "https://raw.githubusercontent.com": 1
+      },
+      "statuses": {
+        "200": 1
+      },
+      "wireRequests": 1,
+      "wireErrors": [
+        "ZeeFliz search posts failed: {\"code\":\"ERR_INVALID_URL\",\"input\":\"[redacted]\"}"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "measuredAt": "2026-11-16T07:14:04.698Z",
+  "method": "HEAD",
+  "path": "/",
+  "headers": "app UA only",
+  "followRedirects": false,
+  "rows": [
+    {
+      "hostname": "animesub.duckdns.org",
+      "undici": {
+        "status": 302,
+        "ms": 693
+      },
+      "curl": {
+        "status": 302,
+        "ms": 676
+      }
+    },
+    {
+      "hostname": "cdn.video-gen.xyz",
+      "undici": {
+        "status": 200,
+        "ms": 315
+      },
+      "curl": {
+        "status": 200,
+        "ms": 380
+      }
+    },
+    {
+      "hostname": "feb.8man.workers.dev",
+      "undici": {
+        "status": 404,
+        "ms": 248
+      },
+      "curl": {
+        "status": 404,
+        "ms": 352
+      }
+    },
+    {
+      "hostname": "greenmotors.club",
+      "undici": {
+        "status": 302,
+        "ms": 258
+      },
+      "curl": {
+        "status": 302,
+        "ms": 306
+      }
+    },
+    {
+      "hostname": "hubcloud.cloudflarefb.workers.dev",
+      "undici": {
+        "status": 200,
+        "ms": 287
+      },
+      "curl": {
+        "status": 200,
+        "ms": 349
+      }
+    },
+    {
+      "hostname": "net52.cc",
+      "undici": {
+        "status": 404,
+        "ms": 399
+      },
+      "curl": {
+        "status": 404,
+        "ms": 412
+      }
+    },
+    {
+      "hostname": "one.kmcloud.lol",
+      "undici": {
+        "status": 200,
+        "ms": 1051
+      },
+      "curl": {
+        "status": 200,
+        "ms": 1126
+      }
+    },
+    {
+      "hostname": "rogmovies.cyou",
+      "undici": {
+        "status": 403,
+        "ms": 346
+      },
+      "curl": {
+        "status": 403,
+        "ms": 383
+      }
+    },
+    {
+      "hostname": "www.mxplayer.in",
+      "undici": {
+        "status": 302,
+        "ms": 490
+      },
+      "curl": {
+        "status": 302,
+        "ms": 605
+      }
+    }
+  ]
+}

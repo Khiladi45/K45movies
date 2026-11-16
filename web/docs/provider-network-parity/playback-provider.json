@@ -1,0 +1,25 @@
+{
+  "browser": "157.0.8103.51",
+  "mode": "provider",
+  "failedProviderDidNotBlockPlayback": false,
+  "serverDiagnostics": true,
+  "flow": "Detail → 1080p → server fallback → 720p → Episode 2",
+  "requests": [
+    {
+      "ref": "season1-1080-ep1",
+      "preference": "auto"
+    },
+    {
+      "ref": "season1-720-ep1",
+      "preference": "auto"
+    },
+    {
+      "ref": "season1-720-ep2",
+      "preference": "auto"
+    }
+  ],
+  "playedAt": 4,
+  "resumed": 4.0004,
+  "serverFallback": true,
+  "seasonsFiltered": true
+}
