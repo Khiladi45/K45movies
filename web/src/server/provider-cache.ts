@@ -1,6 +1,6 @@
 import "server-only";
 
-type Entry = { promise: Promise<unknown>; expires?: number };
+type Entry = { promise: Promise<unknown>; controller: AbortController; waiters: number; expires?: number };
 const cache = new Map<string, Entry>();
 const maxEntries = 512;
 
@@ -15,10 +15,14 @@ export async function providerResult<T>(key: string, ttl: number, signal: AbortS
     }
     if (cache.size >= maxEntries) return load(signal);
 
-    // A disconnected caller can stop waiting without killing another caller's
-    // request. The shared work remains bounded by the provider's normal limits.
-    const task = load(AbortSignal.timeout(40_000));
-    const pending: Entry = { promise: task };
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(new DOMException("Provider cache load timed out.", "TimeoutError")), 40_000);
+    timer.unref();
+    const task = Promise.resolve().then(() => {
+      controller.signal.throwIfAborted();
+      return load(controller.signal);
+    }).finally(() => clearTimeout(timer));
+    const pending: Entry = { promise: task, controller, waiters: 0 };
     cache.set(key, pending);
     const remove = () => { if (cache.get(key) === pending) cache.delete(key); };
     void task.then((value) => {
@@ -28,6 +32,7 @@ export async function providerResult<T>(key: string, ttl: number, signal: AbortS
     entry = pending;
   }
 
+  entry.waiters++;
   let abort: (() => void) | undefined;
   try {
     return await Promise.race([
@@ -40,5 +45,10 @@ export async function providerResult<T>(key: string, ttl: number, signal: AbortS
     ]);
   } finally {
     if (abort) signal.removeEventListener("abort", abort);
+    entry.waiters--;
+    if (signal.aborted && entry.waiters === 0 && entry.expires === undefined) {
+      if (cache.get(key) === entry) cache.delete(key);
+      entry.controller.abort();
+    }
   }
 }

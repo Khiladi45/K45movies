@@ -39,7 +39,7 @@ function title(value: Record<string, unknown>, fallback?: MediaType): Title | un
 }
 
 async function request(path: string, params: Record<string, string>, signal: AbortSignal) {
-  const key = (process.env.TMDB_API_KEY || process.env.NEXT_PUBLIC_TMDB_KEY || "").trim();
+  const key = (process.env.TMDB_API_KEY || "").trim();
   if (!key) throw new HttpError(503, "Movie Based needs a TMDB API key on the server.");
   const url = new URL("https://api.themoviedb.org/3" + path);
   url.search = new URLSearchParams({ language: "en-US", ...params }).toString();

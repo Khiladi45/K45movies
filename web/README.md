@@ -7,7 +7,7 @@ npm ci
 npm run dev
 ```
 
-Copy `.env.example` to `.env.local` and set `TMDB_API_KEY` to a TMDB API key or read access token to enable Movie Based. `NEXT_PUBLIC_TMDB_KEY` is available as a fallback for a key intended to be public. The browser uses same-origin handlers for both catalogs.
+Copy `.env.example` to `.env.local` and set `TMDB_API_KEY` to a TMDB API key or read access token to enable Movie Based. The browser uses same-origin handlers for both catalogs.
 
 - The vendored Android registry and bundles supply the default provider code. `K45MOVIES_API_BASE_URL` configures the trusted API manifest and fallback bundles. `K45_PROVIDER_SOURCE=api` selects the API-only comparison mode. Treat both bundle sources as trusted application code. The VM adapts the provider runtime.
 - `K45_REFERENCE_SECRET` should be a shared random secret of at least 32 characters in a deployment. Local development generates an ignored key file for stable title links. Keep this key stable for saved title links.

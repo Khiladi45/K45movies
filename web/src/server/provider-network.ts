@@ -9,13 +9,17 @@ function publicAddress(address: string) {
   return ipaddr.process(address).range() === "unicast";
 }
 
+export function publicDnsAnswers(addresses: { address: string; family: number }[]) {
+  return addresses.length > 0 && addresses.every(({ address }) => ipaddr.isValid(address) && publicAddress(address));
+}
+
 // The lookup callback supplies the resolved addresses directly to the socket.
 const dispatcher = new Agent({
   connect: {
     lookup(hostname, options, callback) {
       lookup(hostname, { ...options, all: true }, (error, addresses) => {
         if (error) return callback(error, "", 0);
-        if (!addresses.length || addresses.some(({ address }) => !publicAddress(address))) {
+        if (!publicDnsAnswers(addresses)) {
           return callback(new Error("Provider network destination is unavailable."), "", 0);
         }
         if (options.all) return callback(null, addresses);
@@ -25,7 +29,7 @@ const dispatcher = new Agent({
   },
 });
 
-function destination(input: string | URL) {
+export function providerDestination(input: string | URL) {
   const url = new URL(input);
   const host = url.hostname.replace(/^\[|\]$/g, "");
   if (!["https:", "http:"].includes(url.protocol) || url.username || url.password || url.port ||
@@ -44,7 +48,7 @@ export function providerNetwork(signal: AbortSignal, defaultHeaders?: HeadersIni
   const jar = new CookieJar();
   let requests = 0;
   const networkRequest = async (input: string | URL, options?: RequestInit, maxRedirects = 5): Promise<Response> => {
-    let url = destination(input);
+    let url = providerDestination(input);
     let method = (options?.method || "GET").toUpperCase();
     let body = options?.body;
     const headers = new Headers(defaultHeaders);
@@ -69,7 +73,7 @@ export function providerNetwork(signal: AbortSignal, defaultHeaders?: HeadersIni
           throw new Error("Upstream redirect limit reached.");
         }
         await res.body?.cancel();
-        const next = destination(new URL(location, url));
+        const next = providerDestination(new URL(location, url));
         if (next.origin !== url.origin) {
           for (const name of ["authorization", "cookie", "origin", "referer"]) headers.delete(name);
         }
@@ -154,7 +158,7 @@ export function providerNetwork(signal: AbortSignal, defaultHeaders?: HeadersIni
 }
 
 export async function streamUpstream(value: string, method: string, headers: Headers, signal: AbortSignal) {
-  let url = destination(value);
+  let url = providerDestination(value);
   const connect = new AbortController();
   const timer = setTimeout(() => connect.abort(), 15_000);
   try {
@@ -166,7 +170,7 @@ export async function streamUpstream(value: string, method: string, headers: Hea
       const location = response.headers.get("location");
       if (!location || ![301, 302, 303, 307, 308].includes(response.status)) return { response, url };
       await response.body?.cancel();
-      const next = destination(new URL(location, url));
+      const next = providerDestination(new URL(location, url));
       if (url.origin !== next.origin) {
         for (const name of ["authorization", "cookie", "origin", "referer"]) headers.delete(name);
       }

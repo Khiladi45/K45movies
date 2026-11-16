@@ -36,6 +36,6 @@ export function mediaTarget(token: string): MediaTarget {
   } catch {
     throw new HttpError(403, "Invalid media link.");
   }
-  if (target.expires < Date.now()) throw new HttpError(410, "This stream link expired. Refresh the source.");
+  if (target.expires <= Date.now()) throw new HttpError(410, "This stream link expired. Refresh the source.");
   return target;
 }
