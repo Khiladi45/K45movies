@@ -1,0 +1,101 @@
+{
+  "lighthouse": "13.6.0",
+  "desktop": true,
+  "metrics": [
+    {
+      "name": "Home",
+      "mode": "navigation",
+      "scores": {
+        "performance": 96,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "lcpMs": 1352.915,
+      "tbtMs": 0,
+      "cls": 0.017690238058877747,
+      "auditFailures": []
+    },
+    {
+      "name": "Detail",
+      "mode": "navigation",
+      "scores": {
+        "performance": 95,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "lcpMs": 1551.846,
+      "tbtMs": 0,
+      "cls": 0.01060070301783265,
+      "auditFailures": []
+    },
+    {
+      "name": "Player",
+      "mode": "snapshot",
+      "scores": {
+        "accessibility": 100,
+        "best-practices": 100
+      },
+      "auditFailures": []
+    },
+    {
+      "name": "Search",
+      "mode": "navigation",
+      "scores": {
+        "performance": 99,
+        "accessibility": 100,
+        "best-practices": 96,
+        "seo": 100
+      },
+      "lcpMs": 856.941,
+      "tbtMs": 0,
+      "cls": 0,
+      "auditFailures": [
+        "errors-in-console"
+      ]
+    },
+    {
+      "name": "Watchlist",
+      "mode": "navigation",
+      "scores": {
+        "performance": 100,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "lcpMs": 102.239,
+      "tbtMs": 0,
+      "cls": 0.005252573088134431,
+      "auditFailures": []
+    },
+    {
+      "name": "Providers",
+      "mode": "navigation",
+      "scores": {
+        "performance": 100,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "lcpMs": 79.593,
+      "tbtMs": 0,
+      "cls": 0,
+      "auditFailures": []
+    },
+    {
+      "name": "Settings",
+      "mode": "navigation",
+      "scores": {
+        "performance": 100,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "lcpMs": 94.88,
+      "tbtMs": 0,
+      "cls": 0,
+      "auditFailures": []
+    }
+  ]
+}

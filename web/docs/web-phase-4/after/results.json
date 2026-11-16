@@ -1,0 +1,401 @@
+{
+  "browser": "157.0.8103.51",
+  "detail": "The Beast",
+  "rows": [
+    {
+      "width": 1920,
+      "views": {
+        "home": {
+          "title": "Home",
+          "viewport": 1920,
+          "pageWidth": 1920,
+          "offenders": []
+        },
+        "movie-home": {
+          "title": "Home",
+          "viewport": 1920,
+          "pageWidth": 1920,
+          "offenders": []
+        },
+        "youtube-home": {
+          "title": "Home",
+          "viewport": 1920,
+          "pageWidth": 1920,
+          "offenders": []
+        },
+        "search": {
+          "title": "Search",
+          "viewport": 1920,
+          "pageWidth": 1920,
+          "offenders": []
+        },
+        "watchlist": {
+          "title": "Watchlist",
+          "viewport": 1920,
+          "pageWidth": 1920,
+          "offenders": []
+        },
+        "providers": {
+          "title": "Providers",
+          "viewport": 1920,
+          "pageWidth": 1920,
+          "offenders": []
+        },
+        "settings": {
+          "title": "Settings",
+          "viewport": 1920,
+          "pageWidth": 1920,
+          "offenders": []
+        },
+        "detail": {
+          "title": "The Beast",
+          "viewport": 1920,
+          "pageWidth": 1920,
+          "offenders": []
+        },
+        "player": {
+          "title": "The Beast",
+          "viewport": 1920,
+          "pageWidth": 1920,
+          "offenders": []
+        }
+      }
+    },
+    {
+      "width": 1440,
+      "views": {
+        "home": {
+          "title": "Home",
+          "viewport": 1440,
+          "pageWidth": 1440,
+          "offenders": [],
+          "axe": []
+        },
+        "movie-home": {
+          "title": "Home",
+          "viewport": 1440,
+          "pageWidth": 1440,
+          "offenders": [],
+          "axe": []
+        },
+        "youtube-home": {
+          "title": "Home",
+          "viewport": 1440,
+          "pageWidth": 1440,
+          "offenders": [],
+          "axe": []
+        },
+        "search": {
+          "title": "Search",
+          "viewport": 1440,
+          "pageWidth": 1440,
+          "offenders": [],
+          "axe": []
+        },
+        "watchlist": {
+          "title": "Watchlist",
+          "viewport": 1440,
+          "pageWidth": 1440,
+          "offenders": [],
+          "axe": []
+        },
+        "providers": {
+          "title": "Providers",
+          "viewport": 1440,
+          "pageWidth": 1440,
+          "offenders": [],
+          "axe": []
+        },
+        "settings": {
+          "title": "Settings",
+          "viewport": 1440,
+          "pageWidth": 1440,
+          "offenders": [],
+          "axe": []
+        },
+        "detail": {
+          "title": "The Beast",
+          "viewport": 1440,
+          "pageWidth": 1440,
+          "offenders": [],
+          "axe": []
+        },
+        "player": {
+          "title": "The Beast",
+          "viewport": 1440,
+          "pageWidth": 1440,
+          "offenders": [],
+          "axe": []
+        },
+        "episodes": {
+          "title": "Arifureta: From Commonplace to World's Strongest",
+          "viewport": 1440,
+          "pageWidth": 1440,
+          "offenders": []
+        }
+      }
+    },
+    {
+      "width": 1280,
+      "views": {
+        "home": {
+          "title": "Home",
+          "viewport": 1280,
+          "pageWidth": 1280,
+          "offenders": []
+        },
+        "movie-home": {
+          "title": "Home",
+          "viewport": 1280,
+          "pageWidth": 1280,
+          "offenders": []
+        },
+        "youtube-home": {
+          "title": "Home",
+          "viewport": 1280,
+          "pageWidth": 1280,
+          "offenders": []
+        },
+        "search": {
+          "title": "Search",
+          "viewport": 1280,
+          "pageWidth": 1280,
+          "offenders": []
+        },
+        "watchlist": {
+          "title": "Watchlist",
+          "viewport": 1280,
+          "pageWidth": 1280,
+          "offenders": []
+        },
+        "providers": {
+          "title": "Providers",
+          "viewport": 1280,
+          "pageWidth": 1280,
+          "offenders": []
+        },
+        "settings": {
+          "title": "Settings",
+          "viewport": 1280,
+          "pageWidth": 1280,
+          "offenders": []
+        },
+        "detail": {
+          "title": "The Beast",
+          "viewport": 1280,
+          "pageWidth": 1280,
+          "offenders": []
+        },
+        "player": {
+          "title": "The Beast",
+          "viewport": 1280,
+          "pageWidth": 1280,
+          "offenders": []
+        }
+      }
+    },
+    {
+      "width": 1024,
+      "views": {
+        "home": {
+          "title": "Home",
+          "viewport": 1024,
+          "pageWidth": 1024,
+          "offenders": []
+        },
+        "movie-home": {
+          "title": "Home",
+          "viewport": 1024,
+          "pageWidth": 1024,
+          "offenders": []
+        },
+        "youtube-home": {
+          "title": "Home",
+          "viewport": 1024,
+          "pageWidth": 1024,
+          "offenders": []
+        },
+        "search": {
+          "title": "Search",
+          "viewport": 1024,
+          "pageWidth": 1024,
+          "offenders": []
+        },
+        "watchlist": {
+          "title": "Watchlist",
+          "viewport": 1024,
+          "pageWidth": 1024,
+          "offenders": []
+        },
+        "providers": {
+          "title": "Providers",
+          "viewport": 1024,
+          "pageWidth": 1024,
+          "offenders": []
+        },
+        "settings": {
+          "title": "Settings",
+          "viewport": 1024,
+          "pageWidth": 1024,
+          "offenders": []
+        },
+        "detail": {
+          "title": "The Beast",
+          "viewport": 1024,
+          "pageWidth": 1024,
+          "offenders": []
+        },
+        "player": {
+          "title": "The Beast",
+          "viewport": 1024,
+          "pageWidth": 1024,
+          "offenders": []
+        }
+      }
+    },
+    {
+      "width": 768,
+      "views": {
+        "home": {
+          "title": "Home",
+          "viewport": 768,
+          "pageWidth": 768,
+          "offenders": []
+        },
+        "movie-home": {
+          "title": "Home",
+          "viewport": 768,
+          "pageWidth": 768,
+          "offenders": []
+        },
+        "youtube-home": {
+          "title": "Home",
+          "viewport": 768,
+          "pageWidth": 768,
+          "offenders": []
+        },
+        "search": {
+          "title": "Search",
+          "viewport": 768,
+          "pageWidth": 768,
+          "offenders": []
+        },
+        "watchlist": {
+          "title": "Watchlist",
+          "viewport": 768,
+          "pageWidth": 768,
+          "offenders": []
+        },
+        "providers": {
+          "title": "Providers",
+          "viewport": 768,
+          "pageWidth": 768,
+          "offenders": []
+        },
+        "settings": {
+          "title": "Settings",
+          "viewport": 768,
+          "pageWidth": 768,
+          "offenders": []
+        },
+        "detail": {
+          "title": "The Beast",
+          "viewport": 768,
+          "pageWidth": 768,
+          "offenders": []
+        },
+        "player": {
+          "title": "The Beast",
+          "viewport": 768,
+          "pageWidth": 768,
+          "offenders": []
+        }
+      }
+    },
+    {
+      "width": 390,
+      "views": {
+        "home": {
+          "title": "Home",
+          "viewport": 390,
+          "pageWidth": 390,
+          "offenders": [],
+          "axe": []
+        },
+        "movie-home": {
+          "title": "Home",
+          "viewport": 390,
+          "pageWidth": 390,
+          "offenders": [],
+          "axe": []
+        },
+        "youtube-home": {
+          "title": "Home",
+          "viewport": 390,
+          "pageWidth": 390,
+          "offenders": [],
+          "axe": []
+        },
+        "youtube-video": {
+          "title": "SCENE Meme Review - Today Trending Troll #surya #nazriya",
+          "viewport": 390,
+          "pageWidth": 390,
+          "offenders": []
+        },
+        "search": {
+          "title": "Search",
+          "viewport": 390,
+          "pageWidth": 390,
+          "offenders": [],
+          "axe": []
+        },
+        "watchlist": {
+          "title": "Watchlist",
+          "viewport": 390,
+          "pageWidth": 390,
+          "offenders": [],
+          "axe": []
+        },
+        "providers": {
+          "title": "Providers",
+          "viewport": 390,
+          "pageWidth": 390,
+          "offenders": [],
+          "axe": []
+        },
+        "settings": {
+          "title": "Settings",
+          "viewport": 390,
+          "pageWidth": 390,
+          "offenders": [],
+          "axe": []
+        },
+        "detail": {
+          "title": "The Beast",
+          "viewport": 390,
+          "pageWidth": 390,
+          "offenders": [],
+          "axe": []
+        },
+        "player": {
+          "title": "The Beast",
+          "viewport": 390,
+          "pageWidth": 390,
+          "offenders": [],
+          "axe": []
+        },
+        "episodes": {
+          "title": "Arifureta: From Commonplace to World's Strongest",
+          "viewport": 390,
+          "pageWidth": 390,
+          "offenders": []
+        }
+      },
+      "youtubeEmbed": true,
+      "mobileControls": {
+        "pointerAfterAutoHide": true,
+        "keyboardTabAndEnter": true
+      }
+    }
+  ]
+}
