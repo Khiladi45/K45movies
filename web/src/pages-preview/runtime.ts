@@ -63,10 +63,22 @@ export async function animeCollection(path: string, signal: AbortSignal) {
 }
 
 export async function animeSearch(query: string, signal: AbortSignal) {
-  const data = await json<Page<Anime>>(animeOrigin + "/api/fsearch", signal, {
-    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ page: 1, query }),
-  });
-  return data.result.filter((show) => showId.test(show.slug) && (show.title_en || show.title)).map(adaptAnime);
+  try {
+    const data = await json<Page<Anime>>(animeOrigin + "/api/fsearch", signal, {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ page: 1, query }),
+    });
+    const shows = data.result.filter((show) => showId.test(show.slug) && (show.title_en || show.title)).map(adaptAnime);
+    return { shows, limited: false };
+  } catch (error) {
+    signal.throwIfAborted();
+    const results = await Promise.allSettled(collections.map(({ path }) => animeCollection(path, signal)));
+    signal.throwIfAborted();
+    const pages = results.filter((result) => result.status === "fulfilled");
+    if (!pages.length) throw error;
+    const term = query.toLocaleLowerCase();
+    const matches = pages.flatMap(({ value }) => value).filter(({ title }) => title.toLocaleLowerCase().includes(term));
+    return { shows: [...new Map(matches.map((show) => [show.id, show])).values()], limited: true };
+  }
 }
 
 export async function animeDetail(slug: string, signal: AbortSignal) {

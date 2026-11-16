@@ -10,6 +10,7 @@ const { chromium } = require("playwright");
 const AxeBuilder = require("@axe-core/playwright").default;
 const origin = "https://khiladi45.github.io";
 const base = origin + "/K45movies/";
+const live = process.env.K45_TEST_LIVE === "1";
 const assets = new Map(await Promise.all([
   ["index.html", "text/html"], ["styles.css", "text/css"], ["app.js", "text/javascript"], ["brand.png", "image/png"],
 ].map(async ([name, type]) => [base + (name === "index.html" ? "" : name), { type, body: await readFile(".pages/" + name) }])));
@@ -27,10 +28,15 @@ try {
       const url = new URL(request.url());
       if (url.origin === origin && url.pathname.startsWith("/K45movies/api/")) requests.push(url.pathname);
     });
-    await page.route(base + "**", (route) => {
-      const file = assets.get(route.request().url());
-      return file ? route.fulfill({ body: file.body, contentType: file.type }) : route.fulfill({ status: 404 });
-    });
+    if (!live) {
+      await page.route(base + "**", (route) => {
+        const url = new URL(route.request().url());
+        url.search = "";
+        const file = assets.get(url.href);
+        return file ? route.fulfill({ body: file.body, contentType: file.type }) : route.fulfill({ status: 404 });
+      });
+      await page.route("https://kaa.lt/api/fsearch", (route) => route.abort());
+    }
     await page.goto(base);
     const capture = async (layout) => {
       await page.locator(".home-hero h2").waitFor({ timeout: 25_000 });
@@ -59,6 +65,8 @@ try {
     await page.getByRole("button", { name: "Search", exact: true }).click();
     await page.locator(".poster-card").first().waitFor();
     const animeSearchCount = await page.locator(".poster-card").count();
+    const limitedSearch = await page.getByText("Provider search is unavailable. Showing matches from the preview’s catalog pages.").isVisible();
+    if (!live) assert.equal(limitedSearch, true);
     await page.getByRole("link", { name: "Movie Based", exact: true }).click();
     await page.getByRole("heading", { name: "Featured movies", exact: true }).waitFor();
     const movieAxe = await capture("movie");
@@ -87,10 +95,10 @@ try {
     assert.deepEqual(requests, []);
     assert.deepEqual(errors, []);
     assert.deepEqual([...providerAxe, ...movieAxe, ...youtubeAxe], []);
-    results.push({ width, firstTitle, episodeCount, animeSearchCount, youtubeSeconds: elapsed, unavailable,
+    results.push({ width, firstTitle, episodeCount, animeSearchCount, limitedSearch, youtubeSeconds: elapsed, unavailable,
       axe: { provider: providerAxe, movie: movieAxe, youtube: youtubeAxe }, providerApiCallsToPages: requests.length });
     console.log(results.at(-1));
-    await writeFile(join(out, "browser-audit.json"), JSON.stringify({ browser: browser.version(), origin, results }, null, 2) + "\n");
+    await writeFile(join(out, "browser-audit.json"), JSON.stringify({ browser: browser.version(), origin, live, results }, null, 2) + "\n");
     await context.close();
   }
 } finally { await browser.close(); }

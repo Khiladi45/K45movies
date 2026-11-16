@@ -1,4 +1,5 @@
-import { copyFile, mkdir, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { build } from "esbuild";
 import postcss from "postcss";
@@ -23,8 +24,12 @@ const source = '@import "../app/globals.css";\n@import "./styles.css";';
 const result = await postcss([tailwind({ base: process.cwd(), optimize: true })]).process(source, {
   from: resolve(frontend, "entry.css"), to: resolve(out, "styles.css"),
 });
+const version = (asset) => createHash("sha256").update(asset).digest("hex").slice(0, 12);
+const html = (await readFile(resolve(frontend, "index.html"), "utf8"))
+  .replace("./app.js", "./app.js?v=" + version(await readFile(resolve(out, "app.js"))))
+  .replace("./styles.css", "./styles.css?v=" + version(result.css));
 await Promise.all([
-  copyFile(resolve(frontend, "index.html"), resolve(out, "index.html")),
+  writeFile(resolve(out, "index.html"), html),
   copyFile(resolve("public/brand.png"), resolve(out, "brand.png")),
   writeFile(resolve(out, ".nojekyll"), ""),
   writeFile(resolve(out, "styles.css"), result.css),

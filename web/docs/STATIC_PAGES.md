@@ -16,7 +16,7 @@ Open [the static preview](http://127.0.0.1:3201/K45movies/) on the same PC. The 
 
 | Layout | Available in this build | Playback |
 | --- | --- | --- |
-| Provider Based | Live KickAssAnime trending, popular and recent catalogs, search, metadata and the first Japanese episode page | Open on the provider’s site. Its frame policy blocks embedding from GitHub Pages. |
+| Provider Based | Live KickAssAnime trending, popular and recent catalogs, metadata and the first Japanese episode page. If direct search is unavailable, search filters those catalog pages. | Open on the provider’s site. Its frame policy blocks embedding from GitHub Pages. |
 | Movie Based | Movie and series discovery and search in a dated TMDB snapshot | Links to TMDB title pages |
 | YouTube | Browse and search the video snapshot | Standard embeds where YouTube allows them, plus links to YouTube |
 | Providers | Live manifest with browser eligibility shown for every listed entry | Providers without an adapter are marked unavailable in this preview |

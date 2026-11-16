@@ -97,9 +97,12 @@ function SearchResults({ mode, query, enabled }: { mode: Mode; query: string; en
   const [request] = useState(() => (signal: AbortSignal) => animeSearch(query, signal));
   const anime = useLoad(mode === "provider" && enabled ? query : "", request);
   const title = "Results for “" + query + "”";
-  if (mode === "provider") return <Shelf name={title} load={{
-    data: anime.data?.map(animeCard), error: enabled === false ? "The published provider address needs browser verification." : anime.error,
-  }} />;
+  if (mode === "provider") return <>
+    {anime.data?.limited && <p role="status" className="preview-description">Provider search is unavailable. Showing matches from the preview’s catalog pages.</p>}
+    <Shelf name={title} load={{
+      data: anime.data?.shows.map(animeCard), error: enabled === false ? "The published provider address needs browser verification." : anime.error,
+    }} />
+  </>;
   const items = mode === "movie" ? snapshot.movies.filter((item) => match(item.title, query)).map(movieCard) :
     videos.filter((item) => match(item.title, query)).map(youtubeCard);
   return <Shelf name={title} wide={mode === "youtube"} load={{ data: unique(items) }} />;
