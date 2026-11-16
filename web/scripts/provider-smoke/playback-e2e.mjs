@@ -42,6 +42,7 @@ try {
   const post = { title: movie?.title ?? "Playback Fixture", ref: "title-fixture.fixture-signature", type: "series" };
   const detail = { ...post, groups, tags: [], cast: [] };
   const requests = [];
+  let rejectSources = mode === "provider";
   const source = (ref) => ({ server: "Fixture server", url: "/api/proxy/media/" + ref, hls: false, format: "mp4",
     probe: { status: "ok", format: "mp4" }, subtitles: [], languages: [] });
   await page.route("**/api/proxy/providers?*", async (route) => {
@@ -60,9 +61,18 @@ try {
       case "posts": return route.fulfill({ json: [post] });
       case "title": return route.fulfill({ json: detail });
       case "episodes": return route.fulfill({ json: [2, 1].map((number) => ({ title: "Episode " + number, ref: ref + "-ep" + number })) });
-      case "sources":
+      case "sources": {
+        if (rejectSources) return route.fulfill({ json: {
+          sources: [],
+          issue: { provider: id, operation: "sources", stage: "probe", message: "None of the checked servers returned verified media." },
+          attempts: [
+            { server: "Expired fixture", quality: "1080p", probe: { status: "failed", httpStatus: 410, contentType: "text/plain", reason: "HTTP 410" } },
+            { server: "HTML fixture", probe: { status: "failed", httpStatus: 200, contentType: "text/html", reason: "Invalid streaming manifest." } },
+          ],
+        } });
         requests.push({ ref, preference: query.get("quality") });
-        return route.fulfill({ json: ref === "season1-1080-ep1" ? [source("dropped-after-probe"), source(ref)] : [source(ref)] });
+        return route.fulfill({ json: { attempts: [], sources: ref === "season1-1080-ep1" ? [source("dropped-after-probe"), source(ref)] : [source(ref)] } });
+      }
       default: return route.fulfill({ status: 400, json: { error: "Unexpected request" } });
     }
   });
@@ -92,6 +102,13 @@ try {
   await picker.waitFor();
   assert.equal(await picker.count(), 1);
   await picker.selectOption("1");
+  if (rejectSources) {
+    await page.getByRole("button", { name: "Watch Now" }).click();
+    const servers = page.getByRole("list", { name: "Server checks" });
+    await servers.getByText(/Expired fixture.*HTTP 410.*text\/plain/).waitFor();
+    await servers.getByText(/HTML fixture.*HTTP 200.*text\/html.*Invalid streaming manifest/).waitFor();
+    rejectSources = false;
+  }
   await page.getByRole("button", { name: "Watch Now" }).click();
   const video = page.locator("video").last();
   const waitPlayback = (ref, time) => page.waitForFunction(({ ref, time }) => [...document.querySelectorAll("video")].some(
@@ -124,7 +141,7 @@ try {
     assert.match(cancellation ?? "", /abort/i);
   }
   await writeFile(output, JSON.stringify({
-    browser: browser.version(), mode, tmdbTitle: movie?.title, cancellation, failedProviderDidNotBlockPlayback: !!movie,
+    browser: browser.version(), mode, tmdbTitle: movie?.title, cancellation, failedProviderDidNotBlockPlayback: !!movie, serverDiagnostics: !movie,
     flow: "Detail → 1080p → server fallback → 720p → Episode 2",
     requests, playedAt, resumed, serverFallback: true, seasonsFiltered: true,
   }, null, 2) + "\n");

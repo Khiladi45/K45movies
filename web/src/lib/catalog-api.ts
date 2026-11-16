@@ -1,14 +1,30 @@
-import type { Category, Episode, MediaType, Post, Provider, ProviderDetail, ProviderHealth, ProviderIssue, QualityPreference, Source, Title, TitleDetail, TitleEpisode } from "./catalog-types";
+import type { Category, Episode, MediaType, Post, Provider, ProviderDetail, ProviderHealth, ProviderIssue, QualityPreference, Source, SourceAttempt, SourceReport, Title, TitleDetail, TitleEpisode } from "./catalog-types";
+
+export function providerIssueText(issue: ProviderIssue) {
+  return [issue.provider, issue.operation, issue.stage === "verification" ? "Needs verification" : issue.stage,
+    issue.upstreamStatus ? "upstream HTTP " + issue.upstreamStatus : undefined, issue.message].filter(Boolean).join(" · ");
+}
 
 export class CatalogError extends Error {
-  constructor(public status: number, message: string, public details?: ProviderIssue) { super(message); }
+  constructor(public status: number, message: string, public details?: ProviderIssue, public attempts: SourceAttempt[] = []) {
+    super(details ? providerIssueText(details) : message);
+  }
 }
 
 async function get<T>(service: "providers" | "tmdb", params: Record<string, string>, signal?: AbortSignal): Promise<T> {
-  const res = await fetch("/api/proxy/" + service + "?" + new URLSearchParams(params), { signal });
+  let res: Response;
+  try {
+    res = await fetch("/api/proxy/" + service + "?" + new URLSearchParams(params), { signal });
+  } catch (error) {
+    if (service !== "providers" || signal?.aborted) throw error;
+    const message = error instanceof Error ? error.message : "The browser could not reach the provider API.";
+    throw new CatalogError(0, message, { provider: params.id, operation: params.op, stage: "request", message });
+  }
   if (!res.ok) {
     const payload = await res.json().catch(() => null);
-    throw new CatalogError(res.status, payload?.error || "Catalog request failed.", payload?.details);
+    const message = payload?.error || "The website API returned HTTP " + res.status + ".";
+    throw new CatalogError(res.status, message, payload?.details ?? (service === "providers"
+      ? { provider: params.id, operation: params.op, stage: "request", message } : undefined));
   }
   return res.json();
 }
@@ -24,6 +40,8 @@ export const providers = {
   episodes: (id: string, ref: string, signal?: AbortSignal) => get<Episode[]>("providers", { op: "episodes", id, ref }, signal),
   sources: (id: string, ref: string, type: "movie" | "series", signal?: AbortSignal, quality: QualityPreference = "auto") =>
     get<Source[]>("providers", { op: "sources", id, ref, type, quality }, signal),
+  sourceReport: (id: string, ref: string, type: "movie" | "series", signal: AbortSignal, quality: QualityPreference) =>
+    get<SourceReport | Source[]>("providers", { op: "sources", id, ref, type, quality, diagnostics: "1" }, signal),
 };
 
 export type MovieRow = "trending" | "popular" | "top" | "now" | "air" | "discover" | "language";

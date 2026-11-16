@@ -1,4 +1,4 @@
-import { providers } from "./catalog-api";
+import { CatalogError, providers } from "./catalog-api";
 import type { LinkGroup, Source } from "./catalog-types";
 import { episodeNumberOf, findSameEpisode, orderEpisodes, parseSeasonNumber } from "./episodes";
 import type { PlaybackItem, PlaybackTarget } from "./playback";
@@ -88,7 +88,14 @@ export function orderBrowserSources(sources: Source[], language?: string) {
 }
 
 export async function playbackSources(item: PlaybackItem, signal: AbortSignal, language?: string) {
-  const list = await providers.sources(item.provider, item.ref, item.series ? "series" : "movie", signal,
+  const value = await providers.sourceReport(item.provider, item.ref, item.series ? "series" : "movie", signal,
     usePlayerPreferences.getState().defaultQuality);
+  const report = Array.isArray(value) ? { sources: value, attempts: [], issue: undefined } : value;
+  const list = report.sources;
+  if (!list.length) {
+    const issue = report.issue ?? { provider: item.provider, operation: "sources", stage: "normalize" as const,
+      message: "The provider returned no eligible streams." };
+    throw new CatalogError(200, issue.message, issue, report.attempts);
+  }
   return orderBrowserSources(list, language);
 }

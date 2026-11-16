@@ -3,6 +3,8 @@
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { Captions, ChevronDown, Expand, ListVideo, Lock, Maximize, Minimize2, Pause, PictureInPicture2, Play, Server, Settings2, SlidersHorizontal, SkipForward, Unlock, Volume2, VolumeX, X } from "lucide-react";
 import { usePlayback, type PlaybackItem } from "@/lib/playback";
+import { CatalogError } from "@/lib/catalog-api";
+import type { SourceAttempt } from "@/lib/catalog-types";
 import { usePlayerPreferences } from "@/lib/player-preferences";
 import { useLibrary } from "@/lib/library";
 import { attachMedia, emptyTracks, type MediaTracks } from "@/lib/media-engine";
@@ -12,6 +14,7 @@ import { normalizeLangCode } from "@/lib/languages";
 import { parseCues } from "@/lib/video-cues";
 import { CaptionSettings, textStyle } from "./player-caption-settings";
 import { formatTime, SeekControl } from "./seek-control";
+import { SourceAttempts } from "./source-attempts";
 
 type Session = NonNullable<ReturnType<typeof usePlayback.getState>["session"]>;
 type Cue = ReturnType<typeof parseCues>[number];
@@ -66,6 +69,7 @@ export function BrowserPlayer({ session }: { session: Session }) {
   const [locked, setLocked] = useState(false);
   const [panel, setPanel] = useState<Panel>(null);
   const [error, setError] = useState("");
+  const [attempts, setAttempts] = useState<SourceAttempt[]>([]);
   const [note, setNote] = useState("");
   const [switching, setSwitching] = useState(false);
   const [awake, setAwake] = useState(true);
@@ -262,6 +266,7 @@ export function BrowserPlayer({ session }: { session: Session }) {
     resumePlay.current = !video()?.paused;
     changingMedia.current = true;
     tried.current.clear();
+    setAttempts([]);
     setWaiting(true);
     setError("");
     setNote("");
@@ -291,10 +296,10 @@ export function BrowserPlayer({ session }: { session: Session }) {
       };
       const list = await playbackSources(updated.item, controller.signal, updated.preferredLanguage);
       if (controller.signal.aborted) return;
-      if (!list.length) throw new Error("No healthy streams were found for this selection.");
       save();
       const match = options.refresh ? list.findIndex(({ server, quality }) => server === source.server && quality === source.quality) : 0;
       tried.current.clear();
+      setAttempts([]);
       changingMedia.current = true;
       positionRef.current = resume;
       resumePlay.current = shouldPlay;
@@ -315,7 +320,10 @@ export function BrowserPlayer({ session }: { session: Session }) {
       return true;
     } catch (failure) {
       if (controller.signal.aborted) return;
-      if (!options.fallback) setNote(failure instanceof Error ? failure.message : "Could not load this selection.");
+      if (failure instanceof CatalogError && failure.attempts.length) {
+        setAttempts((current) => [...current, ...failure.attempts]);
+      }
+      setNote(failure instanceof Error ? failure.message : String(failure));
       return false;
     } finally { if (!controller.signal.aborted) setSwitching(false); }
   }
@@ -330,8 +338,7 @@ export function BrowserPlayer({ session }: { session: Session }) {
     }
     setNote("");
     setWaiting(false);
-    setError(formatFailure ? "This format cannot play in your browser." +
-      (alternatives.length ? " The alternate qualities could not be played." : "") : "Playback failed on the available servers.");
+    setError(target.item.provider + " · playback · " + (formatFailure ? "This format cannot play in your browser." : "All attempted servers failed."));
   }
 
   function retry() {
@@ -370,10 +377,13 @@ export function BrowserPlayer({ session }: { session: Session }) {
     wake();
   }
 
-  const onMediaFailure = useEffectEvent((reason?: "format") => {
+  const onMediaFailure = useEffectEvent((reason?: "format", diagnostic?: string) => {
     clearTimeout(stalled.current);
     changingMedia.current = true;
+    const message = diagnostic ?? (reason === "format" ? "Codec or container unsupported during playback." : "Playback connection failed or stalled.");
     tried.current.add(i);
+    setAttempts((current) => [...current, { server: source.server, quality: source.quality,
+      probe: { ...source.probe, status: "failed", reason: message } }]);
     const replacement = sources.findIndex((_, index) => !tried.current.has(index));
     if (replacement >= 0) {
       setWaiting(true);
@@ -405,7 +415,7 @@ export function BrowserPlayer({ session }: { session: Session }) {
           if (best >= 0) { preferredApplied.current = true; current.audio(best); setAudio(best); }
         }
       },
-      failed: (reason) => onMediaFailure(reason),
+      failed: (reason, diagnostic) => onMediaFailure(reason, diagnostic),
     });
     engine.current = current;
     return () => current.destroy();
@@ -463,6 +473,7 @@ export function BrowserPlayer({ session }: { session: Session }) {
         {waiting && !error && !locked && <span className="player-spinner" role="status" aria-label="Buffering" />}
         {error && <div className="player-error">
           <p role="alert">{error}</p>
+          <div className="max-h-32 overflow-auto"><SourceAttempts attempts={attempts} /></div>
           <button type="button" className="secondary-button" onClick={retry} disabled={switching}>Refresh sources</button>
         </div>}
         <div className="player-top" data-visible={!!controls}>

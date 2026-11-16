@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Puzzle, RefreshCw, Trash2 } from "lucide-react";
-import { providers } from "@/lib/catalog-api";
+import { providerIssueText, providers } from "@/lib/catalog-api";
 import type { Provider } from "@/lib/catalog-types";
 import { useLibrary } from "@/lib/library";
 import { Artwork, CatalogSkeleton, QueryMessage } from "./catalog-ui";
@@ -67,15 +67,17 @@ export function ProviderSettings() {
       <button type="button" className="secondary-button" onClick={() => remove(id)}>Remove</button></div>)}
     {groups.map((group) => <section key={group.title} className="mt-6 min-w-0">
       <h2 className="mb-3 text-xl font-semibold">{group.title}</h2>
-      {group.entries.length ? <ul className="grid gap-2">{group.entries.map((provider) => <li key={provider.id} className="list-row flex-wrap">
+      {group.entries.length ? <ul className="grid gap-2">{group.entries.map((provider) => {
+        const state = health.data?.[provider.id];
+        return <li key={provider.id} className="list-row flex-wrap">
         {provider.icon ? <Artwork src={provider.icon} className="size-10 rounded-lg" /> : <Puzzle className="text-accent" size={23} />}
         <div className="min-w-24 flex-1">
           <strong>{provider.name}</strong>
           {provider.version && <span className="ml-2 text-xs text-muted">v{provider.version}</span>}
           {provider.description && <p className="text-sm text-muted">{provider.description}</p>}
-          {health.data?.[provider.id]?.issue && <p className="text-sm text-muted">{health.data[provider.id].issue?.message}</p>}
+          {state?.issue && <p className="break-words text-sm text-muted">{providerIssueText(state.issue)}</p>}
         </div>
-        <span className="chip capitalize" data-health={health.data?.[provider.id]?.state}>{health.data?.[provider.id]?.state ?? "unchecked"}</span>
+        <span className="chip capitalize" data-health={state?.state}>{state?.state ?? "unchecked"}</span>
         <button type="button" className="secondary-button" disabled={!!checking} onClick={() => void check(provider)}>
           {checking === provider.id ? "Checking…" : "Check catalog"}
         </button>
@@ -89,7 +91,7 @@ export function ProviderSettings() {
             remove(provider.id);
             setNotice(provider.name + " removed.");
           }}><Trash2 size={17} /></button>}
-      </li>)}</ul> : <p className="text-sm text-muted">{find ? "No matching providers." : "No providers here."}</p>}
+      </li>})}</ul> : <p className="text-sm text-muted">{find ? "No matching providers." : "No providers here."}</p>}
     </section>)}
     <div className="mt-6 flex flex-wrap gap-2">
       <Link href="/" className="secondary-button">Browse catalog</Link>

@@ -4,9 +4,9 @@ import Link from "next/link";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { ArrowUpDown, ExternalLink, Play } from "lucide-react";
-import { providers, tmdb } from "@/lib/catalog-api";
+import { CatalogError, providers, tmdb } from "@/lib/catalog-api";
 import { providerLink, titleLink } from "@/lib/catalog-links";
-import type { Episode, MediaType, ProviderDetail, TitleDetail } from "@/lib/catalog-types";
+import type { Episode, MediaType, ProviderDetail, SourceAttempt, TitleDetail } from "@/lib/catalog-types";
 import { usePlayerPreferences } from "@/lib/player-preferences";
 import { usePlayback, type PlaybackTarget } from "@/lib/playback";
 import { useLibrary } from "@/lib/library";
@@ -16,6 +16,7 @@ import { playbackSources, qualityLabel } from "@/lib/player-switch";
 import { languageName } from "@/lib/languages";
 import { Artwork, BackLink, CardGrid, CatalogSkeleton, QueryMessage, Rail, SaveButton } from "./catalog-ui";
 import { useCatalogReady } from "./catalog-context";
+import { SourceAttempts } from "./source-attempts";
 
 function DetailHero({ title, image, backdrop, synopsis, tags, children }: {
   title: string; image?: string; backdrop?: string; synopsis?: string; tags: string[];
@@ -35,7 +36,7 @@ function DetailHero({ title, image, backdrop, synopsis, tags, children }: {
 
 function useStartPlayback() {
   const active = useRef<AbortController>(null);
-  const [status, setStatus] = useState<{ pending?: boolean; error?: string }>({});
+  const [status, setStatus] = useState<{ pending?: boolean; error?: string; attempts?: SourceAttempt[] }>({});
   useEffect(() => () => active.current?.abort(), []);
 
   function cancel() {
@@ -51,14 +52,16 @@ function useStartPlayback() {
     try {
       const sources = await playbackSources(target.item, controller.signal, target.preferredLanguage);
       if (controller.signal.aborted) return;
-      if (!sources.length) throw new Error("No healthy streams were found for this selection.");
       const saved = useLibrary.getState().progress.find((item) => item.href === target.title.href && item.playback?.item.ref === target.item.ref);
       usePlayback.getState().open({
         target, sources, index: 0, position: usePlayerPreferences.getState().resume ? saved?.position ?? 0 : 0,
       });
       setStatus({});
     } catch (error) {
-      if (!controller.signal.aborted) setStatus({ error: error instanceof Error ? error.message : "Could not start playback." });
+      if (!controller.signal.aborted) setStatus({
+        error: error instanceof Error ? error.message : target.item.provider + " · sources · " + String(error),
+        attempts: error instanceof CatalogError ? error.attempts : undefined,
+      });
     }
   }
 
@@ -114,7 +117,7 @@ function ProviderEpisodes({ id, detail }: { id: string; detail: ProviderDetail }
       <button className="primary-button" type="button" disabled={!ordered.length || playback.pending}
         onClick={() => choose(ordered[0])}><Play size={16} aria-hidden="true" /> {playback.pending ? "Resolving streams…" : "Watch Now"}</button>
     </div>
-    {playback.error && <p role="alert" className="text-sm text-muted">{playback.error}</p>}
+    {playback.error && <div role="alert" className="text-sm text-muted">{playback.error}<SourceAttempts attempts={playback.attempts ?? []} /></div>}
     {group.episodesRef && episodes.isPending && !items.length ? <p role="status">Loading episodes…</p> :
       group.episodesRef && episodes.isError && !items.length ? <QueryMessage retry={() => void episodes.refetch()}>{episodes.error.message}</QueryMessage> :
       !visible.length ? <QueryMessage>No matching {series ? "episodes" : "sources"}.</QueryMessage> :
@@ -177,10 +180,12 @@ function MovieChoices({ title, season, episode }: { title: TitleDetail; season: 
         const provider = installed[i];
         const result = choices[i];
         const name = manifest.data?.find((entry) => entry.id === provider)?.name ?? provider;
-        const failed = match.isError || result.isError;
+        const failure = match.error ?? result.error;
+        const failed = !!failure;
         const status = failed ? "Failed" : match.isPending || result.isPending ? "Checking…" : result.data?.length ? "Available" : "No match";
         return <li key={provider} className="chip">{name} · {status}
           {failed && <button type="button" className="ml-1 underline" onClick={() => void (match.isError ? match.refetch() : result.refetch())}>Retry</button>}
+          {failure && <details className="whitespace-normal break-words"><summary>Reason</summary>{failure.message}</details>}
         </li>;
       })}
     </ul>
@@ -206,7 +211,7 @@ function MovieChoices({ title, season, episode }: { title: TitleDetail; season: 
         episodeNumber: episode || undefined, seasonNumber: season || undefined, preferredLanguage: language,
       })}><Play size={16} aria-hidden="true" /> {playback.pending ? "Resolving streams…" : "Watch Now"}</button>}
     </div>}
-    {playback.error && <p role="alert" className="text-sm text-muted">{playback.error}</p>}
+    {playback.error && <div role="alert" className="text-sm text-muted">{playback.error}<SourceAttempts attempts={playback.attempts ?? []} /></div>}
     {!items.length && <p role="status" className="text-muted">{pending ? "Checking installed providers…" : "No matching sources found."}</p>}
   </div>;
 }

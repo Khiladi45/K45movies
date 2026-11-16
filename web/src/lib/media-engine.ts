@@ -11,7 +11,7 @@ type NativeMedia = HTMLVideoElement & { audioTracks?: NativeAudioTracks };
 
 export function attachMedia(video: HTMLVideoElement, source: Source, events: {
   tracks: (tracks: MediaTracks) => void;
-  failed: (reason?: "format") => void;
+  failed: (reason?: "format", diagnostic?: string) => void;
 }) {
   let engine: Hls | undefined;
   let disposed = false;
@@ -22,8 +22,8 @@ export function attachMedia(video: HTMLVideoElement, source: Source, events: {
   const textTracks = () => Array.from(video.textTracks).filter((track) => track.kind === "subtitles" || track.kind === "captions");
   let working = true;
 
-  function fail(reason?: "format") {
-    if (!disposed && working) { working = false; events.failed(reason); }
+  function fail(reason?: "format", diagnostic?: string) {
+    if (!disposed && working) { working = false; events.failed(reason, diagnostic); }
   }
 
   function update() {
@@ -37,7 +37,12 @@ export function attachMedia(video: HTMLVideoElement, source: Source, events: {
     });
   }
 
-  const nativeFailed = () => fail(video.error?.code === 3 || video.error?.code === 4 ? "format" : undefined);
+  const nativeFailed = () => {
+    const code = video.error?.code;
+    const diagnostic = code === 4 ? "Codec or container unsupported by the browser." :
+      code === 3 ? "The browser could not decode the media." : code ? "Browser media error " + code + "." : undefined;
+    fail(code === 3 || code === 4 ? "format" : undefined, diagnostic);
+  };
   video.addEventListener("error", nativeFailed);
   video.addEventListener("loadedmetadata", update);
   video.textTracks.addEventListener("addtrack", update);
@@ -66,11 +71,15 @@ export function attachMedia(video: HTMLVideoElement, source: Source, events: {
         } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR && !mediaRecovered) {
           mediaRecovered = true;
           engine.recoverMediaError();
-        } else fail(data.type === Hls.ErrorTypes.MEDIA_ERROR ? "format" : undefined);
+        } else {
+          const status = data.response?.code;
+          fail(data.type === Hls.ErrorTypes.MEDIA_ERROR ? "format" : undefined,
+            "HLS " + data.details + (status ? " · HTTP " + status : ""));
+        }
       });
       engine.attachMedia(video);
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) video.src = source.url;
-    else fail("format");
+    else fail("format", "HLS is unsupported in this browser.");
   }
   void load().catch(() => fail());
 

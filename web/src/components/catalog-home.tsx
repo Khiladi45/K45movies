@@ -143,7 +143,8 @@ function ProviderHome() {
       {active && health.data?.[active] && <span className="chip capitalize" data-health={health.data[active].state}>{health.data[active].state}</span>}
       <Link href="/providers" className="secondary-button">Manage providers</Link>
     </div>
-    {active && (item ? <Hero item={{ ...item, href: providerLink(active, item.ref) }} subtitle={item.tag} change={rotation.length > 1 ? (offset) => setIndex((current) => (current + offset + rotation.length) % rotation.length) : undefined} /> : <HeroSkeleton />)}
+    {active && (item ? <Hero item={{ ...item, href: providerLink(active, item.ref) }} subtitle={item.tag} change={rotation.length > 1 ? (offset) => setIndex((current) => (current + offset + rotation.length) % rotation.length) : undefined} /> :
+      (catalog.isPending || featured.some((query) => query.isPending)) && <HeroSkeleton />)}
     <ContinueWatching />
     {!active ? <QueryMessage>Install a provider to browse its catalog.</QueryMessage> :
       catalog.isPending ? <PendingRail /> :

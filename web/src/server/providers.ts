@@ -5,7 +5,7 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import * as cheerio from "cheerio";
 import { z } from "zod";
-import type { Category, Episode, Post, Provider, ProviderDetail, QualityPreference, Source } from "@/lib/catalog-types";
+import type { Category, Episode, Post, Provider, ProviderDetail, QualityPreference, Source, SourceAttempt, SourceReport } from "@/lib/catalog-types";
 import { providerNetwork, streamUpstream } from "./provider-network";
 import { decodeReference, encodeReference } from "./references";
 import { createMediaLink, mediaHeaders } from "./media";
@@ -128,7 +128,7 @@ export const providerRequest = z.discriminatedUnion("op", [
   z.object({ op: z.literal("search"), id: providerId, q: z.string().trim().min(2).max(120) }),
   z.object({ op: z.literal("title"), id: providerId, ref: z.string().min(1).max(8000) }),
   z.object({ op: z.literal("episodes"), id: providerId, ref: z.string().min(1).max(8000) }),
-  z.object({ op: z.literal("sources"), id: providerId, ref: z.string().min(1).max(8000), type: z.enum(["movie", "series"]).default("movie"), quality: z.enum(["auto", "highest", "lowest"]).default("auto") }),
+  z.object({ op: z.literal("sources"), id: providerId, ref: z.string().min(1).max(8000), type: z.enum(["movie", "series"]).default("movie"), quality: z.enum(["auto", "highest", "lowest"]).default("auto"), diagnostics: z.literal("1").optional() }),
 ]);
 
 let activeExecutions = 0;
@@ -275,12 +275,17 @@ function details(provider: string, ref: string, value: unknown): ProviderDetail 
   };
 }
 
-async function sources(value: unknown, preference: QualityPreference, signal: AbortSignal) {
+async function sources(provider: string, value: unknown, preference: QualityPreference, signal: AbortSignal): Promise<SourceReport> {
   const streams = preferredStreams(normalizeStreams(value), preference);
-  return probeCandidates(streams, async (stream, deadline): Promise<Source | undefined> => {
-    const { raw, server, serverKey, quality } = stream;
+  const attempts = new Map<string, SourceAttempt>();
+  const verified = await probeCandidates(streams, async (stream, deadline): Promise<Source | undefined> => {
+    const { raw, server: label, serverKey, quality } = stream;
+    const server = providerMessage({ message: label }) || "Stream";
     const headers = { "user-agent": androidHeaders["User-Agent"], ...mediaHeaders(raw.headers) };
-    if (stream.url.length > 5500) return;
+    if (stream.url.length > 5500) {
+      attempts.set(stream.url, { server, quality, probe: { status: "failed", reason: "Stream URL exceeds the media link length limit." } });
+      return;
+    }
     const probe = await probePlayback(async (method, abort) => {
       const outgoing = new Headers(headers);
       outgoing.set("accept-encoding", "identity");
@@ -288,10 +293,17 @@ async function sources(value: unknown, preference: QualityPreference, signal: Ab
       const { response } = await streamUpstream(stream.url, method, outgoing, abort);
       return response as unknown as Response;
     }, stream.format, deadline);
-    if (probe.status !== "ok") return;
+    if (probe.status !== "ok") {
+      attempts.set(stream.url, { server, quality, probe });
+      return;
+    }
     const format = probe.format ?? stream.format;
     const url = createMediaLink(stream.url, headers, "media", undefined, format);
-    if (!url) return;
+    if (!url) {
+      attempts.set(stream.url, { server, quality, probe: { ...probe, status: "failed", reason: "The media route rejected the stream URL." } });
+      return;
+    }
+    attempts.set(stream.url, { server, quality, probe });
     const subtitles = list(raw.subtitles).flatMap((entry) => {
       const subtitle = item(entry);
       const uri = text(subtitle.uri);
@@ -308,6 +320,18 @@ async function sources(value: unknown, preference: QualityPreference, signal: Ab
       languages: [...strings(raw.languages), ...strings(raw.audioLanguages), ...strings(raw.tags)],
     };
   }, signal);
+  return {
+    sources: verified,
+    attempts: streams.flatMap((stream) => {
+      const attempt = attempts.get(stream.url);
+      return attempt ? [attempt] : [];
+    }),
+    issue: verified.length ? undefined : {
+      provider, operation: "sources", stage: streams.length ? "probe" : "normalize",
+      message: streams.length ? "None of the checked servers returned verified media." :
+        "The bundle returned no eligible HTTP video streams for this selection.",
+    },
+  };
 }
 
 const cacheTtl = { catalog: 300_000, title: 180_000, episodes: 90_000 };
@@ -319,7 +343,7 @@ export function runProvider(input: z.infer<typeof providerRequest>, signal: Abor
   return resolveProvider(input, signal);
 }
 
-async function resolveProvider(input: z.infer<typeof providerRequest>, signal: AbortSignal): Promise<Category[] | Post[] | ProviderDetail | Episode[] | Source[]> {
+async function resolveProvider(input: z.infer<typeof providerRequest>, signal: AbortSignal): Promise<Category[] | Post[] | ProviderDetail | Episode[] | Source[] | SourceReport> {
   const id = input.id;
   if (id === "youtube" && (input.op === "sources" || input.op === "episodes")) {
     throw new ProviderError(422, "YouTube playback uses the embedded video player.", "request");
@@ -341,7 +365,9 @@ async function resolveProvider(input: z.infer<typeof providerRequest>, signal: A
       return details(id, input.ref, await execute(input, { link: decodeReference(id, "title", input.ref) }, signal));
     case "episodes":
       return episodes(id, await execute(input, { url: decodeReference(id, "episodes", input.ref) }, signal));
-    case "sources":
-      return sources(await execute(input, { link: decodeReference(id, "source", input.ref), type: input.type }, signal), input.quality, signal);
+    case "sources": {
+      const report = await sources(id, await execute(input, { link: decodeReference(id, "source", input.ref), type: input.type }, signal), input.quality, signal);
+      return input.diagnostics ? report : report.sources;
+    }
   }
 }

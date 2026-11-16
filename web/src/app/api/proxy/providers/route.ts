@@ -25,7 +25,8 @@ export async function GET(request: Request) {
       const input = providerRequest.safeParse(Object.fromEntries(params));
       if (!input.success) throw new ProviderError(400, "Invalid provider request.", "request");
       value = await runProvider(input.data, request.signal);
-      if (!Array.isArray(value) || value.length) recordProviderHealth(input.data.id, operation);
+      if (!Array.isArray(value) && "sources" in value) recordProviderHealth(input.data.id, operation, value.issue);
+      else if (!Array.isArray(value) || value.length) recordProviderHealth(input.data.id, operation);
     }
     response = Response.json(value, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {

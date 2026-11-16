@@ -1,4 +1,4 @@
-export type ProviderStage = "request" | "registry" | "rate-limit" | "bundle" | "runtime" | "upstream" | "normalize" | "verification";
+export type ProviderStage = "request" | "registry" | "rate-limit" | "bundle" | "runtime" | "upstream" | "normalize" | "verification" | "probe";
 export type ProviderIssue = { provider?: string; operation: string; stage: ProviderStage; upstreamStatus?: number; message: string };
 export type ProviderHealth = { state: "healthy" | "degraded" | "needs verification"; checkedAt: number; issue?: ProviderIssue };
 export type Provider = { id: string; name: string; version?: string; description?: string; type?: string; icon?: string; bundleSource?: "vendored" | "api"; searchUnavailable?: string };
@@ -13,6 +13,8 @@ export type StreamFormat = "mp4" | "hls" | "dash" | "mkv" | "webm" | "avi" | "ot
 export type StreamProbe = { status: "ok" | "failed" | "unknown"; httpStatus?: number; reason?: string; contentType?: string; format?: StreamFormat;
   codecs?: string[]; videoCodec?: "hevc" | "h264"; audioCodec?: "ac3" | "eac3" };
 export type Source = { url: string; hls: boolean; subtitles: SubtitleTrack[]; server: string; quality?: string; type?: string; label?: string; languages: string[]; serverKey?: string; format?: StreamFormat; probe?: StreamProbe; compatibilityUrl?: string };
+export type SourceAttempt = { server: string; quality?: string; probe: StreamProbe };
+export type SourceReport = { sources: Source[]; attempts: SourceAttempt[]; issue?: ProviderIssue };
 export type MediaType = "movie" | "tv";
 export type Title = {
   id: number; mediaType: MediaType; title: string; originalTitle: string; year: string;
