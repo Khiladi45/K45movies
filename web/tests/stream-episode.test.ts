@@ -29,6 +29,7 @@ test("rejects HTML disguised as video and invalid manifests and detects real med
   const html = await probePlayback(async (method) => new Response(method === "HEAD" ? null : "<html>challenge</html>",
     { headers: { "Content-Type": "video/mp4" } }), "mp4", signal);
   assert.equal(html.status, "failed");
+  assert.equal(html.contentType, "video/mp4");
   const invalid = await probePlayback(async () => new Response("#EXTM3U\nbroken"), "hls", signal);
   assert.equal(invalid.status, "failed");
   const valid = await probePlayback(async () => new Response('#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=200,CODECS="avc1.4d401f,mp4a.40.2"\nstream.m3u8\n'), "hls", signal);
@@ -37,6 +38,18 @@ test("rejects HTML disguised as video and invalid manifests and detects real med
     new Response("....ftypavc1", { status: 206 }), "mkv", signal);
   assert.equal(mp4.format, "mp4");
   assert.equal(mp4.status, "ok");
+});
+
+test("checks the ranged body when HEAD advertises HTML", async () => {
+  const methods: string[] = [];
+  const result = await probePlayback(async (method) => {
+    methods.push(method);
+    return method === "HEAD" ? new Response(null, { headers: { "Content-Type": "text/html" } }) :
+      new Response("....ftypavc1", { status: 206, headers: { "Content-Type": "video/mp4" } });
+  }, "mp4", new AbortController().signal);
+  assert.deepEqual(methods, ["HEAD", "GET"]);
+  assert.equal(result.status, "ok");
+  assert.equal(result.httpStatus, 206);
 });
 
 test("probes up to four at once and retains preference order after varying completion times", async () => {

@@ -45,15 +45,15 @@ export async function probePlayback(request: ProbeRequest, hint: StreamFormat, s
   try {
     if (!adaptive(hint)) {
       const head = await request("HEAD", deadline);
-      const type = head.headers.get("content-type") ?? "";
-      if (nonMedia.test(type) && head.ok) return { status: "failed", httpStatus: head.status, reason: "Server returned a web page or API response." };
-      if ([401, 404, 410].includes(head.status)) return { status: "failed", httpStatus: head.status, reason: "HTTP " + head.status };
+      const contentType = head.headers.get("content-type") ?? "";
+      if ([401, 404, 410].includes(head.status)) return { status: "failed", httpStatus: head.status, contentType, reason: "HTTP " + head.status };
+      // HEAD can advertise a different content type than a ranged GET.
     }
     const response = await request("GET", deadline);
     const type = response.headers.get("content-type") ?? "";
     if (!response.ok) {
       void response.body?.cancel().catch(() => undefined);
-      return { status: "failed", httpStatus: response.status, reason: "HTTP " + response.status };
+      return { status: "failed", httpStatus: response.status, contentType: type, reason: "HTTP " + response.status };
     }
     const bytes = await prefix(response);
     const info = mediaInfo(bytes, type, hint);
@@ -61,15 +61,19 @@ export async function probePlayback(request: ProbeRequest, hint: StreamFormat, s
       const manifest = info.format === "hls"
         ? /^\uFEFF?#EXTM3U(?:\r?\n|$)/.test(info.text) && /#EXT(?:INF:|-X-(?:STREAM-INF|TARGETDURATION|MEDIA:))/.test(info.text)
         : /^\s*(?:<\?xml[^>]*>\s*)?<MPD[\s>]/i.test(info.text);
-      if (!manifest) return { status: "failed", httpStatus: response.status, reason: "Invalid streaming manifest." };
+      if (!manifest) return { status: "failed", httpStatus: response.status, contentType: type, reason: "Invalid streaming manifest." };
     } else if (!bytes.length || nonMedia.test(type) || /^\s*(?:<!doctype|<html|<head|<body|[\[{])/i.test(info.text) ||
         (!/^video\//i.test(type) && info.measuredFormat === "other")) {
-      return { status: "failed", httpStatus: response.status, reason: "The response did not contain recognized video." };
+      return { status: "failed", httpStatus: response.status, contentType: type, reason: "The response did not contain recognized video." };
     }
     return { status: "ok", httpStatus: response.status, contentType: type, format: info.format,
       codecs: info.hls, videoCodec: info.videoCodec, audioCodec: info.audioCodec };
-  } catch {
-    return { status: "unknown", reason: deadline.aborted ? "Stream probe timed out." : "Stream connection failed." };
+  } catch (error) {
+    const reason = error instanceof Error ? error : undefined;
+    const code = (reason?.cause as { code?: string } | undefined)?.code || (reason as { code?: string } | undefined)?.code;
+    const diagnostic = typeof code === "string" && /^[A-Z0-9_]+$/.test(code) ? code : undefined;
+    return { status: "unknown", reason: deadline.aborted ? "Stream probe timed out." :
+      diagnostic ? "Stream connection failed (" + diagnostic + ")." : "Stream connection failed." };
   }
 }
 
