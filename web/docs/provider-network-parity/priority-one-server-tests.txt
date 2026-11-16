@@ -1,0 +1,37 @@
+Provider request failed {
+  provider: 'vega',
+  operation: 'sources',
+  stage: 'request',
+  upstreamStatus: undefined,
+  message: 'Invalid provider request.'
+}
+Provider request failed {
+  provider: 'vega',
+  operation: 'sources',
+  stage: 'request',
+  upstreamStatus: undefined,
+  message: 'Invalid provider reference.'
+}
+Provider request failed {
+  provider: 'vega',
+  operation: 'sources',
+  stage: 'request',
+  upstreamStatus: undefined,
+  message: 'This provider link is unavailable. Open the title again.'
+}
+{"cacheWaves":[{"heapUsed":30283872,"arrayBuffers":4677553},{"heapUsed":29880424,"arrayBuffers":4677553},{"heapUsed":30209472,"arrayBuffers":4677553},{"heapUsed":29964632,"arrayBuffers":4677553},{"heapUsed":30652768,"arrayBuffers":4677553}],"lookups":3000,"oldestEntryEvicted":true,"gc":true}
+✔ provider queue limits each client to three active and 32 waiting operations (3.2286ms)
+✔ provider cookie sessions persist by service and stay scoped by provider, domain and path (8.1467ms)
+✔ Sources API validates quality and rejects malformed or cross-provider references (8.982ms)
+✔ destination and DNS policies reject non-public answers on redirects and on reconnect (1.7425ms)
+✔ encrypted media targets expire exactly at the deadline (0.9134ms)
+✔ shared provider work cancels when the last caller leaves (0.9756ms)
+✔ provider cache evicts completed entries under repeated load (156.6934ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1331.1998

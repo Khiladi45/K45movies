@@ -150,6 +150,18 @@ The fresh system lookup matched both DoH resolvers for these hosts on the test c
 | primeVideo | F / – / F / – / – / – | F / – / F / – / – / – |
 | showbox | P / P / F / P / P / F | P / F / F / – / – / – |
 | starWars | F / – / F / – / – / – | F / – / F / – / – / – |
+
+### Runtime reference and remaining gaps
+
+The pinned Android network factory uses Cloudflare, Google, then system DNS, sorts IPv4 first, and configures 30-second connect, read, and write timeouts. The factory configures a React Native cookie-jar container. The React Native networking module attaches its WebView-backed cookie handler and flushes cookies through Android CookieManager. In contrast, the earlier web runtime used system lookup, a 12-second upstream request deadline, a 25-second operation deadline, and an operation-local cookie jar. [Android network factory](https://github.com/Khiladi45/K45movies/blob/a77aa81/native-src/android/com/vega/K45DohOkHttpFactory.kt)
+
+At the reviewed Vega Desktop revision, the resolver allows Cloudflare, Google, Quad9 and AdGuard, includes NAT64 handling, and uses Chrome137 emulation. Its cookie jar is scoped by provider author and its queue allows three active operations and 32 waiting. Its optional relay applies destination checks. The web implementation uses its own TypeScript and Node transports. [Vega networking source](https://github.com/vega-org/vega-desktop/blob/b1a7c6881e9f1cb6a933f1929f0336c797366cc6/src-tauri/src/doh_client.rs) · [Vega networking documentation](https://github.com/vega-org/vega-desktop/blob/b1a7c6881e9f1cb6a933f1929f0336c797366cc6/docs/platform-networking.md)
+
+On the seven legacy IDs, Android's `SandboxManager.hasBundledCatalog` selects `cncHome` specifically for `catalog` and `getPosts`. It executes the combined exports in its WebView sandbox with a 75-second budget and has a distinct path for other methods. The web runtime executes standalone API bundles with its Node Axios adapter. The combined catalog requires an upstream-verified session before parsing provider and studio trays. Reproducing the sandbox alone cannot establish that the upstream will issue a session to a web server. No supported server-side credential or verification flow was available in the reviewed material. [Android sandbox routing](https://github.com/Khiladi45/K45movies/blob/a77aa81/src/services/SandboxManager.ts)
+
+The final web runtime adds a 30-second upstream budget, a 75-second provider-operation ceiling, a per-client queue with three active and 32 waiting, and visible status for slow catalog and playback requests. Shorter bundle timeouts still apply. Provider cookie jars are isolated by provider, honor cookie domain/path and expiration, and stay separate from bundle KV. Redis snapshot persistence is optional. The memory and Redis protocol fixtures both pass. Live multi-instance cookie synchronization has not been measured.
+
+HTTP 403 by itself does not classify a TLS fingerprint block. Exact browser-TLS emulation against blocked providers and automated WAF verification were outside these tests. The UI retains the verified mirror OTP reason. The browser compatibility outcome is separate from source verification.
 | torrentio | P / P / P / P / – / E | P / P / P / P / – / E |
 | uhd | P / P / P / P / – / P | P / P / P / P / – / P |
 | uniquestream | P / P / E / P / P / P | P / P / E / P / P / P |
@@ -160,3 +172,72 @@ The fresh system lookup matched both DoH resolvers for these hosts on the test c
 | primeMirror | P / E / P / P / – / F | P / E / P / P / – / F |
 | youtube | P / P / P / P / – / F | P / P / P / P / – / F |
 | moviesApi | F / – / F / – / – / – | F / – / F / – / – / – |
+
+### Final Priority 1 production smoke
+
+The same PC ran the final build with DoH, the longer provider budget, the three-operation client queue, and provider session persistence enabled. The Android-device and deployed-host columns from the earlier matrix still await independent measurements. The six-letter order remains catalog / posts / search / metadata / episodes / verified sources.
+
+| Operation | System DNS baseline | Final production build |
+| --- | ---: | ---: |
+| catalog | 39 | 46 |
+| posts | 33 | 40 |
+| search | 29 | 37 |
+| meta | 34 | 41 |
+| episodes | 8 | 11 |
+| stream | 21 | 29 |
+
+| Provider | Baseline | Final | Observed cause or limitation |
+| --- | --- | --- | --- |
+| 1flex | P / P / P / P / – / P | P / P / P / P / – / P | Applicable sample checks passed. |
+| 1tamilblasters | P / P / P / P / – / E | P / P / P / P / – / E | Sample stream had no verified source. |
+| 1tamilmv | P / P / P / F / – / – | P / P / P / F / – / – | meta returned no usable title metadata. |
+| 4khdhub | P / P / P / P / – / E | P / P / P / P / – / P | Applicable sample checks passed. |
+| Joya9tv | P / P / P / P / – / P | P / P / P / P / – / E | No verified source for this title in the final run. The earlier system run found a source. |
+| anikoto | P / P / P / P / – / P | P / P / P / P / – / P | Applicable sample checks passed. |
+| animesalt | P / E / E / – / – / – | P / E / E / – / – / – | Empty catalog contents and search for the sampled category/query. |
+| animesub | P / P / P / P / – / E | P / P / P / P / – / E | No verified source for the sample. |
+| animeworld | P / P / P / P / P / P | P / P / P / P / P / P | Applicable sample checks passed. |
+| autoEmbed | P / P / P / P / – / P | P / P / P / P / – / P | Applicable sample checks passed. |
+| castle | P / P / P / P / – / P | P / P / P / P / – / P | Applicable sample checks passed. |
+| disneyPlus | F / – / F / – / – / – | P / P / P / P / P / P | Old provider deadline. Final catalog took 38847 ms. |
+| drive | P / P / P / P / – / E | P / P / P / P / – / E | No verified source for the sampled title. |
+| dvdplay | P / P / F / P / – / E | P / P / F / P / – / P | Provider bundle does not support search. |
+| gokuHD | P / P / P / P / P / P | P / P / P / P / P / P | Applicable sample checks passed. |
+| hdhub4u | P / P / P / P / – / P | P / P / P / P / – / P | Applicable sample checks passed. |
+| hdmovieslife | P / P / E / P / – / P | P / P / E / P / – / P | Empty Batman search, with usable catalog, posts and sources. |
+| hiAnime | P / F / F / – / – / – | P / F / F / – / – / – | posts used an invalid URL before the target request. search used an invalid URL before the target request. |
+| hotstar | F / – / F / – / – / – | P / P / P / P / – / P | Old provider deadline. Final catalog took 39922 ms. |
+| kickAssAnime | P / P / P / P / – / P | P / P / P / P / – / P | Applicable sample checks passed. |
+| kissKh | P / P / P / P / – / P | P / P / P / P / – / P | Applicable sample checks passed. |
+| kmMovies | P / P / P / P / – / E | P / P / P / P / – / E | No verified source. The historical bzzhr.co system answer failed TLS, and current DNS produced an authenticated HTTP 403 on the origin. |
+| luxMovies | P / P / E / P / P / P | P / P / E / P / P / P | search was empty for the sample. |
+| marvel | F / – / F / – / – / – | P / P / P / P / – / P | Old provider deadline. Final catalog took 37809 ms. |
+| movieBoxWeb | P / P / P / P / P / P | P / P / P / P / P / P | Applicable sample checks passed. |
+| movielinkdb | P / P / P / P / – / P | P / P / P / P / – / P | Applicable sample checks passed. |
+| movies4u | P / P / P / P / – / F | P / P / P / P / – / F | stream used an invalid URL before the target request. |
+| moviesda | P / P / E / P / – / P | P / P / E / P / – / P | search was empty for the sample. |
+| movieswood | P / P / F / P / – / P | P / P / F / P / – / P | Provider bundle does not support search. |
+| moviezwap | P / P / P / P / P / P | P / P / P / P / P / P | Applicable sample checks passed. |
+| multi | P / P / P / P / E / P | P / P / P / P / E / P | An episodes response was empty. The sampled direct-source fallback passed. |
+| mxplayer | P / P / P / F / – / – | P / P / P / F / – / – | meta returned no usable title metadata. |
+| netflix | F / – / F / – / – / – | P / P / P / P / P / P | Old provider deadline. Final catalog took 37905 ms. |
+| pixar | F / – / F / – / – / – | P / P / P / P / – / P | Old provider deadline. Final catalog took 38258 ms. |
+| primeVideo | F / – / F / – / – / – | P / P / P / P / – / P | Old provider deadline. Final catalog took 38508 ms. |
+| showbox | P / P / F / P / P / F | P / P / P / P / P / F | stream endpoint returned upstream HTTP 404. |
+| starWars | F / – / F / – / – / – | P / P / P / P / P / P | Old provider deadline. Final catalog took 38701 ms. |
+| torrentio | P / P / P / P / – / E | P / P / P / P / – / E | No eligible HTTP/HTTPS source. The earlier reference run found non-HTTP records. |
+| uhd | P / P / P / P / – / P | P / P / P / P / – / P | Applicable sample checks passed. |
+| uniquestream | P / P / E / P / P / P | P / P / E / P / P / P | search was empty for the sample. |
+| vega | P / P / P / P / P / P | P / P / P / P / P / P | Applicable sample checks passed. |
+| zeefliz | P / F / F / – / – / – | P / F / F / – / – / – | posts used an invalid URL before the target request. search used an invalid URL before the target request. |
+| disneyMirror | P / E / P / P / – / F | P / E / P / P / – / F | posts was empty for the sample. Upstream requires one-time verification. |
+| netflixMirror | P / E / P / P / – / F | P / E / P / P / – / F | posts was empty for the sample. Upstream requires one-time verification. |
+| primeMirror | P / E / P / P / – / F | P / E / P / P / – / F | posts was empty for the sample. Upstream requires one-time verification. |
+| youtube | P / P / P / P / – / F | P / P / P / P / – / F | Embedded playback uses a separate route. Direct Sources is intentionally unsupported. |
+| moviesApi | F / – / F / – / – / – | F / – / F / – / – / – | Internal helper. The manifest excludes it. |
+
+All seven legacy providers passed catalogs and verified sources. Their final first catalog calls took 37.8–39.9 seconds, past the previous 25-second cap. DoH alone left all seven failing. The production result demonstrates recovery with the runtime changes combined. It does not isolate the impact of cookie persistence from the longer runtime budget.
+
+All seven also started live HLS playback in both Chromium and Firefox. Each sample required decoded video and at least 0.5 seconds of playback. The playback run includes Disney Mickey Mouse Clubhouse, Valiant One, Captain America: The First Avenger, Squid Game, Inside Out 2, Deewane Huye Paagal and Star Wars: The Bad Batch. This establishes sample playback and leaves coverage of other titles and networks open. [Live legacy playback](provider-network-parity/priority-one-live-legacy.json)
+
+[Final HTTP smoke](provider-network-parity/priority-one-final.json) · [Provider Based Playwright](provider-network-parity/priority-one-e2e-provider.json) · [Movie Based Playwright](provider-network-parity/priority-one-e2e-movie.json) · [Queue, cookie and security tests](provider-network-parity/priority-one-server-tests.txt)

@@ -1,0 +1,338 @@
+{
+  "site": "http://127.0.0.1:3200",
+  "engines": [
+    "Chromium",
+    "Firefox"
+  ],
+  "rows": [
+    {
+      "provider": "disneyPlus",
+      "titles": [
+        {
+          "title": "Disney Mickey Mouse Clubhouse",
+          "group": "Season 1",
+          "entry": "Episode 1: Daisy Bo Peep",
+          "samples": [
+            {
+              "server": "Disney+ Auto",
+              "quality": "1080p",
+              "format": "hls",
+              "probe": {
+                "status": "ok",
+                "httpStatus": 206,
+                "contentType": "application/vnd.apple.mpegurl",
+                "format": "hls"
+              },
+              "browsers": {
+                "Chromium": {
+                  "version": "157.0.8103.51",
+                  "played": true,
+                  "seconds": 0.52,
+                  "width": 1920,
+                  "height": 1080,
+                  "frames": 15,
+                  "audioBytes": 5637,
+                  "elapsedMs": 3581,
+                  "httpStatus": 200
+                },
+                "Firefox": {
+                  "version": "159.0",
+                  "played": true,
+                  "seconds": 0.62,
+                  "width": 1920,
+                  "height": 1080,
+                  "frames": 12,
+                  "elapsedMs": 2049,
+                  "httpStatus": 200
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "issues": []
+    },
+    {
+      "provider": "hotstar",
+      "titles": [
+        {
+          "title": "Valiant One",
+          "group": "Valiant One",
+          "entry": "Valiant One",
+          "samples": [
+            {
+              "server": "Hotstar Auto",
+              "quality": "1080p",
+              "format": "hls",
+              "probe": {
+                "status": "ok",
+                "httpStatus": 206,
+                "contentType": "application/vnd.apple.mpegurl",
+                "format": "hls"
+              },
+              "browsers": {
+                "Chromium": {
+                  "version": "157.0.8103.51",
+                  "played": true,
+                  "seconds": 0.56,
+                  "width": 1920,
+                  "height": 1080,
+                  "frames": 17,
+                  "audioBytes": 14212,
+                  "elapsedMs": 4980,
+                  "httpStatus": 200
+                },
+                "Firefox": {
+                  "version": "159.0",
+                  "played": true,
+                  "seconds": 0.61,
+                  "width": 1920,
+                  "height": 1080,
+                  "frames": 12,
+                  "elapsedMs": 3653,
+                  "httpStatus": 200
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "issues": []
+    },
+    {
+      "provider": "marvel",
+      "titles": [
+        {
+          "title": "Captain America: The First Avenger",
+          "group": "Captain America: The First Avenger",
+          "entry": "Captain America: The First Avenger",
+          "samples": [
+            {
+              "server": "Marvel Auto",
+              "quality": "1080p",
+              "format": "hls",
+              "probe": {
+                "status": "ok",
+                "httpStatus": 206,
+                "contentType": "application/vnd.apple.mpegurl",
+                "format": "hls"
+              },
+              "browsers": {
+                "Chromium": {
+                  "version": "157.0.8103.51",
+                  "played": true,
+                  "seconds": 0.57,
+                  "width": 1920,
+                  "height": 1080,
+                  "frames": 16,
+                  "audioBytes": 416,
+                  "elapsedMs": 2405,
+                  "httpStatus": 200
+                },
+                "Firefox": {
+                  "version": "159.0",
+                  "played": true,
+                  "seconds": 0.56,
+                  "width": 1920,
+                  "height": 1080,
+                  "frames": 11,
+                  "elapsedMs": 3035,
+                  "httpStatus": 200
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "issues": []
+    },
+    {
+      "provider": "netflix",
+      "titles": [
+        {
+          "title": "Squid Game",
+          "group": "Season 1",
+          "entry": "Episode 1: Red Light, Green Light",
+          "samples": [
+            {
+              "server": "Netflix Auto",
+              "quality": "1080p",
+              "format": "hls",
+              "probe": {
+                "status": "ok",
+                "httpStatus": 206,
+                "contentType": "application/vnd.apple.mpegurl",
+                "format": "hls"
+              },
+              "browsers": {
+                "Chromium": {
+                  "version": "157.0.8103.51",
+                  "played": true,
+                  "seconds": 0.56,
+                  "width": 1920,
+                  "height": 1080,
+                  "frames": 16,
+                  "audioBytes": 2956,
+                  "elapsedMs": 3078,
+                  "httpStatus": 200
+                },
+                "Firefox": {
+                  "version": "159.0",
+                  "played": true,
+                  "seconds": 0.6,
+                  "width": 1920,
+                  "height": 1080,
+                  "frames": 11,
+                  "elapsedMs": 3438,
+                  "httpStatus": 200
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "issues": []
+    },
+    {
+      "provider": "pixar",
+      "titles": [
+        {
+          "title": "Inside Out 2",
+          "group": "Inside Out 2",
+          "entry": "Inside Out 2",
+          "samples": [
+            {
+              "server": "Pixar Auto",
+              "quality": "1080p",
+              "format": "hls",
+              "probe": {
+                "status": "ok",
+                "httpStatus": 206,
+                "contentType": "application/vnd.apple.mpegurl",
+                "format": "hls"
+              },
+              "browsers": {
+                "Chromium": {
+                  "version": "157.0.8103.51",
+                  "played": true,
+                  "seconds": 0.5,
+                  "width": 1920,
+                  "height": 1080,
+                  "frames": 14,
+                  "audioBytes": 12888,
+                  "elapsedMs": 6168,
+                  "httpStatus": 200
+                },
+                "Firefox": {
+                  "version": "159.0",
+                  "played": true,
+                  "seconds": 0.57,
+                  "width": 1920,
+                  "height": 1080,
+                  "frames": 11,
+                  "elapsedMs": 5436,
+                  "httpStatus": 200
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "issues": []
+    },
+    {
+      "provider": "primeVideo",
+      "titles": [
+        {
+          "title": "Deewane Huye Paagal",
+          "group": "Deewane Huye Paagal",
+          "entry": "Deewane Huye Paagal",
+          "samples": [
+            {
+              "server": "Prime Video Auto",
+              "quality": "1080p",
+              "format": "hls",
+              "probe": {
+                "status": "ok",
+                "httpStatus": 206,
+                "contentType": "application/vnd.apple.mpegurl",
+                "format": "hls"
+              },
+              "browsers": {
+                "Chromium": {
+                  "version": "157.0.8103.51",
+                  "played": true,
+                  "seconds": 0.57,
+                  "width": 1920,
+                  "height": 1080,
+                  "frames": 16,
+                  "audioBytes": 18732,
+                  "elapsedMs": 3882,
+                  "httpStatus": 200
+                },
+                "Firefox": {
+                  "version": "159.0",
+                  "played": true,
+                  "seconds": 0.61,
+                  "width": 1920,
+                  "height": 1080,
+                  "frames": 12,
+                  "elapsedMs": 3723,
+                  "httpStatus": 200
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "issues": []
+    },
+    {
+      "provider": "starWars",
+      "titles": [
+        {
+          "title": "Star Wars: The Bad Batch",
+          "group": "Season 1",
+          "entry": "Episode 1: Aftermath",
+          "samples": [
+            {
+              "server": "Star Wars Auto",
+              "quality": "1080p",
+              "format": "hls",
+              "probe": {
+                "status": "ok",
+                "httpStatus": 206,
+                "contentType": "application/vnd.apple.mpegurl",
+                "format": "hls"
+              },
+              "browsers": {
+                "Chromium": {
+                  "version": "157.0.8103.51",
+                  "played": true,
+                  "seconds": 0.53,
+                  "width": 1920,
+                  "height": 1080,
+                  "frames": 15,
+                  "audioBytes": 12870,
+                  "elapsedMs": 4985,
+                  "httpStatus": 200
+                },
+                "Firefox": {
+                  "version": "159.0",
+                  "played": true,
+                  "seconds": 0.53,
+                  "width": 1920,
+                  "height": 1080,
+                  "frames": 9,
+                  "elapsedMs": 4731,
+                  "httpStatus": 200
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "issues": []
+    }
+  ]
+}
