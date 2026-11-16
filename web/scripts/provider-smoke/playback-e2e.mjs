@@ -139,6 +139,13 @@ try {
     cancellation = await Promise.race([slowStopped.promise, new Promise((resolve) => setTimeout(resolve, 5000))]);
     releaseSlow.resolve();
     assert.match(cancellation ?? "", /abort/i);
+  } else {
+    rejectSources = true;
+    await page.goto("/settings/providers/diagnostics");
+    await page.getByRole("button", { name: "Run diagnostics" }).click();
+    const servers = page.getByRole("list", { name: "Server checks" });
+    await servers.getByText(/Expired fixture.*HTTP 410.*text\/plain/).waitFor();
+    await servers.getByText(/HTML fixture.*HTTP 200.*text\/html.*Invalid streaming manifest/).waitFor();
   }
   await writeFile(output, JSON.stringify({
     browser: browser.version(), mode, tmdbTitle: movie?.title, cancellation, failedProviderDidNotBlockPlayback: !!movie, serverDiagnostics: !movie,

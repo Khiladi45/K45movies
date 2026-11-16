@@ -14,6 +14,7 @@ type Outcome = { state: "pass" | "fail" | "empty" | "skipped"; ms?: number; http
 const trace = new AsyncLocalStorage<Trace>();
 const safe = (message: unknown) => String(message)
   .replace(/https?:\/\/[^\s"'<>]+/gi, "[url]")
+  .replace(/"(?:input|authorization|cookie|token|apiKey|secret)"\s*:\s*"[^"]*"/gi, '"value":"[redacted]"')
   .replace(/'[^']*'/g, "'[redacted]'")
   .replace(/\s+\|\s+\{.*$/s, "").slice(0, 240);
 
