@@ -49,7 +49,12 @@ try {
     await page.evaluate(() => performance.mark("home-rotation-start"));
     await page.waitForFunction((heading) => document.querySelector(".home-hero h2")?.textContent !== heading, before, { timeout: 12_000 });
     const after = await title.textContent();
-    await page.evaluate(() => performance.mark("home-rotation-end"));
+    await page.evaluate(async () => {
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      const animations = document.querySelector(".home-hero").getAnimations({ subtree: true });
+      await Promise.allSettled(animations.map((animation) => animation.finished));
+      performance.mark("home-rotation-end");
+    });
     const rail = page.locator(".home-rail-view").first();
     await rail.scrollIntoViewIfNeeded();
     await rail.hover();
