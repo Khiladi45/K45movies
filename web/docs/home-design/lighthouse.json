@@ -1,0 +1,66 @@
+{
+  "lighthouse": "13.6.0",
+  "fixture": "k45-home-design-fixture.json",
+  "rows": [
+    {
+      "mode": "provider",
+      "width": 1440,
+      "cls": 0,
+      "lcpMs": 1021.481,
+      "tbtMs": 5.7799999389648065,
+      "performance": 0.99,
+      "accessibility": 1,
+      "featuredTitle": "Naruto: Shippuden (Season 1 – 18) [S18 – 389 Added] Hindi Dubbed (ORG) MULTi-Audio Anime Series 720p & 1080p Blu-Ray"
+    },
+    {
+      "mode": "provider",
+      "width": 390,
+      "cls": 0,
+      "lcpMs": 789.482,
+      "tbtMs": 0,
+      "performance": 1,
+      "accessibility": 1,
+      "featuredTitle": "Naruto: Shippuden (Season 1 – 18) [S18 – 389 Added] Hindi Dubbed (ORG) MULTi-Audio Anime Series 720p & 1080p Blu-Ray"
+    },
+    {
+      "mode": "movie",
+      "width": 1440,
+      "cls": 0,
+      "lcpMs": 622.531,
+      "tbtMs": 17.747000000000014,
+      "performance": 1,
+      "accessibility": 1,
+      "featuredTitle": "The Odyssey"
+    },
+    {
+      "mode": "movie",
+      "width": 390,
+      "cls": 0,
+      "lcpMs": 727.636,
+      "tbtMs": 50.426999999999964,
+      "performance": 1,
+      "accessibility": 1,
+      "featuredTitle": "The Odyssey"
+    },
+    {
+      "mode": "youtube",
+      "width": 1440,
+      "cls": 0,
+      "lcpMs": 873.946,
+      "tbtMs": 154.80099993896482,
+      "performance": 0.96,
+      "accessibility": 1,
+      "featuredTitle": "🔥Trending Instagram Love Mashup 2026 | Instagram Jukebox | Trending Love Songs |Viral Romantic Songs"
+    },
+    {
+      "mode": "youtube",
+      "width": 390,
+      "cls": 0,
+      "lcpMs": 782.864,
+      "tbtMs": 98.07099999999997,
+      "performance": 0.99,
+      "accessibility": 1,
+      "featuredTitle": "🔥Trending Instagram Love Mashup 2026 | Instagram Jukebox | Trending Love Songs |Viral Romantic Songs"
+    }
+  ]
+}

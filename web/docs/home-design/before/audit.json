@@ -1,0 +1,195 @@
+{
+  "stage": "before",
+  "browser": "157.0.8103.51",
+  "results": [
+    {
+      "mode": "provider",
+      "width": 1920,
+      "overflow": 0,
+      "shifts": [
+        {
+          "value": 0.01349554697672526,
+          "time": 303,
+          "nodes": [
+            ""
+          ]
+        }
+      ],
+      "hero": "Naruto: Shippuden (Season 1 – 18) [S18 – 389 Added] Hindi Dubbed (ORG) MULTi-Audio Anime Series 720p & 1080p Blu-Ray",
+      "loadedImages": 10,
+      "axe": []
+    },
+    {
+      "mode": "provider",
+      "width": 1440,
+      "overflow": 0,
+      "shifts": [
+        {
+          "value": 0.022711495293511286,
+          "time": 245.69999998807907,
+          "nodes": [
+            ""
+          ]
+        }
+      ],
+      "hero": "Naruto: Shippuden (Season 1 – 18) [S18 – 389 Added] Hindi Dubbed (ORG) MULTi-Audio Anime Series 720p & 1080p Blu-Ray",
+      "loadedImages": 10,
+      "axe": []
+    },
+    {
+      "mode": "provider",
+      "width": 1024,
+      "overflow": 0,
+      "shifts": [
+        {
+          "value": 0.00025777816772460933,
+          "time": 166.79999995231628,
+          "nodes": [
+            "site-footer"
+          ]
+        },
+        {
+          "value": 0.022165346145629886,
+          "time": 241,
+          "nodes": [
+            ""
+          ]
+        }
+      ],
+      "hero": "Naruto: Shippuden (Season 1 – 18) [S18 – 389 Added] Hindi Dubbed (ORG) MULTi-Audio Anime Series 720p & 1080p Blu-Ray",
+      "loadedImages": 42,
+      "axe": []
+    },
+    {
+      "mode": "provider",
+      "width": 390,
+      "overflow": 0,
+      "shifts": [],
+      "hero": "Naruto: Shippuden (Season 1 – 18) [S18 – 389 Added] Hindi Dubbed (ORG) MULTi-Audio Anime Series 720p & 1080p Blu-Ray",
+      "loadedImages": 30,
+      "axe": []
+    },
+    {
+      "mode": "movie",
+      "width": 1920,
+      "overflow": 0,
+      "shifts": [],
+      "hero": "The Odyssey",
+      "loadedImages": 29,
+      "axe": []
+    },
+    {
+      "mode": "movie",
+      "width": 1440,
+      "overflow": 0,
+      "shifts": [],
+      "hero": "The Odyssey",
+      "loadedImages": 38,
+      "axe": []
+    },
+    {
+      "mode": "movie",
+      "width": 1024,
+      "overflow": 0,
+      "shifts": [
+        {
+          "value": 0.00003404617309570312,
+          "time": 161.60000002384186,
+          "nodes": [
+            "site-footer"
+          ]
+        }
+      ],
+      "hero": "The Odyssey",
+      "loadedImages": 52,
+      "axe": []
+    },
+    {
+      "mode": "movie",
+      "width": 390,
+      "overflow": 0,
+      "shifts": [],
+      "hero": "The Odyssey",
+      "loadedImages": 37,
+      "axe": []
+    },
+    {
+      "mode": "youtube",
+      "width": 1920,
+      "overflow": 0,
+      "shifts": [
+        {
+          "value": 0.008476828186600296,
+          "time": 166.39999997615814,
+          "nodes": [
+            "site-footer"
+          ]
+        }
+      ],
+      "loadedImages": 19,
+      "axe": []
+    },
+    {
+      "mode": "youtube",
+      "width": 1440,
+      "overflow": 0,
+      "shifts": [
+        {
+          "value": 0.007109670380015432,
+          "time": 179,
+          "nodes": [
+            "site-footer"
+          ]
+        }
+      ],
+      "loadedImages": 19,
+      "axe": []
+    },
+    {
+      "mode": "youtube",
+      "width": 1024,
+      "overflow": 0,
+      "shifts": [
+        {
+          "value": 0.002168961614370346,
+          "time": 165.20000004768372,
+          "nodes": [
+            "site-footer"
+          ]
+        }
+      ],
+      "loadedImages": 18,
+      "axe": []
+    },
+    {
+      "mode": "youtube",
+      "width": 390,
+      "overflow": 0,
+      "shifts": [
+        {
+          "value": 0.017037145216583185,
+          "time": 157.30000001192093,
+          "nodes": [
+            "site-footer"
+          ]
+        },
+        {
+          "value": 0.010506497284989107,
+          "time": 173.80000001192093,
+          "nodes": [
+            "site-footer"
+          ]
+        },
+        {
+          "value": 0.010506497284989107,
+          "time": 194.80000001192093,
+          "nodes": [
+            "site-footer"
+          ]
+        }
+      ],
+      "loadedImages": 8,
+      "axe": []
+    }
+  ]
+}

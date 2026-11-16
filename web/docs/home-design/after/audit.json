@@ -1,0 +1,136 @@
+{
+  "stage": "after",
+  "browser": "157.0.8103.51",
+  "results": [
+    {
+      "mode": "provider",
+      "width": 1920,
+      "overflow": 0,
+      "shifts": [],
+      "hero": "Naruto: Shippuden (Season 1 – 18) [S18 – 389 Added] Hindi Dubbed (ORG) MULTi-Audio Anime Series 720p & 1080p Blu-Ray",
+      "loadedImages": 21,
+      "axe": []
+    },
+    {
+      "mode": "provider",
+      "width": 1440,
+      "overflow": 0,
+      "shifts": [],
+      "hero": "Naruto: Shippuden (Season 1 – 18) [S18 – 389 Added] Hindi Dubbed (ORG) MULTi-Audio Anime Series 720p & 1080p Blu-Ray",
+      "loadedImages": 21,
+      "axe": []
+    },
+    {
+      "mode": "provider",
+      "width": 1024,
+      "overflow": 0,
+      "shifts": [],
+      "hero": "Naruto: Shippuden (Season 1 – 18) [S18 – 389 Added] Hindi Dubbed (ORG) MULTi-Audio Anime Series 720p & 1080p Blu-Ray",
+      "loadedImages": 23,
+      "axe": []
+    },
+    {
+      "mode": "provider",
+      "width": 390,
+      "overflow": 0,
+      "shifts": [],
+      "hero": "Naruto: Shippuden (Season 1 – 18) [S18 – 389 Added] Hindi Dubbed (ORG) MULTi-Audio Anime Series 720p & 1080p Blu-Ray",
+      "loadedImages": 15,
+      "axe": []
+    },
+    {
+      "mode": "movie",
+      "width": 1920,
+      "overflow": 0,
+      "shifts": [],
+      "hero": "The Odyssey",
+      "loadedImages": 21,
+      "axe": []
+    },
+    {
+      "mode": "movie",
+      "width": 1440,
+      "overflow": 0,
+      "shifts": [],
+      "hero": "The Odyssey",
+      "loadedImages": 27,
+      "axe": []
+    },
+    {
+      "mode": "movie",
+      "width": 1024,
+      "overflow": 0,
+      "shifts": [],
+      "hero": "The Odyssey",
+      "loadedImages": 28,
+      "axe": []
+    },
+    {
+      "mode": "movie",
+      "width": 390,
+      "overflow": 0,
+      "shifts": [],
+      "hero": "The Odyssey",
+      "loadedImages": 18,
+      "axe": []
+    },
+    {
+      "mode": "youtube",
+      "width": 1920,
+      "overflow": 0,
+      "shifts": [],
+      "hero": "🔥Trending Instagram Love Mashup 2026 | Instagram Jukebox | Trending Love Songs |Viral Romantic Songs",
+      "loadedImages": 8,
+      "axe": []
+    },
+    {
+      "mode": "youtube",
+      "width": 1440,
+      "overflow": 0,
+      "shifts": [],
+      "hero": "🔥Trending Instagram Love Mashup 2026 | Instagram Jukebox | Trending Love Songs |Viral Romantic Songs",
+      "loadedImages": 7,
+      "axe": []
+    },
+    {
+      "mode": "youtube",
+      "width": 1024,
+      "overflow": 0,
+      "shifts": [
+        {
+          "value": 0.0015506967902183533,
+          "time": 204.10000002384186,
+          "nodes": [
+            "site-footer"
+          ]
+        },
+        {
+          "value": 0.0003778517246246338,
+          "time": 205.80000001192093,
+          "nodes": [
+            "site-footer"
+          ]
+        },
+        {
+          "value": 0.00003470480442047119,
+          "time": 222.4000000357628,
+          "nodes": [
+            "site-footer"
+          ]
+        }
+      ],
+      "hero": "🔥Trending Instagram Love Mashup 2026 | Instagram Jukebox | Trending Love Songs |Viral Romantic Songs",
+      "loadedImages": 6,
+      "axe": []
+    },
+    {
+      "mode": "youtube",
+      "width": 390,
+      "overflow": 0,
+      "shifts": [],
+      "hero": "🔥Trending Instagram Love Mashup 2026 | Instagram Jukebox | Trending Love Songs |Viral Romantic Songs",
+      "loadedImages": 5,
+      "axe": []
+    }
+  ]
+}

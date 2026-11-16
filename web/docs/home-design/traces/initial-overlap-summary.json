@@ -1,0 +1,60 @@
+{
+  "browser": "157.0.8103.51",
+  "summaries": [
+    {
+      "mode": "provider",
+      "before": "Naruto: Shippuden (Season 1 – 18) [S18 – 389 Added] Hindi Dubbed (ORG) MULTi-Audio Anime Series 720p & 1080p Blu-Ray",
+      "after": "The Beast (2026)",
+      "longFrames": [
+        {
+          "startTime": 7386.399999976158,
+          "duration": 55.80000001192093,
+          "blockingDuration": 0
+        }
+      ],
+      "scrollLeft": 1037,
+      "marks": {
+        "home-rotation-start": 792.7999999523163,
+        "home-rotation-end": 7274.599999964237,
+        "home-rail-start": 7383.099999964237,
+        "home-rail-end": 8147.199999988079
+      },
+      "actionLongFrames": [
+        {
+          "startTime": 7386.399999976158,
+          "duration": 55.80000001192093,
+          "blockingDuration": 0
+        }
+      ]
+    },
+    {
+      "mode": "movie",
+      "before": "The Odyssey",
+      "after": "VisionQuest",
+      "longFrames": [],
+      "scrollLeft": 1037,
+      "marks": {
+        "home-rotation-start": 677.6000000238419,
+        "home-rotation-end": 7288.900000035763,
+        "home-rail-start": 7388.400000035763,
+        "home-rail-end": 8121.800000011921
+      },
+      "actionLongFrames": []
+    },
+    {
+      "mode": "youtube",
+      "before": "🔥Trending Instagram Love Mashup 2026 | Instagram Jukebox | Trending Love Songs |Viral Romantic Songs",
+      "after": "Aksomaniac - Amsham ft. M.H.R, Bhumi, Circle Tone (Official Music Video)",
+      "youtubePlay": true,
+      "longFrames": [],
+      "scrollLeft": 1068,
+      "marks": {
+        "home-rotation-start": 892.6000000238419,
+        "home-rotation-end": 7458.5,
+        "home-rail-start": 7548.699999988079,
+        "home-rail-end": 8273.800000011921
+      },
+      "actionLongFrames": []
+    }
+  ]
+}
