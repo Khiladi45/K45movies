@@ -2,12 +2,14 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import { subscribe } from "node:diagnostics_channel";
 import { execFile } from "node:child_process";
 import { writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import { promisify } from "node:util";
 import { Script } from "node:vm";
-import type { Category, Episode, Post, Provider, ProviderDetail, ProviderIssue, Source } from "../../src/lib/catalog-types";
+import type { Category, Episode, Post, Provider, ProviderDetail, ProviderIssue, Source, SourceAttempt, SourceReport } from "../../src/lib/catalog-types";
 
-type Trace = { requests: number; statuses: Record<string, number>; errors: Set<string>; providerLogs: number; webViewCalls: number };
-type Outcome = { state: "pass" | "fail" | "empty" | "skipped"; ms?: number; http?: number; count?: number; error?: string; details?: ProviderIssue; trace?: Omit<Trace, "errors"> & { errors: string[] } };
+type Failure = { origin: string; targetFingerprint: string; method: string; headers: Record<string, string>; headerNames: string[]; ms: number; status?: number; error?: string };
+type Trace = { requests: number; origins: Record<string, number>; statuses: Record<string, number>; errors: Set<string>; providerLogs: number; webViewCalls: number; firstFailure?: Failure };
+type Outcome = { state: "pass" | "fail" | "empty" | "skipped"; ms?: number; http?: number; count?: number; error?: string; details?: ProviderIssue; attempts?: SourceAttempt[]; trace?: Omit<Trace, "errors"> & { errors: string[] } };
 
 const trace = new AsyncLocalStorage<Trace>();
 const safe = (message: unknown) => String(message)
@@ -15,20 +17,45 @@ const safe = (message: unknown) => String(message)
   .replace(/'[^']*'/g, "'[redacted]'")
   .replace(/\s+\|\s+\{.*$/s, "").slice(0, 240);
 
-const upstreamTraces = new WeakMap<object, Trace>();
-subscribe("undici:request:create", ({ request }: { request: object }) => {
+type UpstreamRequest = { origin: string; path: string; method: string; headers: string[] };
+const upstreamTraces = new WeakMap<UpstreamRequest, { active: Trace; start: number }>();
+function firstFailure(request: UpstreamRequest, outcome: { status?: number; error?: string }) {
+  const entry = upstreamTraces.get(request);
+  if (!entry || entry.active.firstFailure) return;
+  const headers: Record<string, string> = {};
+  const headerNames: string[] = [];
+  for (let index = 0; index + 1 < request.headers.length; index += 2) {
+    const name = request.headers[index].toLowerCase();
+    headerNames.push(name);
+    if (/^(accept|accept-encoding|accept-language|content-type|range|sec-fetch-mode|user-agent)$/.test(name)) {
+      headers[name] = safe(request.headers[index + 1]);
+    }
+  }
+  entry.active.firstFailure = {
+    origin: request.origin, targetFingerprint: createHash("sha256").update(request.path).digest("hex").slice(0, 16),
+    method: request.method, headers, headerNames, ms: Math.round(performance.now() - entry.start), ...outcome,
+  };
+}
+subscribe("undici:request:create", ({ request }: { request: UpstreamRequest }) => {
   const active = trace.getStore();
-  if (active) { active.requests++; upstreamTraces.set(request, active); }
+  if (active) {
+    active.requests++;
+    active.origins[request.origin] = (active.origins[request.origin] ?? 0) + 1;
+    upstreamTraces.set(request, { active, start: performance.now() });
+  }
 });
-subscribe("undici:request:headers", ({ request, response }: { request: object; response: { statusCode: number } }) => {
-  const active = upstreamTraces.get(request);
+subscribe("undici:request:headers", ({ request, response }: { request: UpstreamRequest; response: { statusCode: number } }) => {
+  const active = upstreamTraces.get(request)?.active;
   if (active) {
     const status = String(response.statusCode);
     active.statuses[status] = (active.statuses[status] ?? 0) + 1;
+    if (response.statusCode >= 400) firstFailure(request, { status: response.statusCode });
   }
 });
-subscribe("undici:request:error", ({ request, error }: { request: object; error: Error & { code?: string } }) => {
-  upstreamTraces.get(request)?.errors.add(safe(error.code ?? error.message));
+subscribe("undici:request:error", ({ request, error }: { request: UpstreamRequest; error: Error & { code?: string } }) => {
+  const message = safe(typeof error.code === "string" ? error.code : error.name || error.message);
+  upstreamTraces.get(request)?.active.errors.add(message);
+  firstFailure(request, { error: message });
 });
 
 // The diagnostic process runs the same route and VM. Observe before error
@@ -93,7 +120,7 @@ const supplementalIds = ["disneyMirror", "netflixMirror", "primeMirror", "youtub
 const started = new Date().toISOString();
 
 async function call<T>(params: Record<string, string>) {
-  const store: Trace = { requests: 0, statuses: {}, errors: new Set(), providerLogs: 0, webViewCalls: 0 };
+  const store: Trace = { requests: 0, origins: {}, statuses: {}, errors: new Set(), providerLogs: 0, webViewCalls: 0 };
   const url = new URL("/api/proxy/providers", remote?.origin || "http://localhost");
   url.search = new URLSearchParams(params).toString();
   const begin = performance.now();
@@ -110,12 +137,13 @@ async function call<T>(params: Record<string, string>) {
   }
   const data = await response.json().catch(() => null);
   const usable = response.ok && data !== null;
-  const count = Array.isArray(data) ? data.length : undefined;
+  const sourceReport = params.op === "sources" && Array.isArray(data?.sources) ? data as SourceReport : undefined;
+  const count = Array.isArray(data) ? data.length : sourceReport?.sources.length;
   const outcome: Outcome = {
     state: usable ? count === 0 ? "empty" : "pass" : "fail",
     ms: Math.round(performance.now() - begin), http: response.status, count,
     error: usable ? undefined : safe(data?.error ?? "Server returned a non-JSON response."),
-    details: usable ? undefined : data?.details,
+    details: usable ? sourceReport?.issue : data?.details, attempts: sourceReport?.attempts,
     trace: localRoutes ? { ...store, errors: [...store.errors] } : undefined,
   };
   return { data: usable ? data as T : undefined, outcome };
@@ -184,14 +212,15 @@ async function smoke(id: string) {
     { data: undefined, outcome: skipped(group ? "Direct links; no episode reference" : "No group from meta") };
   const source = episodes.data?.[0] ?? group?.directLinks[0] ?? meta.data?.groups.find(({ directLinks }) => directLinks.length)?.directLinks[0];
   const type = group?.episodesRef || /series|tv|show/i.test(meta.data?.type ?? "") ? "series" : "movie";
-  const streams = source ? await call<Source[]>({ id, op: "sources", ref: source.ref, type }) :
+  const streams = source ? await call<Source[] | SourceReport>({ id, op: "sources", ref: source.ref, type, diagnostics: "1" }) :
     { data: undefined, outcome: skipped("No source reference") };
   const results = {
     catalog: catalog.outcome, posts: posts.outcome, search: search.outcome, meta: meta.outcome,
     episodes: episodes.outcome, stream: streams.outcome,
   };
   console.log(id, Object.entries(results).map(([op, result]) => op + "=" + result.state + (result.ms === undefined ? "" : "/" + result.ms)).join(" "));
-  const samples = await Promise.all((streams.data ?? []).slice(0, 3).map(media));
+  const sources = Array.isArray(streams.data) ? streams.data : streams.data?.sources ?? [];
+  const samples = await Promise.all(sources.slice(0, 3).map(media));
   return { id, title: meta.data?.title ?? first?.title, group: group?.title, results, samples };
 }
 
