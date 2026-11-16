@@ -1,0 +1,3039 @@
+{
+  "started": "2026-11-16T06:53:07.820Z",
+  "target": "http://127.0.0.1:3200",
+  "finished": "2026-11-16T06:55:40.026Z",
+  "query": "Batman",
+  "manifest": {
+    "state": "pass",
+    "ms": 50,
+    "http": 200,
+    "count": 45
+  },
+  "manifestIds": [
+    "1flex",
+    "1tamilblasters",
+    "1tamilmv",
+    "4khdhub",
+    "Joya9tv",
+    "anikoto",
+    "animesalt",
+    "animesub",
+    "animeworld",
+    "autoEmbed",
+    "castle",
+    "disneyPlus",
+    "drive",
+    "dvdplay",
+    "gokuHD",
+    "hdhub4u",
+    "hdmovieslife",
+    "hiAnime",
+    "hotstar",
+    "kickAssAnime",
+    "kissKh",
+    "kmMovies",
+    "luxMovies",
+    "marvel",
+    "movieBoxWeb",
+    "movielinkdb",
+    "movies4u",
+    "moviesda",
+    "movieswood",
+    "moviezwap",
+    "multi",
+    "mxplayer",
+    "netflix",
+    "pixar",
+    "primeVideo",
+    "showbox",
+    "starWars",
+    "torrentio",
+    "uhd",
+    "uniquestream",
+    "vega",
+    "zeefliz",
+    "disneyMirror",
+    "netflixMirror",
+    "primeMirror"
+  ],
+  "manifestSources": [
+    {
+      "id": "1flex",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "1tamilblasters",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "1tamilmv",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "4khdhub",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "Joya9tv",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "anikoto",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "animesalt",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "animesub",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "animeworld",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "autoEmbed",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "castle",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "disneyPlus",
+      "bundleSource": "api"
+    },
+    {
+      "id": "drive",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "dvdplay",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "gokuHD",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "hdhub4u",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "hdmovieslife",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "hiAnime",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "hotstar",
+      "bundleSource": "api"
+    },
+    {
+      "id": "kickAssAnime",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "kissKh",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "kmMovies",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "luxMovies",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "marvel",
+      "bundleSource": "api"
+    },
+    {
+      "id": "movieBoxWeb",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "movielinkdb",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "movies4u",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "moviesda",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "movieswood",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "moviezwap",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "multi",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "mxplayer",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "netflix",
+      "bundleSource": "api"
+    },
+    {
+      "id": "pixar",
+      "bundleSource": "api"
+    },
+    {
+      "id": "primeVideo",
+      "bundleSource": "api"
+    },
+    {
+      "id": "showbox",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "starWars",
+      "bundleSource": "api"
+    },
+    {
+      "id": "torrentio",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "uhd",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "uniquestream",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "vega",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "zeefliz",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "disneyMirror",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "netflixMirror",
+      "bundleSource": "vendored"
+    },
+    {
+      "id": "primeMirror",
+      "bundleSource": "vendored"
+    }
+  ],
+  "rows": [
+    {
+      "id": "1flex",
+      "title": "Heart of the Beast",
+      "group": "Movie",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 34,
+          "http": 200,
+          "count": 4
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 182,
+          "http": 200,
+          "count": 20
+        },
+        "search": {
+          "state": "pass",
+          "ms": 181,
+          "http": 200,
+          "count": 20
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 33,
+          "http": 200
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 13408,
+          "http": 200,
+          "count": 1
+        }
+      },
+      "samples": [
+        {
+          "server": "Cinejoy - Nebula",
+          "hint": "m3u8",
+          "quality": "1080p",
+          "hls": true,
+          "format": "hls",
+          "probe": {
+            "status": "ok",
+            "httpStatus": 206,
+            "contentType": "image/jpeg",
+            "format": "hls"
+          },
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "range": null,
+          "signature": "HLS",
+          "ms": 24
+        }
+      ]
+    },
+    {
+      "id": "1tamilblasters",
+      "title": "John Doe (2026)",
+      "group": "Watch Online",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 30,
+          "http": 200,
+          "count": 9
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 325,
+          "http": 200,
+          "count": 28
+        },
+        "search": {
+          "state": "pass",
+          "ms": 335,
+          "http": 200,
+          "count": 3
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 70,
+          "http": 200
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "empty",
+          "ms": 4235,
+          "http": 200,
+          "count": 0
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "1tamilmv",
+      "title": "John Doe (2026)",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 30,
+          "http": 200,
+          "count": 5
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 625,
+          "http": 200,
+          "count": 190
+        },
+        "search": {
+          "state": "pass",
+          "ms": 666,
+          "http": 200,
+          "count": 25
+        },
+        "meta": {
+          "state": "fail",
+          "ms": 4123,
+          "http": 404,
+          "error": "This title is unavailable from the provider.",
+          "details": {
+            "provider": "1tamilmv",
+            "operation": "title",
+            "stage": "normalize",
+            "message": "This title is unavailable from the provider."
+          }
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "4khdhub",
+      "title": "Attack on Titan",
+      "group": "S06 AVC - Attack on Titan OAD 1080p WEB-DL H264",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 73,
+          "http": 200,
+          "count": 12
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 397,
+          "http": 200,
+          "count": 18
+        },
+        "search": {
+          "state": "pass",
+          "ms": 776,
+          "http": 200,
+          "count": 18
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 3559,
+          "http": 200
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 5918,
+          "http": 200,
+          "count": 1
+        }
+      },
+      "samples": [
+        {
+          "server": "CF Worker",
+          "hint": "mkv",
+          "quality": "1080p",
+          "hls": false,
+          "format": "mkv",
+          "probe": {
+            "status": "ok",
+            "httpStatus": 206,
+            "contentType": "video/x-matroska",
+            "format": "mkv",
+            "videoCodec": "h264",
+            "audioCodec": "eac3"
+          },
+          "status": 206,
+          "contentType": "video/x-matroska",
+          "range": "bytes 0-4095/1241031400",
+          "signature": "EBML",
+          "ms": 1185
+        }
+      ]
+    },
+    {
+      "id": "Joya9tv",
+      "title": "Transformers: The Last Knight (2017) Dual Audio [Hindi ORG-English] BluRay H264 AAC 1080p 720p 480p ESub",
+      "group": "Transformers: The Last Knight (2017) Dual Audio [Hindi ORG-English] BluRay H264 AAC 1080p 720p 480p ESub - SD 480p (500MB)",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 10,
+          "http": 200,
+          "count": 2
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 2288,
+          "http": 200,
+          "count": 30
+        },
+        "search": {
+          "state": "pass",
+          "ms": 2260,
+          "http": 200,
+          "count": 3
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 424,
+          "http": 200
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "empty",
+          "ms": 7343,
+          "http": 200,
+          "count": 0
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "anikoto",
+      "title": "Solo Leveling Season 2: Arise from the Shadow",
+      "group": "Solo Leveling Season 2: Arise from the Shadow",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 10,
+          "http": 200,
+          "count": 7
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 2293,
+          "http": 200,
+          "count": 30
+        },
+        "search": {
+          "state": "pass",
+          "ms": 2582,
+          "http": 200,
+          "count": 2
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 59,
+          "http": 200
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 1434,
+          "http": 200,
+          "count": 12
+        }
+      },
+      "samples": [
+        {
+          "server": "HD-1 (SUB)",
+          "hint": "m3u8",
+          "quality": "auto",
+          "hls": true,
+          "format": "hls",
+          "probe": {
+            "status": "ok",
+            "httpStatus": 206,
+            "contentType": "application/vnd.apple.mpegurl",
+            "format": "hls",
+            "codecs": [
+              "avc1.640032",
+              "mp4a.40.2"
+            ],
+            "videoCodec": "h264"
+          },
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "range": null,
+          "signature": "HLS",
+          "ms": 25
+        },
+        {
+          "server": "Vidstream-2 (SUB)",
+          "hint": "m3u8",
+          "quality": "auto",
+          "hls": true,
+          "format": "hls",
+          "probe": {
+            "status": "ok",
+            "httpStatus": 200,
+            "contentType": "application/vnd.apple.mpegurl",
+            "format": "hls",
+            "codecs": [
+              "avc1.640032",
+              "mp4a.40.2"
+            ],
+            "videoCodec": "h264"
+          },
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "range": null,
+          "signature": "HLS",
+          "ms": 329
+        },
+        {
+          "server": "HD-1 (DUB)",
+          "hint": "m3u8",
+          "quality": "auto",
+          "hls": true,
+          "format": "hls",
+          "probe": {
+            "status": "ok",
+            "httpStatus": 206,
+            "contentType": "application/vnd.apple.mpegurl",
+            "format": "hls",
+            "codecs": [
+              "avc1.640032",
+              "mp4a.40.2"
+            ],
+            "videoCodec": "h264"
+          },
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "range": null,
+          "signature": "HLS",
+          "ms": 25
+        }
+      ]
+    },
+    {
+      "id": "animesalt",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 9,
+          "http": 200,
+          "count": 3
+        },
+        "posts": {
+          "state": "empty",
+          "ms": 3789,
+          "http": 200,
+          "count": 0
+        },
+        "search": {
+          "state": "empty",
+          "ms": 2744,
+          "http": 200,
+          "count": 0
+        },
+        "meta": {
+          "state": "skipped",
+          "error": "No title from posts or search"
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "animesub",
+      "title": "Steel Ball Run: JoJo no Kimyou na Bouken",
+      "group": "Season 6",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 8,
+          "http": 200,
+          "count": 4
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 1466,
+          "http": 200,
+          "count": 50
+        },
+        "search": {
+          "state": "pass",
+          "ms": 2160,
+          "http": 200,
+          "count": 9
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 6039,
+          "http": 200
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "empty",
+          "ms": 2382,
+          "http": 200,
+          "count": 0
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "animeworld",
+      "title": "Arifureta: From Commonplace to World's Strongest",
+      "group": "Season 1",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 8,
+          "http": 200,
+          "count": 2
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 925,
+          "http": 200,
+          "count": 20
+        },
+        "search": {
+          "state": "pass",
+          "ms": 742,
+          "http": 200,
+          "count": 1
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 835,
+          "http": 200
+        },
+        "episodes": {
+          "state": "pass",
+          "ms": 4994,
+          "http": 200,
+          "count": 13
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 8866,
+          "http": 200,
+          "count": 2
+        }
+      },
+      "samples": [
+        {
+          "server": "ZephyrFlick",
+          "hint": "m3u8",
+          "hls": true,
+          "format": "hls",
+          "probe": {
+            "status": "ok",
+            "httpStatus": 200,
+            "contentType": "application/x-mpegURL",
+            "format": "hls",
+            "codecs": [
+              "avc1.4D400D",
+              "mp4a.40.2"
+            ],
+            "videoCodec": "h264"
+          },
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "range": null,
+          "signature": "HLS",
+          "ms": 436
+        },
+        {
+          "server": "AbyssPlayer (Hindi)",
+          "hint": "mp4",
+          "quality": "480p",
+          "hls": false,
+          "format": "mp4",
+          "probe": {
+            "status": "ok",
+            "httpStatus": 206,
+            "contentType": "video/mp4",
+            "format": "mp4",
+            "videoCodec": "h264"
+          },
+          "status": 206,
+          "contentType": "video/mp4",
+          "range": "bytes 0-4095/129370057",
+          "signature": "ISO BMFF",
+          "ms": 111
+        }
+      ]
+    },
+    {
+      "id": "autoEmbed",
+      "title": "Heart of the Beast",
+      "group": "Heart of the Beast",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 12,
+          "http": 200,
+          "count": 4
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 291,
+          "http": 200,
+          "count": 50
+        },
+        "search": {
+          "state": "pass",
+          "ms": 382,
+          "http": 200,
+          "count": 40
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 18,
+          "http": 200
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 7814,
+          "http": 200,
+          "count": 12
+        }
+      },
+      "samples": [
+        {
+          "server": "Cinejoy - Nebula",
+          "hint": "m3u8",
+          "quality": "1080p",
+          "hls": true,
+          "format": "hls",
+          "probe": {
+            "status": "ok",
+            "httpStatus": 206,
+            "contentType": "image/jpeg",
+            "format": "hls"
+          },
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "range": null,
+          "signature": "HLS",
+          "ms": 17
+        },
+        {
+          "server": "Movy - Boise (Multi/4K)",
+          "hint": "m3u8",
+          "quality": "2160p",
+          "hls": true,
+          "format": "hls",
+          "probe": {
+            "status": "ok",
+            "httpStatus": 200,
+            "contentType": "application/vnd.apple.mpegurl",
+            "format": "hls",
+            "codecs": [
+              "avc1.640033",
+              "mp4a.40.2"
+            ],
+            "videoCodec": "h264"
+          },
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "range": null,
+          "signature": "HLS",
+          "ms": 424
+        },
+        {
+          "server": "Movy - Boise (Multi/4K) (2160p)",
+          "hint": "m3u8",
+          "quality": "2160p",
+          "hls": true,
+          "format": "hls",
+          "probe": {
+            "status": "ok",
+            "httpStatus": 200,
+            "contentType": "application/vnd.apple.mpegurl",
+            "format": "hls"
+          },
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "range": null,
+          "signature": "HLS",
+          "ms": 1255
+        }
+      ]
+    },
+    {
+      "id": "castle",
+      "title": "Jailer 2",
+      "group": "Movie",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 16,
+          "http": 200,
+          "count": 3
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 4966,
+          "http": 200,
+          "count": 20
+        },
+        "search": {
+          "state": "pass",
+          "ms": 778,
+          "http": 200,
+          "count": 20
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 245,
+          "http": 200
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 777,
+          "http": 200,
+          "count": 2
+        }
+      },
+      "samples": [
+        {
+          "server": "Jailer 2 - Hindi, Tamil, Telugu, Malayalam, Kannada - 1080p - preview",
+          "hint": "m3u8",
+          "quality": "1080p",
+          "hls": true,
+          "format": "hls",
+          "probe": {
+            "status": "ok",
+            "httpStatus": 206,
+            "contentType": "application/vnd.apple.mpegurl",
+            "format": "hls"
+          },
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "range": null,
+          "signature": "HLS",
+          "ms": 87
+        },
+        {
+          "server": "Jailer 2 - Hindi, Tamil, Telugu, Malayalam, Kannada - 720p - preview",
+          "hint": "m3u8",
+          "quality": "720p",
+          "hls": true,
+          "format": "hls",
+          "probe": {
+            "status": "ok",
+            "httpStatus": 206,
+            "contentType": "application/vnd.apple.mpegurl",
+            "format": "hls"
+          },
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "range": null,
+          "signature": "HLS",
+          "ms": 126
+        }
+      ]
+    },
+    {
+      "id": "disneyPlus",
+      "results": {
+        "catalog": {
+          "state": "fail",
+          "ms": 25332,
+          "http": 504,
+          "error": "The provider exceeded the operation deadline.",
+          "details": {
+            "provider": "disneyPlus",
+            "operation": "catalog",
+            "stage": "runtime",
+            "message": "The provider exceeded the operation deadline."
+          }
+        },
+        "posts": {
+          "state": "skipped",
+          "error": "No category returned"
+        },
+        "search": {
+          "state": "fail",
+          "ms": 25010,
+          "http": 504,
+          "error": "The provider exceeded the operation deadline.",
+          "details": {
+            "provider": "disneyPlus",
+            "operation": "search",
+            "stage": "runtime",
+            "message": "The provider exceeded the operation deadline."
+          }
+        },
+        "meta": {
+          "state": "skipped",
+          "error": "No title from posts or search"
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "drive",
+      "title": "Avengers: Endgame",
+      "group": "Avengers Endgame: Encore (2026) [IMAX] Hindi – English – Tamil – Telugu Watch Online",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 16,
+          "http": 200,
+          "count": 7
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 1381,
+          "http": 200,
+          "count": 26
+        },
+        "search": {
+          "state": "pass",
+          "ms": 479,
+          "http": 200,
+          "count": 10
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 540,
+          "http": 200
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "empty",
+          "ms": 4471,
+          "http": 200,
+          "count": 0
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "dvdplay",
+      "title": "Ranabaali (2026) Tamil HDRip",
+      "group": "1 [TRUE WEB-DL - 4K SDR - 2160p HQ - HEVC - UNTOUCHED - [Tamil + Telugu + Hindi + Malayalam + Kannada]",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 22,
+          "http": 200,
+          "count": 5
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 596,
+          "http": 200,
+          "count": 10
+        },
+        "search": {
+          "state": "fail",
+          "ms": 28,
+          "http": 422,
+          "error": "DVDPlay search failed: Search is unavailable. Browse the categories.",
+          "details": {
+            "provider": "dvdplay",
+            "operation": "search",
+            "stage": "runtime",
+            "message": "DVDPlay search failed: Search is unavailable. Browse the categories."
+          }
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 634,
+          "http": 200
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "empty",
+          "ms": 6601,
+          "http": 200,
+          "count": 0
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "gokuHD",
+      "title": "Naruto: Shippuden (Season 1 – 18) Hindi Dubbed (ORG) [MULTi-Audio] WEB-DL 1080p 720p HD | [E389 Added | Anime Series]",
+      "group": "Naruto: Shippuden [Season 18] {Hindi + English + Japanese} 720p x264 [180MB/E] (Source 1)",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 21,
+          "http": 200,
+          "count": 5
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 719,
+          "http": 200,
+          "count": 10
+        },
+        "search": {
+          "state": "pass",
+          "ms": 718,
+          "http": 200,
+          "count": 10
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 265,
+          "http": 200
+        },
+        "episodes": {
+          "state": "pass",
+          "ms": 164,
+          "http": 200,
+          "count": 17
+        },
+        "stream": {
+          "state": "empty",
+          "ms": 5948,
+          "http": 200,
+          "count": 0
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "hdhub4u",
+      "title": "Bigg Boss",
+      "group": "Bigg Boss (Season 20)",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 40,
+          "http": 200,
+          "count": 9
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 282,
+          "http": 200,
+          "count": 60
+        },
+        "search": {
+          "state": "pass",
+          "ms": 560,
+          "http": 200,
+          "count": 14
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 1065,
+          "http": 200
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 4376,
+          "http": 200,
+          "count": 1
+        }
+      },
+      "samples": [
+        {
+          "server": "Pixeldrain",
+          "hint": "mkv",
+          "hls": false,
+          "format": "mkv",
+          "probe": {
+            "status": "ok",
+            "httpStatus": 206,
+            "contentType": "video/matroska",
+            "format": "mkv",
+            "videoCodec": "h264"
+          },
+          "status": 206,
+          "contentType": "video/x-matroska",
+          "range": "bytes 0-4095/355973718",
+          "signature": "EBML",
+          "ms": 310
+        }
+      ]
+    },
+    {
+      "id": "hdmovieslife",
+      "title": "The Beast (2026)",
+      "group": "Download",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 15,
+          "http": 200,
+          "count": 6
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 826,
+          "http": 200,
+          "count": 18
+        },
+        "search": {
+          "state": "empty",
+          "ms": 829,
+          "http": 200,
+          "count": 0
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 253,
+          "http": 200
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 7739,
+          "http": 200,
+          "count": 1
+        }
+      },
+      "samples": [
+        {
+          "server": "HDMoviesLife PixelDrain",
+          "hint": "mkv",
+          "hls": false,
+          "format": "mkv",
+          "probe": {
+            "status": "ok",
+            "httpStatus": 206,
+            "contentType": "video/matroska",
+            "format": "mkv",
+            "videoCodec": "h264"
+          },
+          "status": 206,
+          "contentType": "video/x-matroska",
+          "range": "bytes 0-4095/377752892",
+          "signature": "EBML",
+          "ms": 1278
+        }
+      ]
+    },
+    {
+      "id": "hiAnime",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 9,
+          "http": 200,
+          "count": 4
+        },
+        "posts": {
+          "state": "fail",
+          "ms": 35,
+          "http": 502,
+          "error": "Upstream request failed (ERR_INVALID_URL).",
+          "details": {
+            "provider": "hiAnime",
+            "operation": "posts",
+            "stage": "upstream",
+            "message": "Upstream request failed (ERR_INVALID_URL)."
+          }
+        },
+        "search": {
+          "state": "fail",
+          "ms": 35,
+          "http": 502,
+          "error": "Upstream request failed (ERR_INVALID_URL).",
+          "details": {
+            "provider": "hiAnime",
+            "operation": "search",
+            "stage": "upstream",
+            "message": "Upstream request failed (ERR_INVALID_URL)."
+          }
+        },
+        "meta": {
+          "state": "skipped",
+          "error": "No title from posts or search"
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "hotstar",
+      "results": {
+        "catalog": {
+          "state": "fail",
+          "ms": 25296,
+          "http": 504,
+          "error": "The provider exceeded the operation deadline.",
+          "details": {
+            "provider": "hotstar",
+            "operation": "catalog",
+            "stage": "runtime",
+            "message": "The provider exceeded the operation deadline."
+          }
+        },
+        "posts": {
+          "state": "skipped",
+          "error": "No category returned"
+        },
+        "search": {
+          "state": "fail",
+          "ms": 25015,
+          "http": 504,
+          "error": "The provider exceeded the operation deadline.",
+          "details": {
+            "provider": "hotstar",
+            "operation": "search",
+            "stage": "runtime",
+            "message": "The provider exceeded the operation deadline."
+          }
+        },
+        "meta": {
+          "state": "skipped",
+          "error": "No title from posts or search"
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "kickAssAnime",
+      "title": "Bungo Stray Dogs 5",
+      "group": "Episodes (Sub)",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 8,
+          "http": 200,
+          "count": 6
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 829,
+          "http": 200,
+          "count": 24
+        },
+        "search": {
+          "state": "pass",
+          "ms": 889,
+          "http": 200,
+          "count": 5
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 4145,
+          "http": 200
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 5318,
+          "http": 200,
+          "count": 4
+        }
+      },
+      "samples": [
+        {
+          "server": "VidStreaming (Auto)",
+          "hint": "m3u8",
+          "quality": "auto",
+          "hls": true,
+          "format": "hls",
+          "probe": {
+            "status": "ok",
+            "httpStatus": 200,
+            "contentType": "application/x-mpegURL",
+            "format": "hls",
+            "codecs": [
+              "avc1.4D4C28",
+              "mp4a.40.2"
+            ],
+            "videoCodec": "h264"
+          },
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "range": null,
+          "signature": "HLS",
+          "ms": 609
+        },
+        {
+          "server": "VidStreaming (1080p)",
+          "hint": "m3u8",
+          "quality": "1080p",
+          "hls": true,
+          "format": "hls",
+          "probe": {
+            "status": "ok",
+            "httpStatus": 200,
+            "contentType": "application/x-mpegURL",
+            "format": "hls"
+          },
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "range": null,
+          "signature": "HLS",
+          "ms": 662
+        },
+        {
+          "server": "VidStreaming (720p)",
+          "hint": "m3u8",
+          "quality": "720p",
+          "hls": true,
+          "format": "hls",
+          "probe": {
+            "status": "ok",
+            "httpStatus": 200,
+            "contentType": "application/x-mpegURL",
+            "format": "hls"
+          },
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "range": null,
+          "signature": "HLS",
+          "ms": 1554
+        }
+      ]
+    },
+    {
+      "id": "kissKh",
+      "title": "Blossom in Darkness",
+      "group": "Blossom in Darkness",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 18,
+          "http": 200,
+          "count": 4
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 383,
+          "http": 200,
+          "count": 10
+        },
+        "search": {
+          "state": "pass",
+          "ms": 192,
+          "http": 200,
+          "count": 2
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 222,
+          "http": 200
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 639,
+          "http": 200,
+          "count": 1
+        }
+      },
+      "samples": [
+        {
+          "server": "KissKH",
+          "hint": "m3u8",
+          "quality": "auto",
+          "hls": true,
+          "format": "hls",
+          "probe": {
+            "status": "ok",
+            "httpStatus": 206,
+            "contentType": "application/vnd.apple.mpegurl",
+            "format": "hls"
+          },
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "range": null,
+          "signature": "HLS",
+          "ms": 19
+        }
+      ]
+    },
+    {
+      "id": "kmMovies",
+      "title": "The Beast",
+      "group": "Encoded Version - 480p 480p 415.7MB",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 7,
+          "http": 200,
+          "count": 6
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 255,
+          "http": 200,
+          "count": 36
+        },
+        "search": {
+          "state": "pass",
+          "ms": 1090,
+          "http": 200,
+          "count": 11
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 173,
+          "http": 200
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "empty",
+          "ms": 5010,
+          "http": 200,
+          "count": 0
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "luxMovies",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 18,
+          "http": 200,
+          "count": 9
+        },
+        "posts": {
+          "state": "fail",
+          "ms": 228,
+          "http": 502,
+          "error": "Upstream returned HTTP 403.",
+          "details": {
+            "provider": "luxMovies",
+            "operation": "posts",
+            "stage": "upstream",
+            "upstreamStatus": 403,
+            "message": "Upstream returned HTTP 403."
+          }
+        },
+        "search": {
+          "state": "fail",
+          "ms": 225,
+          "http": 502,
+          "error": "Upstream returned HTTP 403.",
+          "details": {
+            "provider": "luxMovies",
+            "operation": "search",
+            "stage": "upstream",
+            "upstreamStatus": 403,
+            "message": "Upstream returned HTTP 403."
+          }
+        },
+        "meta": {
+          "state": "skipped",
+          "error": "No title from posts or search"
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "marvel",
+      "results": {
+        "catalog": {
+          "state": "fail",
+          "ms": 25291,
+          "http": 504,
+          "error": "The provider exceeded the operation deadline.",
+          "details": {
+            "provider": "marvel",
+            "operation": "catalog",
+            "stage": "runtime",
+            "message": "The provider exceeded the operation deadline."
+          }
+        },
+        "posts": {
+          "state": "skipped",
+          "error": "No category returned"
+        },
+        "search": {
+          "state": "fail",
+          "ms": 25014,
+          "http": 504,
+          "error": "The provider exceeded the operation deadline.",
+          "details": {
+            "provider": "marvel",
+            "operation": "search",
+            "stage": "runtime",
+            "message": "The provider exceeded the operation deadline."
+          }
+        },
+        "meta": {
+          "state": "skipped",
+          "error": "No title from posts or search"
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "movieBoxWeb",
+      "title": "Lucifer [Hindi] S1-S6",
+      "group": "Original Audio",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 6,
+          "http": 200,
+          "count": 3
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 571,
+          "http": 200,
+          "count": 18
+        },
+        "search": {
+          "state": "pass",
+          "ms": 185,
+          "http": 200,
+          "count": 4
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 115,
+          "http": 200
+        },
+        "episodes": {
+          "state": "pass",
+          "ms": 23,
+          "http": 200,
+          "count": 93
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 2229,
+          "http": 200,
+          "count": 4
+        }
+      },
+      "samples": [
+        {
+          "server": "Original Audio 360",
+          "hint": "mp4",
+          "quality": "360p",
+          "hls": false,
+          "format": "mp4",
+          "probe": {
+            "status": "ok",
+            "httpStatus": 206,
+            "contentType": "video/mp4",
+            "format": "mp4",
+            "videoCodec": "h264"
+          },
+          "status": 206,
+          "contentType": "video/mp4",
+          "range": "bytes 0-4095/122899849",
+          "signature": "ISO BMFF",
+          "ms": 82
+        },
+        {
+          "server": "Original Audio 480",
+          "hint": "mp4",
+          "quality": "480p",
+          "hls": false,
+          "format": "mp4",
+          "probe": {
+            "status": "ok",
+            "httpStatus": 206,
+            "contentType": "video/mp4",
+            "format": "mp4",
+            "videoCodec": "h264"
+          },
+          "status": 206,
+          "contentType": "video/mp4",
+          "range": "bytes 0-4095/167378467",
+          "signature": "ISO BMFF",
+          "ms": 87
+        },
+        {
+          "server": "Original Audio 720",
+          "hint": "mp4",
+          "quality": "720p",
+          "hls": false,
+          "format": "mp4",
+          "probe": {
+            "status": "ok",
+            "httpStatus": 206,
+            "contentType": "video/mp4",
+            "format": "mp4",
+            "videoCodec": "h264"
+          },
+          "status": 206,
+          "contentType": "video/mp4",
+          "range": "bytes 0-4095/374134738",
+          "signature": "ISO BMFF",
+          "ms": 89
+        }
+      ]
+    },
+    {
+      "id": "movielinkdb",
+      "title": "Bachelor Point",
+      "group": "720p",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 10,
+          "http": 200,
+          "count": 5
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 2277,
+          "http": 200,
+          "count": 20
+        },
+        "search": {
+          "state": "pass",
+          "ms": 2490,
+          "http": 200,
+          "count": 15
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 2040,
+          "http": 200
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 14838,
+          "http": 200,
+          "count": 2
+        }
+      },
+      "samples": [
+        {
+          "server": "mp4-entry",
+          "hint": "mp4",
+          "quality": "720p",
+          "hls": false,
+          "format": "mp4",
+          "probe": {
+            "status": "ok",
+            "httpStatus": 206,
+            "contentType": "video/mp4",
+            "format": "mp4",
+            "videoCodec": "h264"
+          },
+          "status": 206,
+          "contentType": "video/mp4",
+          "range": "bytes 0-4095/1508444235",
+          "signature": "ISO BMFF",
+          "ms": 226
+        },
+        {
+          "server": "fsl",
+          "hint": "mp4",
+          "hls": false,
+          "format": "mkv",
+          "probe": {
+            "status": "ok",
+            "httpStatus": 206,
+            "contentType": "video/x-matroska",
+            "format": "mkv",
+            "videoCodec": "h264"
+          },
+          "status": 206,
+          "contentType": "video/x-matroska",
+          "range": null,
+          "signature": "EBML",
+          "ms": 179
+        }
+      ]
+    },
+    {
+      "id": "movies4u",
+      "title": "Ramayana: Rise of a Legend (2026) HQ-HDTC",
+      "group": "Ramayana: Rise of a Legend (2026) HQ-HDTC Multi Audio [Hindi + Tamil + Telugu + Malayalam + Kannada] (ORG) Full Movie and available in 480p & 720p & 1080p. This movie is based on Action, Adventure, Fantasy and available in Hindi.",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 7,
+          "http": 200,
+          "count": 2
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 2368,
+          "http": 200,
+          "count": 31
+        },
+        "search": {
+          "state": "pass",
+          "ms": 3981,
+          "http": 200,
+          "count": 6
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 834,
+          "http": 200
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "fail",
+          "ms": 843,
+          "http": 502,
+          "error": "Upstream request failed (ERR_INVALID_URL).",
+          "details": {
+            "provider": "movies4u",
+            "operation": "sources",
+            "stage": "upstream",
+            "message": "Upstream request failed (ERR_INVALID_URL)."
+          }
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "moviesda",
+      "title": "John Doe (2026) Tamil Full",
+      "group": "John Doe (1080p HD)",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 8,
+          "http": 200,
+          "count": 6
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 601,
+          "http": 200,
+          "count": 20
+        },
+        "search": {
+          "state": "empty",
+          "ms": 960,
+          "http": 200,
+          "count": 0
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 736,
+          "http": 200
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 3612,
+          "http": 200,
+          "count": 2
+        }
+      },
+      "samples": [
+        {
+          "server": "Moviesda 1",
+          "hint": "mp4",
+          "quality": "1080p",
+          "hls": false,
+          "format": "mp4",
+          "probe": {
+            "status": "ok",
+            "httpStatus": 206,
+            "contentType": "video/mp4",
+            "format": "mp4",
+            "videoCodec": "h264"
+          },
+          "status": 206,
+          "contentType": "video/mp4",
+          "range": "bytes 0-4095/2467106733",
+          "signature": "ISO BMFF",
+          "ms": 629
+        },
+        {
+          "server": "Moviesda 2",
+          "hint": "mp4",
+          "quality": "1080p",
+          "hls": false,
+          "format": "mp4",
+          "probe": {
+            "status": "ok",
+            "httpStatus": 206,
+            "contentType": "video/mp4",
+            "format": "mp4",
+            "videoCodec": "h264"
+          },
+          "status": 206,
+          "contentType": "video/mp4",
+          "range": "bytes 0-4095/2467106733",
+          "signature": "ISO BMFF",
+          "ms": 622
+        }
+      ]
+    },
+    {
+      "id": "movieswood",
+      "title": "DNK",
+      "group": "⬇ Download",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 7,
+          "http": 200,
+          "count": 5
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 661,
+          "http": 200,
+          "count": 9
+        },
+        "search": {
+          "state": "fail",
+          "ms": 11,
+          "http": 422,
+          "error": "MoviesWood search failed: Search is unavailable. Browse the categories.",
+          "details": {
+            "provider": "movieswood",
+            "operation": "search",
+            "stage": "runtime",
+            "message": "MoviesWood search failed: Search is unavailable. Browse the categories."
+          }
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 307,
+          "http": 200
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 4063,
+          "http": 200,
+          "count": 1
+        }
+      },
+      "samples": [
+        {
+          "server": "MoviesWood Direct",
+          "hint": "mkv",
+          "quality": "720p",
+          "hls": false,
+          "format": "mkv",
+          "probe": {
+            "status": "ok",
+            "httpStatus": 206,
+            "contentType": "application/octet-stream",
+            "format": "mkv",
+            "videoCodec": "h264"
+          },
+          "status": 206,
+          "contentType": "video/x-matroska",
+          "range": "bytes 0-4095/1377851783",
+          "signature": "EBML",
+          "ms": 1305
+        }
+      ]
+    },
+    {
+      "id": "moviezwap",
+      "title": "Money Heist Telugu Dubbed Season (01 to 05) All Episodes HDRip ESub Full Movie Free Download HD MP4 Format for PC Laptop Android Mobile Tab",
+      "group": "Money Heist (2021) Telugu Season 05 Vol.2 Eps (06 to 10)",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 8,
+          "http": 200,
+          "count": 4
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 1117,
+          "http": 200,
+          "count": 21
+        },
+        "search": {
+          "state": "pass",
+          "ms": 998,
+          "http": 200,
+          "count": 4
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 599,
+          "http": 200
+        },
+        "episodes": {
+          "state": "pass",
+          "ms": 581,
+          "http": 200,
+          "count": 2
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 1362,
+          "http": 200,
+          "count": 1
+        }
+      },
+      "samples": [
+        {
+          "server": "Fast Download",
+          "hint": "mp4",
+          "quality": "480p",
+          "hls": false,
+          "format": "mkv",
+          "probe": {
+            "status": "ok",
+            "httpStatus": 206,
+            "contentType": "video/mp4",
+            "format": "mkv",
+            "videoCodec": "h264"
+          },
+          "status": 206,
+          "contentType": "video/x-matroska",
+          "range": "bytes 0-4095/1083856237",
+          "signature": "EBML",
+          "ms": 507
+        }
+      ]
+    },
+    {
+      "id": "multi",
+      "title": "Mononoke the Movie: Chapter 2 - The Ashes of Rage",
+      "group": "Mononoke the Movie: Chapter 2 - The Ashes of Rage",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 7,
+          "http": 200,
+          "count": 13
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 1158,
+          "http": 200,
+          "count": 30
+        },
+        "search": {
+          "state": "pass",
+          "ms": 1329,
+          "http": 200,
+          "count": 23
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 724,
+          "http": 200
+        },
+        "episodes": {
+          "state": "empty",
+          "ms": 576,
+          "http": 200,
+          "count": 0
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 4679,
+          "http": 200,
+          "count": 4
+        }
+      },
+      "samples": [
+        {
+          "server": "GD mirror / iqst (streamhg)",
+          "hint": "m3u8",
+          "hls": true,
+          "format": "hls",
+          "probe": {
+            "status": "ok",
+            "httpStatus": 200,
+            "contentType": "application/vnd.apple.mpegurl",
+            "format": "hls",
+            "codecs": [
+              "avc1.64001e",
+              "mp4a.40.2"
+            ],
+            "videoCodec": "h264"
+          },
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "range": null,
+          "signature": "HLS",
+          "ms": 235
+        },
+        {
+          "server": "GD mirror / iqst (earnvids)",
+          "hint": "m3u8",
+          "hls": true,
+          "format": "hls",
+          "probe": {
+            "status": "ok",
+            "httpStatus": 200,
+            "contentType": "application/vnd.apple.mpegurl",
+            "format": "hls",
+            "codecs": [
+              "avc1.64001e",
+              "mp4a.40.2"
+            ],
+            "videoCodec": "h264"
+          },
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "range": null,
+          "signature": "HLS",
+          "ms": 249
+        },
+        {
+          "server": "GD mirror / iqst (streamhg)",
+          "hint": "m3u8",
+          "hls": true,
+          "format": "hls",
+          "probe": {
+            "status": "ok",
+            "httpStatus": 200,
+            "contentType": "application/vnd.apple.mpegurl",
+            "format": "hls",
+            "codecs": [
+              "avc1.64001e",
+              "mp4a.40.2"
+            ],
+            "videoCodec": "h264"
+          },
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "range": null,
+          "signature": "HLS",
+          "ms": 325
+        }
+      ]
+    },
+    {
+      "id": "mxplayer",
+      "title": "Ki & Ka",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 12,
+          "http": 200,
+          "count": 5
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 2125,
+          "http": 200,
+          "count": 20
+        },
+        "search": {
+          "state": "pass",
+          "ms": 1972,
+          "http": 200,
+          "count": 10
+        },
+        "meta": {
+          "state": "fail",
+          "ms": 1179,
+          "http": 404,
+          "error": "This title is unavailable from the provider.",
+          "details": {
+            "provider": "mxplayer",
+            "operation": "title",
+            "stage": "normalize",
+            "message": "This title is unavailable from the provider."
+          }
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "netflix",
+      "results": {
+        "catalog": {
+          "state": "fail",
+          "ms": 25311,
+          "http": 504,
+          "error": "The provider exceeded the operation deadline.",
+          "details": {
+            "provider": "netflix",
+            "operation": "catalog",
+            "stage": "runtime",
+            "message": "The provider exceeded the operation deadline."
+          }
+        },
+        "posts": {
+          "state": "skipped",
+          "error": "No category returned"
+        },
+        "search": {
+          "state": "fail",
+          "ms": 25019,
+          "http": 504,
+          "error": "The provider exceeded the operation deadline.",
+          "details": {
+            "provider": "netflix",
+            "operation": "search",
+            "stage": "runtime",
+            "message": "The provider exceeded the operation deadline."
+          }
+        },
+        "meta": {
+          "state": "skipped",
+          "error": "No title from posts or search"
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "pixar",
+      "results": {
+        "catalog": {
+          "state": "fail",
+          "ms": 25326,
+          "http": 504,
+          "error": "The provider exceeded the operation deadline.",
+          "details": {
+            "provider": "pixar",
+            "operation": "catalog",
+            "stage": "runtime",
+            "message": "The provider exceeded the operation deadline."
+          }
+        },
+        "posts": {
+          "state": "skipped",
+          "error": "No category returned"
+        },
+        "search": {
+          "state": "fail",
+          "ms": 25013,
+          "http": 504,
+          "error": "The provider exceeded the operation deadline.",
+          "details": {
+            "provider": "pixar",
+            "operation": "search",
+            "stage": "runtime",
+            "message": "The provider exceeded the operation deadline."
+          }
+        },
+        "meta": {
+          "state": "skipped",
+          "error": "No title from posts or search"
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "primeVideo",
+      "results": {
+        "catalog": {
+          "state": "fail",
+          "ms": 25309,
+          "http": 504,
+          "error": "The provider exceeded the operation deadline.",
+          "details": {
+            "provider": "primeVideo",
+            "operation": "catalog",
+            "stage": "runtime",
+            "message": "The provider exceeded the operation deadline."
+          }
+        },
+        "posts": {
+          "state": "skipped",
+          "error": "No category returned"
+        },
+        "search": {
+          "state": "fail",
+          "ms": 25012,
+          "http": 504,
+          "error": "The provider exceeded the operation deadline.",
+          "details": {
+            "provider": "primeVideo",
+            "operation": "search",
+            "stage": "runtime",
+            "message": "The provider exceeded the operation deadline."
+          }
+        },
+        "meta": {
+          "state": "skipped",
+          "error": "No title from posts or search"
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "showbox",
+      "title": "Ghost Soldier",
+      "group": "Ghost.Soldier.2026.camrip.1080p.mp4 (4.66 GB)",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 15,
+          "http": 200,
+          "count": 3
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 1985,
+          "http": 200,
+          "count": 80
+        },
+        "search": {
+          "state": "fail",
+          "ms": 1985,
+          "http": 502,
+          "error": "Upstream request failed (ECONNRESET).",
+          "details": {
+            "provider": "showbox",
+            "operation": "search",
+            "stage": "upstream",
+            "message": "Upstream request failed (ECONNRESET)."
+          }
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 1407,
+          "http": 200
+        },
+        "episodes": {
+          "state": "pass",
+          "ms": 240,
+          "http": 200,
+          "count": 1
+        },
+        "stream": {
+          "state": "fail",
+          "ms": 118,
+          "http": 502,
+          "error": "Upstream returned HTTP 404.",
+          "details": {
+            "provider": "showbox",
+            "operation": "sources",
+            "stage": "upstream",
+            "upstreamStatus": 404,
+            "message": "Upstream returned HTTP 404."
+          }
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "starWars",
+      "results": {
+        "catalog": {
+          "state": "fail",
+          "ms": 25301,
+          "http": 504,
+          "error": "The provider exceeded the operation deadline.",
+          "details": {
+            "provider": "starWars",
+            "operation": "catalog",
+            "stage": "runtime",
+            "message": "The provider exceeded the operation deadline."
+          }
+        },
+        "posts": {
+          "state": "skipped",
+          "error": "No category returned"
+        },
+        "search": {
+          "state": "fail",
+          "ms": 25017,
+          "http": 504,
+          "error": "The provider exceeded the operation deadline.",
+          "details": {
+            "provider": "starWars",
+            "operation": "search",
+            "stage": "runtime",
+            "message": "The provider exceeded the operation deadline."
+          }
+        },
+        "meta": {
+          "state": "skipped",
+          "error": "No title from posts or search"
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "torrentio",
+      "title": "Heart of the Beast",
+      "group": "Heart of the Beast",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 12,
+          "http": 200,
+          "count": 4
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 68,
+          "http": 200,
+          "count": 50
+        },
+        "search": {
+          "state": "pass",
+          "ms": 79,
+          "http": 200,
+          "count": 40
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 18,
+          "http": 200
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "empty",
+          "ms": 58,
+          "http": 200,
+          "count": 0
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "uhd",
+      "title": "Dexter: Resurrection (2025) 1080p Web-DL [Dual Audio]",
+      "group": "Dexter.Resurrection.S02E01.Risky.Business.1080p.AMZN.WEB-DL.DUAL.DDP5.1.H.264-NOGRP [3.22 GB]",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 7,
+          "http": 200,
+          "count": 9
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 1376,
+          "http": 200,
+          "count": 12
+        },
+        "search": {
+          "state": "pass",
+          "ms": 347,
+          "http": 200,
+          "count": 8
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 64,
+          "http": 200
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 9216,
+          "http": 200,
+          "count": 1
+        }
+      },
+      "samples": [
+        {
+          "server": "Resume Cloud (Fast)",
+          "hint": "mkv",
+          "quality": "720p",
+          "hls": false,
+          "format": "mkv",
+          "probe": {
+            "status": "ok",
+            "httpStatus": 206,
+            "contentType": "video/x-matroska",
+            "format": "mkv",
+            "videoCodec": "h264",
+            "audioCodec": "eac3"
+          },
+          "status": 206,
+          "contentType": "video/x-matroska",
+          "range": "bytes 0-4095/3453109734",
+          "signature": "EBML",
+          "ms": 351
+        }
+      ]
+    },
+    {
+      "id": "uniquestream",
+      "title": "Dragon Ball Super: Beerus",
+      "group": "Season 1",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 5,
+          "http": 200,
+          "count": 3
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 565,
+          "http": 200,
+          "count": 20
+        },
+        "search": {
+          "state": "empty",
+          "ms": 467,
+          "http": 200,
+          "count": 0
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 479,
+          "http": 200
+        },
+        "episodes": {
+          "state": "pass",
+          "ms": 413,
+          "http": 200,
+          "count": 6
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 2404,
+          "http": 200,
+          "count": 2
+        }
+      },
+      "samples": [
+        {
+          "server": "uniquestream (RAW - ja-JP)",
+          "hint": "m3u8",
+          "hls": true,
+          "format": "hls",
+          "probe": {
+            "status": "ok",
+            "httpStatus": 200,
+            "contentType": "application/vnd.apple.mpegurl",
+            "format": "hls",
+            "codecs": [
+              "avc1.640028",
+              "mp4a.40.2"
+            ],
+            "videoCodec": "h264"
+          },
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "range": null,
+          "signature": "HLS",
+          "ms": 395
+        },
+        {
+          "server": "uniquestream (Dub - en-US)",
+          "hint": "m3u8",
+          "hls": true,
+          "format": "hls",
+          "probe": {
+            "status": "ok",
+            "httpStatus": 200,
+            "contentType": "application/vnd.apple.mpegurl",
+            "format": "hls",
+            "codecs": [
+              "avc1.640028",
+              "mp4a.40.2"
+            ],
+            "videoCodec": "h264"
+          },
+          "status": 200,
+          "contentType": "application/vnd.apple.mpegurl",
+          "range": null,
+          "signature": "HLS",
+          "ms": 396
+        }
+      ]
+    },
+    {
+      "id": "vega",
+      "title": "Naruto: Shippuden",
+      "group": "Season 18 [Hindi Dubbed (ORG) + MULTi-Audio] 720p x264 [180MB/E]",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 3,
+          "http": 200,
+          "count": 17
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 212,
+          "http": 200,
+          "count": 21
+        },
+        "search": {
+          "state": "pass",
+          "ms": 685,
+          "http": 200,
+          "count": 15
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 383,
+          "http": 200
+        },
+        "episodes": {
+          "state": "pass",
+          "ms": 518,
+          "http": 200,
+          "count": 17
+        },
+        "stream": {
+          "state": "pass",
+          "ms": 6916,
+          "http": 200,
+          "count": 3
+        }
+      },
+      "samples": [
+        {
+          "server": "Transfer.it",
+          "hint": "mp4",
+          "hls": false,
+          "format": "mkv",
+          "probe": {
+            "status": "ok",
+            "httpStatus": 206,
+            "contentType": "application/octet-stream",
+            "format": "mkv",
+            "videoCodec": "h264"
+          },
+          "status": 206,
+          "contentType": "video/x-matroska",
+          "range": "bytes 0-4095/202706264",
+          "signature": "EBML",
+          "ms": 555
+        },
+        {
+          "server": "CF Worker",
+          "hint": "mkv",
+          "hls": false,
+          "format": "mkv",
+          "probe": {
+            "status": "ok",
+            "httpStatus": 206,
+            "contentType": "application/octet-stream",
+            "format": "mkv",
+            "videoCodec": "h264"
+          },
+          "status": 206,
+          "contentType": "video/x-matroska",
+          "range": "bytes 0-4095/202706270",
+          "signature": "EBML",
+          "ms": 177
+        },
+        {
+          "server": "Pixeldrain",
+          "hint": "mkv",
+          "hls": false,
+          "format": "mkv",
+          "probe": {
+            "status": "ok",
+            "httpStatus": 206,
+            "contentType": "video/matroska",
+            "format": "mkv",
+            "videoCodec": "h264"
+          },
+          "status": 206,
+          "contentType": "video/x-matroska",
+          "range": "bytes 0-4095/202706272",
+          "signature": "EBML",
+          "ms": 477
+        }
+      ]
+    },
+    {
+      "id": "zeefliz",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 9,
+          "http": 200,
+          "count": 2
+        },
+        "posts": {
+          "state": "fail",
+          "ms": 36,
+          "http": 502,
+          "error": "Upstream request failed (ERR_INVALID_URL).",
+          "details": {
+            "provider": "zeefliz",
+            "operation": "posts",
+            "stage": "upstream",
+            "message": "Upstream request failed (ERR_INVALID_URL)."
+          }
+        },
+        "search": {
+          "state": "fail",
+          "ms": 36,
+          "http": 502,
+          "error": "Upstream request failed (ERR_INVALID_URL).",
+          "details": {
+            "provider": "zeefliz",
+            "operation": "search",
+            "stage": "upstream",
+            "message": "Upstream request failed (ERR_INVALID_URL)."
+          }
+        },
+        "meta": {
+          "state": "skipped",
+          "error": "No title from posts or search"
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "disneyMirror",
+      "title": "Batman: Knightfall Part 1: Knightfall",
+      "group": "Batman: Knightfall Part 1: Knightfall",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 6,
+          "http": 200,
+          "count": 4
+        },
+        "posts": {
+          "state": "empty",
+          "ms": 1175,
+          "http": 200,
+          "count": 0
+        },
+        "search": {
+          "state": "pass",
+          "ms": 1416,
+          "http": 200,
+          "count": 8
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 543,
+          "http": 200
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "fail",
+          "ms": 1364,
+          "http": 503,
+          "error": "The mirror requires one-time verification before playback.",
+          "details": {
+            "provider": "disneyMirror",
+            "operation": "sources",
+            "stage": "verification",
+            "upstreamStatus": 200,
+            "message": "The mirror requires one-time verification before playback."
+          }
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "netflixMirror",
+      "title": "Batman Ninja",
+      "group": "Batman Ninja",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 9,
+          "http": 200,
+          "count": 4
+        },
+        "posts": {
+          "state": "empty",
+          "ms": 541,
+          "http": 200,
+          "count": 0
+        },
+        "search": {
+          "state": "pass",
+          "ms": 540,
+          "http": 200,
+          "count": 5
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 513,
+          "http": 200
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "fail",
+          "ms": 523,
+          "http": 503,
+          "error": "The mirror requires one-time verification before playback.",
+          "details": {
+            "provider": "netflixMirror",
+            "operation": "sources",
+            "stage": "verification",
+            "upstreamStatus": 200,
+            "message": "The mirror requires one-time verification before playback."
+          }
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "primeMirror",
+      "title": "Batman",
+      "group": "Batman",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 9,
+          "http": 200,
+          "count": 4
+        },
+        "posts": {
+          "state": "empty",
+          "ms": 540,
+          "http": 200,
+          "count": 0
+        },
+        "search": {
+          "state": "pass",
+          "ms": 540,
+          "http": 200,
+          "count": 13
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 526,
+          "http": 200
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "fail",
+          "ms": 522,
+          "http": 503,
+          "error": "The mirror requires one-time verification before playback.",
+          "details": {
+            "provider": "primeMirror",
+            "operation": "sources",
+            "stage": "verification",
+            "upstreamStatus": 200,
+            "message": "The mirror requires one-time verification before playback."
+          }
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "youtube",
+      "title": "Chalre Chalre Waal |Female Version | TuSanwal Phul Kasturi |Trending Songs 2026",
+      "group": "Watch Video",
+      "results": {
+        "catalog": {
+          "state": "pass",
+          "ms": 15,
+          "http": 200,
+          "count": 9
+        },
+        "posts": {
+          "state": "pass",
+          "ms": 844,
+          "http": 200,
+          "count": 9
+        },
+        "search": {
+          "state": "pass",
+          "ms": 1099,
+          "http": 200,
+          "count": 15
+        },
+        "meta": {
+          "state": "pass",
+          "ms": 727,
+          "http": 200
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "Direct links; no episode reference"
+        },
+        "stream": {
+          "state": "fail",
+          "ms": 3,
+          "http": 422,
+          "error": "YouTube playback uses the embedded video player.",
+          "details": {
+            "provider": "youtube",
+            "operation": "sources",
+            "stage": "request",
+            "message": "YouTube playback uses the embedded video player."
+          }
+        }
+      },
+      "samples": []
+    },
+    {
+      "id": "moviesApi",
+      "results": {
+        "catalog": {
+          "state": "fail",
+          "ms": 4,
+          "http": 404,
+          "error": "Provider is unavailable.",
+          "details": {
+            "provider": "moviesApi",
+            "operation": "catalog",
+            "stage": "registry",
+            "message": "Provider is unavailable."
+          }
+        },
+        "posts": {
+          "state": "skipped",
+          "error": "No category returned"
+        },
+        "search": {
+          "state": "fail",
+          "ms": 3,
+          "http": 404,
+          "error": "Provider is unavailable.",
+          "details": {
+            "provider": "moviesApi",
+            "operation": "search",
+            "stage": "registry",
+            "message": "Provider is unavailable."
+          }
+        },
+        "meta": {
+          "state": "skipped",
+          "error": "No title from posts or search"
+        },
+        "episodes": {
+          "state": "skipped",
+          "error": "No group from meta"
+        },
+        "stream": {
+          "state": "skipped",
+          "error": "No source reference"
+        }
+      },
+      "samples": []
+    }
+  ]
+}

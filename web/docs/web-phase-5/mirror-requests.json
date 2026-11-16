@@ -1,0 +1,117 @@
+{
+  "android": "a77aa81. Axios request before native transport.",
+  "website": "Undici outbound request.",
+  "results": [
+    {
+      "id": "disneyMirror",
+      "androidAxios": {
+        "url": "https://tv.imgcdn.kim/newtv/player.php?id=1271721229",
+        "method": "GET",
+        "headers": {
+          "accept": "application/json, text/plain, */*",
+          "cache-control": "no-cache, no-store, must-revalidate",
+          "expires": "0",
+          "pragma": "no-cache",
+          "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:136.0) Gecko/20100101 Firefox/136.0 /OS.GatuNewTV v1.0",
+          "usertoken": "",
+          "x-requested-with": "NetmirrorNewTV v1.0"
+        }
+      },
+      "websiteUndici": {
+        "url": "https://tv.imgcdn.kim/newtv/player.php?id=1271721229",
+        "method": "GET",
+        "headers": {
+          "accept": "application/json, text/plain, */*",
+          "accept-encoding": "br, gzip, deflate, zstd",
+          "accept-language": "*",
+          "cache-control": "no-cache, no-store, must-revalidate",
+          "expires": "0",
+          "pragma": "no-cache",
+          "sec-fetch-mode": "cors",
+          "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:136.0) Gecko/20100101 Firefox/136.0 /OS.GatuNewTV v1.0",
+          "usertoken": "",
+          "x-requested-with": "NetmirrorNewTV v1.0"
+        }
+      },
+      "outcome": {
+        "stage": "verification",
+        "upstreamStatus": 200,
+        "message": "The mirror requires one-time verification before playback."
+      }
+    },
+    {
+      "id": "netflixMirror",
+      "androidAxios": {
+        "url": "https://tv.imgcdn.kim/newtv/player.php?id=80244455",
+        "method": "GET",
+        "headers": {
+          "accept": "application/json, text/plain, */*",
+          "cache-control": "no-cache, no-store, must-revalidate",
+          "expires": "0",
+          "pragma": "no-cache",
+          "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:136.0) Gecko/20100101 Firefox/136.0 /OS.GatuNewTV v1.0",
+          "usertoken": "",
+          "x-requested-with": "NetmirrorNewTV v1.0"
+        }
+      },
+      "websiteUndici": {
+        "url": "https://tv.imgcdn.kim/newtv/player.php?id=80244455",
+        "method": "GET",
+        "headers": {
+          "accept": "application/json, text/plain, */*",
+          "accept-encoding": "br, gzip, deflate, zstd",
+          "accept-language": "*",
+          "cache-control": "no-cache, no-store, must-revalidate",
+          "expires": "0",
+          "pragma": "no-cache",
+          "sec-fetch-mode": "cors",
+          "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:136.0) Gecko/20100101 Firefox/136.0 /OS.GatuNewTV v1.0",
+          "usertoken": "",
+          "x-requested-with": "NetmirrorNewTV v1.0"
+        }
+      },
+      "outcome": {
+        "stage": "verification",
+        "upstreamStatus": 200,
+        "message": "The mirror requires one-time verification before playback."
+      }
+    },
+    {
+      "id": "primeMirror",
+      "androidAxios": {
+        "url": "https://tv.imgcdn.kim/newtv/player.php?id=0OWK03MO2F6JPCMHYRQWJMDPUY",
+        "method": "GET",
+        "headers": {
+          "accept": "application/json, text/plain, */*",
+          "cache-control": "no-cache, no-store, must-revalidate",
+          "expires": "0",
+          "pragma": "no-cache",
+          "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:136.0) Gecko/20100101 Firefox/136.0 /OS.GatuNewTV v1.0",
+          "usertoken": "",
+          "x-requested-with": "NetmirrorNewTV v1.0"
+        }
+      },
+      "websiteUndici": {
+        "url": "https://tv.imgcdn.kim/newtv/player.php?id=0OWK03MO2F6JPCMHYRQWJMDPUY",
+        "method": "GET",
+        "headers": {
+          "accept": "application/json, text/plain, */*",
+          "accept-encoding": "br, gzip, deflate, zstd",
+          "accept-language": "*",
+          "cache-control": "no-cache, no-store, must-revalidate",
+          "expires": "0",
+          "pragma": "no-cache",
+          "sec-fetch-mode": "cors",
+          "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:136.0) Gecko/20100101 Firefox/136.0 /OS.GatuNewTV v1.0",
+          "usertoken": "",
+          "x-requested-with": "NetmirrorNewTV v1.0"
+        }
+      },
+      "outcome": {
+        "stage": "verification",
+        "upstreamStatus": 200,
+        "message": "The mirror requires one-time verification before playback."
+      }
+    }
+  ]
+}

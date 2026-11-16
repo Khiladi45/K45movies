@@ -1,0 +1,111 @@
+{
+  "lighthouse": "13.6.0",
+  "desktop": true,
+  "metrics": [
+    {
+      "name": "Home",
+      "mode": "navigation",
+      "scores": {
+        "performance": 98,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "lcpMs": 1159.928,
+      "tbtMs": 0,
+      "cls": 0.017174895109953698,
+      "auditFailures": [],
+      "consoleErrors": []
+    },
+    {
+      "name": "Detail",
+      "mode": "navigation",
+      "scores": {
+        "performance": 99,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "lcpMs": 970.787,
+      "tbtMs": 0,
+      "cls": 0,
+      "auditFailures": [],
+      "consoleErrors": []
+    },
+    {
+      "name": "Player",
+      "mode": "snapshot",
+      "scores": {
+        "accessibility": 100,
+        "best-practices": 100
+      },
+      "auditFailures": []
+    },
+    {
+      "name": "Search",
+      "mode": "navigation",
+      "scores": {
+        "performance": 82,
+        "accessibility": 100,
+        "best-practices": 96,
+        "seo": 100
+      },
+      "lcpMs": 883.422,
+      "tbtMs": 0,
+      "cls": 0.350987602051786,
+      "auditFailures": [
+        "errors-in-console"
+      ],
+      "consoleErrors": [
+        {
+          "description": "Failed to load resource: the server responded with a status of 422 (Unprocessable Entity)"
+        }
+      ]
+    },
+    {
+      "name": "Watchlist",
+      "mode": "navigation",
+      "scores": {
+        "performance": 100,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "lcpMs": 135.188,
+      "tbtMs": 0,
+      "cls": 0.005252573088134431,
+      "auditFailures": [],
+      "consoleErrors": []
+    },
+    {
+      "name": "Providers",
+      "mode": "navigation",
+      "scores": {
+        "performance": 100,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "lcpMs": 114.14,
+      "tbtMs": 0,
+      "cls": 0,
+      "auditFailures": [],
+      "consoleErrors": []
+    },
+    {
+      "name": "Settings",
+      "mode": "navigation",
+      "scores": {
+        "performance": 100,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "lcpMs": 79.539,
+      "tbtMs": 0,
+      "cls": 0,
+      "auditFailures": [],
+      "consoleErrors": []
+    }
+  ]
+}

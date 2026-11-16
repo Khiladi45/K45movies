@@ -1,0 +1,36 @@
+{
+  "browser": "157.0.8103.51",
+  "codecs": "H.264 and AAC",
+  "throttle": {
+    "offline": false,
+    "latency": 80,
+    "downloadThroughput": 1000000,
+    "uploadThroughput": 375000
+  },
+  "fixture": "Local HTTP with byte ranges. Chrome native MP4 and the website's hls.js dependency.",
+  "timing": "Startup and seek include the first 0.2 seconds of playback.",
+  "results": [
+    {
+      "format": "MP4",
+      "startupMs": 691,
+      "seekMs": 452,
+      "bufferedAtSeek": false,
+      "width": 1920,
+      "height": 1080,
+      "playedSeconds": 5.01,
+      "measuredFrames": 151,
+      "droppedFrames": 0
+    },
+    {
+      "format": "HLS",
+      "startupMs": 1246,
+      "seekMs": 1594,
+      "bufferedAtSeek": false,
+      "width": 1920,
+      "height": 1080,
+      "playedSeconds": 5,
+      "measuredFrames": 150,
+      "droppedFrames": 0
+    }
+  ]
+}

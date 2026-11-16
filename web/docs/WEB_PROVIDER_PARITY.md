@@ -87,6 +87,21 @@ Read each cell as before → after. P means populated response, E means empty re
 
 All 28 operations above returned HTTP 504. Catalog timings include registry and bundle lookup.
 
+
+Phase 5 reran all seven from the PC network. Every catalog and search request again returned HTTP 504. Android device results are pending.
+
+| Provider | Phase 5 catalog | Phase 5 search |
+| --- | ---: | ---: |
+| disneyPlus | 25332 ms | 25010 ms |
+| hotstar | 25296 ms | 25015 ms |
+| marvel | 25291 ms | 25014 ms |
+| netflix | 25311 ms | 25019 ms |
+| pixar | 25326 ms | 25013 ms |
+| primeVideo | 25309 ms | 25012 ms |
+| starWars | 25301 ms | 25017 ms |
+
+[Phase 5 local request timings](web-phase-5/local-smoke.json)
+
 ### Remaining causes and limits
 
 | Provider(s) | Evidence |

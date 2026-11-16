@@ -1,0 +1,36 @@
+{
+  "lighthouse": "13.6.0",
+  "desktop": true,
+  "metrics": [
+    {
+      "name": "Search",
+      "mode": "navigation",
+      "scores": {
+        "performance": 81,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "lcpMs": 1160.841,
+      "tbtMs": 0,
+      "cls": 0.35569483349542397,
+      "auditFailures": [],
+      "consoleErrors": []
+    },
+    {
+      "name": "Search (Movie Based)",
+      "mode": "navigation",
+      "scores": {
+        "performance": 99,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "lcpMs": 896.253,
+      "tbtMs": 0,
+      "cls": 0,
+      "auditFailures": [],
+      "consoleErrors": []
+    }
+  ]
+}
