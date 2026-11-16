@@ -8,8 +8,10 @@ Deploy branch `feat/website`. Keep `web/vendor` with the build and run the appli
 cd web
 npm ci
 npm run build
-npm run start -- --hostname 127.0.0.1 --port 3000
+npm run start:local
 ```
+
+On Windows, run `start-local.cmd` in `web/`. It installs dependencies and builds when those outputs are missing. After pulling changes, rerun the build before launching. The launcher binds to loopback and enables guarded DoH. Set `PORT` for a different local port, or `K45_DOH=0` to compare system DNS alone.
 
 For a private test, run `tailscale serve --bg http://127.0.0.1:3000` on the host and use its HTTPS tailnet URL from a permitted device. For Cloudflare Tunnel, add a published hostname with `http://127.0.0.1:3000` as the origin service. Keep port 3000 bound to loopback. Use an ingress configuration that preserves Range and avoids caching signed media routes.
 
@@ -22,6 +24,7 @@ Set the production environment through the service manager or managed secret sto
 | `K45_TRUSTED_CLIENT_IP_HEADER` | Set to `X-K45-Client-IP` only when trusted ingress overwrites the header. The signed client cookie is used when the variable is unset. |
 | `K45MOVIES_API_BASE_URL` | Optional trusted provider API fallback and metadata URL. Defaults to the pinned API source. |
 | `K45_PROVIDER_SOURCE` | Leave unset for bundled providers. `api` selects API-only mode for comparison. |
+| `K45_DOH` | `1` selects Cloudflare then Google DoH and system fallback, with IPv4 first and cached answers. The local launcher defaults to `1`. Set it explicitly when using `npm run start` directly. |
 | `K45_KV_REST_URL`, `K45_KV_REST_TOKEN` | Optional shared HTTPS Redis REST provider storage. Supply both, or use process-local TTL storage. |
 | `K45_FFMPEG_PATH` | Optional absolute path to an installed full FFmpeg executable. Test availability with `ffmpeg -version` and confirm AAC encoding support. Current compatibility handling copies MKV video into MP4 and encodes audio as AAC. Leave unset to disable. |
 
@@ -36,11 +39,13 @@ location / {
     proxy_set_header X-K45-Client-IP $remote_addr;
     proxy_set_header Range $http_range;
     proxy_buffering off;
-    proxy_read_timeout 90s;
+    proxy_read_timeout 115s;
 }
 ```
 
-Provider requests allow 12 seconds per upstream request and 25 seconds per operation. The shared cache has a 40-second guard. Media upstream connections have a 15-second deadline. Compatibility playback permits two simultaneous FFmpeg conversions per process. Size the proxy timeouts to cover application limits and ongoing playback. Run the initial smoke from a quiet instance and monitor memory and the operation timings before increasing traffic.
+Provider requests allow up to 30 seconds for an upstream request, including headers and body. Shorter bundle timeouts still apply. A provider operation has 75 seconds, or up to 25 additional seconds waiting in the per-client queue. Each client can run three operations and have up to 32 waiting. Media upstream connections have a 30-second deadline and retain ongoing streaming and range support. Compatibility playback permits two simultaneous FFmpeg conversions per process. Size ingress response timeouts for the queue and operation. Run the first smoke on a quiet host and monitor memory and timings.
+
+Provider session cookies received by the HTTP runtime are isolated by provider and use origin and path matching. Server memory is the default. The optional Redis store holds bounded snapshots with a 24-hour TTL for restarts. Cookie expiry still applies. Concurrent installations can have different live jars until refreshed, so prefer a single Next.js instance when checking session parity.
 
 ```sh
 curl -fsS 'https://your-domain.example/api/proxy/providers?op=manifest'
