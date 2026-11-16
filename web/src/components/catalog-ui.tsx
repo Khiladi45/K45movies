@@ -8,28 +8,38 @@ import { useLibrary, type SavedTitle } from "@/lib/library";
 
 export type Card = { href: string; title: string; image?: string; note?: string; wide?: boolean };
 
-export function Artwork({ src, className = "", priority = false }: { src?: string; className?: string; priority?: boolean }) {
+export function Artwork({ src, className = "", priority = false, backdrop = false }: { src?: string; className?: string; priority?: boolean; backdrop?: boolean }) {
+  const tmdb = src && /^(https:\/\/image\.tmdb\.org\/t\/p\/)(?:w\d+|original)(\/[^?#]+)$/.exec(src);
+  const sizes = backdrop ? "(max-width: 640px) 100vw, (max-width: 1500px) 85vw, 1500px" : "(max-width: 640px) 45vw, 220px";
+  const widths = backdrop ? [300, 780, 1280] : [154, 185, 342, 500];
+  const srcSet = tmdb ? widths.map((width) => tmdb[1] + "w" + width + tmdb[2] + " " + width + "w").join(", ") : undefined;
   return (
     <span className={"artwork " + className}>
       <Film size={26} aria-hidden="true" />
       {src && (
         // Provider artwork has runtime-selected hosts and unknown dimensions.
         // eslint-disable-next-line @next/next/no-img-element
-        <img key={src} src={src} alt="" loading={priority ? "eager" : "lazy"} fetchPriority={priority ? "high" : undefined} decoding="async" referrerPolicy="no-referrer" onError={(event) => { event.currentTarget.hidden = true; }} />
+        <img key={src} src={src} srcSet={srcSet} sizes={srcSet ? sizes : undefined} alt="" loading={priority ? "eager" : "lazy"}
+          fetchPriority={priority ? "high" : undefined} decoding="async" referrerPolicy="no-referrer"
+          onLoad={(event) => { event.currentTarget.dataset.loaded = "true"; }}
+          onError={(event) => { event.currentTarget.hidden = true; }} />
       )}
     </span>
   );
 }
 
 export function CardGrid({ items, rail = false, wide = false }: { items: Card[]; rail?: boolean; wide?: boolean }) {
+  const router = useRouter();
   return (
     <ul className={rail ? "poster-rail" : wide ? "poster-grid video-grid" : "poster-grid"}>
       {items.map((item) => (
         <li key={item.href} className="min-w-0">
-          <Link href={item.href} className="poster-card" prefetch={false}>
+          <Link href={item.href} className="poster-card" prefetch={false}
+            onPointerEnter={rail ? (event) => { if (event.pointerType === "mouse") router.prefetch(item.href); } : undefined}
+            onFocus={rail ? () => router.prefetch(item.href) : undefined}>
             <Artwork src={item.image} className={item.wide ? "aspect-video rounded-xl" : "aspect-[2/3] rounded-xl"} />
             <span className="mt-2 block truncate text-sm font-semibold" title={item.title}>{item.title}</span>
-            {item.note && <span className="mt-0.5 block truncate text-xs text-muted">{item.note}</span>}
+            {(rail || item.note) && <span className="poster-note mt-0.5 block truncate text-xs text-muted">{item.note}</span>}
           </Link>
         </li>
       ))}
@@ -39,10 +49,11 @@ export function CardGrid({ items, rail = false, wide = false }: { items: Card[];
 
 export function CatalogSkeleton({ rail = false, wide = false }: { rail?: boolean; wide?: boolean } = {}) {
   return (
-    <div className={(rail ? "poster-rail" : "poster-grid") + " motion-safe:animate-pulse"} role="status" aria-label="Loading titles">
+    <div className={(rail ? "poster-rail home-skeleton-rail" : "poster-grid motion-safe:animate-pulse") + (wide ? " video-grid" : "")} role="status" aria-label="Loading titles">
       {Array.from({ length: 6 }, (_, i) => <div key={i}>
           <div className={(wide ? "aspect-video" : "aspect-[2/3]") + " rounded-xl bg-surface"} />
           <div className="mt-2 h-5 w-3/4 rounded bg-surface" />
+          {rail && <div className="mt-0.5 h-4 w-1/3 rounded bg-surface" />}
         </div>)}
     </div>
   );

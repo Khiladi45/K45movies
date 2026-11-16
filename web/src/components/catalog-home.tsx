@@ -3,13 +3,15 @@
 import { ProviderWait } from "./provider-wait";
 
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Play, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { YouTubeHome } from "./youtube";
 import { BrowseModes } from "./layout-choice";
 import { useCatalogReady } from "./catalog-context";
-import { Artwork, CardGrid, CatalogSkeleton, QueryMessage, Rail, type Card } from "./catalog-ui";
+import { Artwork, CatalogSkeleton, QueryMessage } from "./catalog-ui";
+import { HomeHero, HomeHeroSkeleton } from "./home-hero";
+import { HomeRailViewport, HomeShelf } from "./home-rail";
 import { resumePlayback } from "@/lib/player-actions";
 import { useAppearance } from "@/lib/appearance";
 import { useLibrary } from "@/lib/library";
@@ -20,18 +22,15 @@ import { categoryLink, providerLink, titleLink } from "@/lib/catalog-links";
 export function CatalogHome() {
   const layout = useAppearance((state) => state.layout);
   const ready = useCatalogReady();
-  if (!ready) return <HomeSkeleton />;
-  return <><BrowseModes />{layout === "movie" ? <MovieHome /> : layout === "youtube" ? <YouTubeHome /> : <ProviderHome />}</>;
-}
-
-function HeroSkeleton() {
-  return <div className="catalog-hero motion-safe:animate-pulse" aria-hidden="true">
-    <div className="h-20 w-2/3 rounded-xl bg-white/5 sm:w-1/3" />
+  return <div className="home-view">
+    <BrowseModes />
+    <div className="home-route" key={layout}>{!ready ? <HomeSkeleton /> : layout === "movie" ? <MovieHome /> :
+      layout === "youtube" ? <><YouTubeHome /><ContinueWatching /></> : <ProviderHome />}</div>
   </div>;
 }
 
 function PendingRail() {
-  return <div className="mt-8" aria-hidden="true">
+  return <div className="home-shelf mt-8" aria-hidden="true">
     <div className="mb-4 h-8 w-40 rounded-lg bg-surface" />
     <CatalogSkeleton rail />
   </div>;
@@ -39,8 +38,7 @@ function PendingRail() {
 
 function HomeSkeleton() {
   return <div role="status" aria-label="Loading catalog">
-    <div className="mb-5 h-9 w-56 rounded-full bg-surface" aria-hidden="true" />
-    <HeroSkeleton />
+    <HomeHeroSkeleton />
     <PendingRail />
   </div>;
 }
@@ -53,9 +51,9 @@ function ContinueWatching() {
   const [resuming, setResuming] = useState("");
   const entries = progress.filter((entry) => entry.layout === layout).slice(0, 20);
   if (!entries.length) return null;
-  return <Rail title="Continue Watching">
+  return <HomeShelf title="Continue Watching" wide>
     <p className="text-sm text-muted" role="status">{status}</p>
-    <ul className="poster-rail">
+    <HomeRailViewport><ul className="poster-rail">
       {entries.map((entry) => <li key={entry.href} className="relative min-w-0">
         <Link href={entry.href} className="poster-card" onClick={async (event) => {
           if (!entry.playback || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
@@ -77,25 +75,8 @@ function ContinueWatching() {
         <button className="icon-button absolute top-1 right-1 bg-black/80" type="button" onClick={() => dismiss(entry.href)}
           aria-label={"Dismiss " + entry.title}><X size={16} /></button>
       </li>)}
-    </ul>
-  </Rail>;
-}
-
-function Hero({ item, subtitle, change }: { item: Card; subtitle?: string; change?: (offset: number) => void }) {
-  return <section className="catalog-hero">
-    <Artwork src={item.image} className="catalog-hero-art" priority />
-    <div className="hero-copy">
-      <h2>{item.title}</h2>
-      {subtitle && <p className="mt-3 line-clamp-3 text-sm text-muted sm:text-base">{subtitle}</p>}
-      <div className="mt-5 flex flex-wrap gap-2">
-        <Link className="primary-button" href={item.href}><Play size={17} aria-hidden="true" /> View details</Link>
-        {change && <>
-          <button type="button" className="secondary-button" aria-label="Previous featured title" onClick={() => change(-1)}><ChevronLeft size={18} /></button>
-          <button type="button" className="secondary-button" aria-label="Next featured title" onClick={() => change(1)}><ChevronRight size={18} /></button>
-        </>}
-      </div>
-    </div>
-  </section>;
+    </ul></HomeRailViewport>
+  </HomeShelf>;
 }
 
 function ProviderRail({ id, category }: { id: string; category: Category }) {
@@ -111,10 +92,10 @@ function ProviderRail({ id, category }: { id: string; category: Category }) {
   }, [node, visible]);
   const posts = useQuery({ queryKey: ["posts", id, category.filter, 1], queryFn: ({ signal }) => providers.posts(id, category.filter, 1, signal), enabled: visible });
   if (posts.data && !posts.data.length) return null;
-  return <div ref={anchor}><Rail title={category.title} href={categoryLink(id, category.filter)}>
-    {posts.isPending ? <CatalogSkeleton rail /> : posts.isError ? <QueryMessage retry={() => void posts.refetch()}>{posts.error.message}</QueryMessage> :
-      <CardGrid rail items={posts.data.map((post) => ({ ...post, href: providerLink(id, post.ref), note: post.tag }))} />}
-  </Rail></div>;
+  return <div ref={anchor}><HomeShelf title={category.title} href={categoryLink(id, category.filter)} pending={posts.isPending}
+    items={posts.data?.map((post) => ({ ...post, href: providerLink(id, post.ref), note: post.tag }))}>
+    {posts.isError ? <QueryMessage retry={() => void posts.refetch()}>{posts.error.message}</QueryMessage> : undefined}
+  </HomeShelf></div>;
 }
 
 function ProviderHome() {
@@ -125,7 +106,6 @@ function ProviderHome() {
   const missing = manifest.data?.find(({ id }) => id === active)?.addressUnavailable;
   const catalog = useQuery({ queryKey: ["catalog", active], queryFn: ({ signal }) => providers.catalog(active!, signal), enabled: !!active && !missing });
   const health = useQuery({ queryKey: ["provider-health"], queryFn: ({ signal }) => providers.health(signal) });
-  const [index, setIndex] = useState(0);
   const featured = useQueries({ queries: (active ? catalog.data?.slice(0, 4) ?? [] : []).map(({ filter }) => ({
     queryKey: ["posts", active, filter, 1],
     queryFn: ({ signal }: { signal: AbortSignal }) => providers.posts(active!, filter, 1, signal),
@@ -134,20 +114,21 @@ function ProviderHome() {
     .map((post) => [post.ref, post])).values());
   const items = candidates.filter((post) => post.image);
   const rotation = items.length ? items : candidates;
-  const item = rotation[index % rotation.length];
+  const features = active ? rotation.slice(0, 6).map((item) => ({ ...item, href: providerLink(active, item.ref),
+    meta: [item.title.match(/\b(?:19|20)\d{2}\b/)?.[0], item.type, item.tag].filter((value): value is string => !!value) })) : [];
 
   return <>
-    <div className="provider-toolbar">
+    {active && !missing && (features.length ? <HomeHero items={features} key={active} /> :
+      (catalog.isPending || featured.some((query) => query.isPending)) && <HomeHeroSkeleton />)}
+    <div className="provider-toolbar home-provider-toolbar">
       {!!installed.length && <label>Provider
-        <select className="field" value={active ?? ""} onChange={(event) => { activate(event.target.value); setIndex(0); }}>
+        <select className="field" value={active ?? ""} onChange={(event) => activate(event.target.value)}>
           {installed.map((id) => <option value={id} key={id}>{manifest.data?.find((entry) => entry.id === id)?.name ?? id}</option>)}
         </select>
       </label>}
       {active && health.data?.[active] && <span className="chip capitalize" data-health={health.data[active].state}>{health.data[active].state}</span>}
       <Link href="/providers" className="secondary-button">Manage providers</Link>
     </div>
-    {active && !missing && (item ? <Hero item={{ ...item, href: providerLink(active, item.ref) }} subtitle={item.tag} change={rotation.length > 1 ? (offset) => setIndex((current) => (current + offset + rotation.length) % rotation.length) : undefined} /> :
-      (catalog.isPending || featured.some((query) => query.isPending)) && <HeroSkeleton />)}
     <ContinueWatching />
     {!active ? <QueryMessage>Install a provider to browse its catalog.</QueryMessage> :
       missing ? <QueryMessage>{missing}</QueryMessage> :
@@ -173,12 +154,11 @@ const rows: { label: string; row: MovieRow; type: MediaType }[] = [
 function MovieRail({ label, row, type, page, language }: typeof rows[number] & { page: number; language?: string }) {
   const catalog = useQuery({ queryKey: ["tmdb", row, type, page, language],
     queryFn: ({ signal }) => tmdb.row(row, type, page, language, signal) });
-  return <Rail title={label}>
-    {catalog.isPending ? <CatalogSkeleton rail /> :
-      catalog.isError ? <QueryMessage retry={() => void catalog.refetch()}>{catalog.error.message}</QueryMessage> :
-      catalog.data.items.length ? <CardGrid rail items={catalog.data.items.map((title) => ({ ...title, href: titleLink(title), note: title.year }))} /> :
-      <QueryMessage>No titles found.</QueryMessage>}
-  </Rail>;
+  return <HomeShelf title={label} pending={catalog.isPending}
+    items={catalog.data?.items.map((title) => ({ ...title, href: titleLink(title), note: title.year }))}>
+    {catalog.isError ? <QueryMessage retry={() => void catalog.refetch()}>{catalog.error.message}</QueryMessage> :
+      catalog.data && !catalog.data.items.length ? <QueryMessage>No titles found.</QueryMessage> : undefined}
+  </HomeShelf>;
 }
 
 function MovieHome() {
@@ -186,13 +166,17 @@ function MovieHome() {
   const [page] = useState(() => 1 + Math.floor(Math.random() * 10));
   const trending = useQuery({ queryKey: ["tmdb", "trending", "movie", 1, undefined],
     queryFn: ({ signal }) => tmdb.row("trending", "movie", 1, undefined, signal) });
-  const featured = trending.data?.items.find((item) => item.backdrop);
+  const featured = trending.data?.items.filter((item) => item.backdrop).slice(0, 6).map((item) => ({
+    ...item, href: titleLink(item),
+    meta: [item.year, item.rating ? "★ " + item.rating.toFixed(1) : undefined, item.mediaType === "tv" ? "Series" : "Movie"]
+      .filter((value): value is string => !!value),
+  }));
   const label = language === "none" ? null : new Intl.DisplayNames(["en"], { type: "language" }).of(language);
 
   if (trending.isError) return <QueryMessage retry={() => void trending.refetch()}>{trending.error.message}</QueryMessage>;
 
   return <>
-    {featured ? <Hero item={{ ...featured, href: titleLink(featured), image: featured.backdrop }} subtitle={featured.synopsis} /> : <HeroSkeleton />}
+    {featured?.length ? <HomeHero items={featured} /> : trending.isPending ? <HomeHeroSkeleton /> : null}
     <ContinueWatching />
     {trending.isPending ? <PendingRail /> : <>
       {label && <>

@@ -18,6 +18,7 @@ import { Artwork, BackLink, CardGrid, CatalogSkeleton, QueryMessage, Rail, SaveB
 import { useCatalogReady } from "./catalog-context";
 import { SourceAttempts } from "./source-attempts";
 import { ProviderWait } from "./provider-wait";
+import { useRequestedPlayback } from "@/lib/requested-playback";
 
 function DetailHero({ title, image, backdrop, synopsis, tags, children }: {
   title: string; image?: string; backdrop?: string; synopsis?: string; tags: string[];
@@ -81,9 +82,7 @@ function ProviderEpisodes({ id, detail }: { id: string; detail: ProviderDetail }
     (!/movie/i.test(detail.type ?? "") && detail.groups.some((entry) => !!entry.episodesRef));
   const episodes = useQuery({ queryKey: ["episodes", id, group?.episodesRef],
     queryFn: ({ signal }) => groupEpisodes(id, group, signal), enabled: !!group?.episodesRef });
-  if (!group) return <QueryMessage>No sources are listed for this title.</QueryMessage>;
-
-  const items = episodes.data?.length ? episodes.data : group.directLinks;
+  const items = episodes.data?.length ? episodes.data : group?.directLinks ?? [];
   const ordered = series ? orderEpisodes(items) : items;
   const visible = ordered.filter((item) => item.title.toLowerCase().includes(filter.toLowerCase()));
   if (order === "desc") visible.reverse();
@@ -95,12 +94,14 @@ function ProviderEpisodes({ id, detail }: { id: string; detail: ProviderDetail }
       item: make(episode), episodes: series ? ordered.map(make) : [],
       qualities: detail.groups, qualityIndex: groupIndex, itemIndex: items.indexOf(episode),
       episodeNumber: series ? parseEpisodeNumber(episode.title) ?? undefined : undefined,
-      seasonNumber: series ? parseSeasonNumber(group.title) ?? undefined : undefined,
+      seasonNumber: series ? parseSeasonNumber(group?.title) ?? undefined : undefined,
     });
   }
+  useRequestedPlayback(ordered.length > 0, () => choose(ordered[0]));
+  if (!group) return <QueryMessage>No sources are listed for this title.</QueryMessage>;
 
   return <div className="min-w-0 space-y-4">
-    <div className="playback-form flex flex-wrap items-end gap-3">
+    <div id="play" className="playback-form flex flex-wrap items-end gap-3">
       {detail.groups.length > 1 && <label className="grid min-w-0 max-w-full gap-1 text-sm font-medium">{series ? "Season or quality" : "Quality"}
         <select className="field w-full min-w-0 truncate" value={groupIndex}
           onChange={(event) => { setGroupIndex(Number(event.target.value)); playback.cancel(); setFilter(""); }}>
@@ -172,7 +173,18 @@ function MovieChoices({ title, season, episode }: { title: TitleDetail; season: 
     Number(b.languages.includes(language)) - Number(a.languages.includes(language)));
   const selected = items.find((item) => item.provider + ":" + item.episode.ref === selection) ?? items[0];
   const pending = matching.some((entry, i) => entry.isPending || (entry.isSuccess && choices[i].isPending));
-
+  function start() {
+    if (!selected) return;
+    void playback.start({
+      title: { href: titleLink(title), title: title.title, image: title.image, layout: "movie" },
+      item: { provider: selected.provider, ref: selected.episode.ref, title: selected.episode.title, series: title.mediaType === "tv" },
+      episodes: selected.episodes.map((item) => ({ provider: selected.provider, ref: item.ref, title: item.title, series: true })),
+      qualities: selected.groups, qualityIndex: selected.groupIndex,
+      itemIndex: Math.max(0, selected.groups[selected.groupIndex].directLinks.findIndex(({ ref }) => ref === selected.episode.ref)),
+      episodeNumber: episode || undefined, seasonNumber: season || undefined, preferredLanguage: language,
+    });
+  }
+  useRequestedPlayback(!!selected, start);
 
   if (!installed.length) return <QueryMessage><Link href="/providers">Install a provider to find sources.</Link></QueryMessage>;
 
@@ -204,14 +216,9 @@ function MovieChoices({ title, season, episode }: { title: TitleDetail; season: 
           </option>)}
         </select>
       </label>}
-      {selected && <button type="button" className="primary-button" disabled={playback.pending} onClick={() => void playback.start({
-        title: { href: titleLink(title), title: title.title, image: title.image, layout: "movie" },
-        item: { provider: selected.provider, ref: selected.episode.ref, title: selected.episode.title, series: title.mediaType === "tv" },
-        episodes: selected.episodes.map((item) => ({ provider: selected.provider, ref: item.ref, title: item.title, series: true })),
-        qualities: selected.groups, qualityIndex: selected.groupIndex,
-        itemIndex: Math.max(0, selected.groups[selected.groupIndex].directLinks.findIndex(({ ref }) => ref === selected.episode.ref)),
-        episodeNumber: episode || undefined, seasonNumber: season || undefined, preferredLanguage: language,
-      })}><Play size={16} aria-hidden="true" /> {playback.pending ? "Resolving streams…" : "Watch Now"}</button>}
+      {selected && <button type="button" className="primary-button" disabled={playback.pending} onClick={start}>
+        <Play size={16} aria-hidden="true" /> {playback.pending ? "Resolving streams…" : "Watch Now"}
+      </button>}
     </div>}
     {playback.pending && <ProviderWait message="Checking provider servers…" />}
     {playback.error && <div role="alert" className="text-sm text-muted">{playback.error}<SourceAttempts attempts={playback.attempts ?? []} /></div>}
@@ -225,6 +232,7 @@ function MovieEpisodes({ title }: { title: TitleDetail }) {
   const query = useQuery({ queryKey: ["tmdb-season", title.id, season],
     queryFn: ({ signal }) => tmdb.season(title.id, season, signal), enabled: season > 0 });
   const selected = query.data?.find((item) => item.number === episode);
+  useRequestedPlayback(!!query.data?.length, () => setEpisode(query.data![0].number), false);
   return <div className="space-y-4">
     {title.seasons.length > 0 ? <label className="grid w-fit gap-1 text-sm font-medium">Season
       <select className="field" aria-label="Season" value={season} onChange={(event) => { setSeason(Number(event.target.value)); setEpisode(0); }}>
@@ -270,9 +278,9 @@ export function MovieTitle({ type, id }: { type: MediaType; id: number }) {
       }}>Share</button>}
       <span role="status" className="text-sm text-muted">{copyStatus}</span>
     </DetailHero>
-    <Rail title={type === "tv" ? "Episodes" : "Sources"}>
+    <div id="play"><Rail title={type === "tv" ? "Episodes" : "Sources"}>
       {type === "tv" ? <MovieEpisodes title={title} /> : <MovieChoices title={title} season={0} episode={0} />}
-    </Rail>
+    </Rail></div>
     {!!title.cast.length && <Rail title="Cast">
       <ul className="flex gap-4 overflow-auto pb-2">{title.cast.map((person,i) => <li key={i} className="w-24 shrink-0">
         <Artwork src={person.image} className="aspect-square rounded-xl" />
