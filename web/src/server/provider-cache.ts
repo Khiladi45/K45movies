@@ -16,7 +16,7 @@ export async function providerResult<T>(key: string, ttl: number, signal: AbortS
     if (cache.size >= maxEntries) return load(signal);
 
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(new DOMException("Provider cache load timed out.", "TimeoutError")), 40_000);
+    const timer = setTimeout(() => controller.abort(new DOMException("Provider cache load timed out.", "TimeoutError")), 85_000);
     timer.unref();
     const task = Promise.resolve().then(() => {
       controller.signal.throwIfAborted();

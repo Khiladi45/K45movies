@@ -5,6 +5,41 @@ import { providerDestination, publicDnsAnswers } from "../../src/server/provider
 import { mediaTarget, mediaUrl } from "../../src/server/media-token";
 import { encodeReference } from "../../src/server/references";
 import { GET } from "../../src/app/api/proxy/providers/route";
+import { enqueueProvider } from "../../src/server/provider-client-queue";
+import { providerCookieSession } from "../../src/server/provider-cookies";
+import { providerStore } from "../../src/server/provider-store";
+
+test("provider queue limits each client to three active and 32 waiting operations", async () => {
+  const signal = new AbortController().signal;
+  const held = Promise.withResolvers<number>();
+  let started = 0;
+  const work = () => { started++; return held.promise; };
+  const running = Array.from({ length: 3 }, () => enqueueProvider("queue-test", signal, work));
+  const cancel = new AbortController();
+  const canceled = enqueueProvider("queue-test", cancel.signal, work);
+  const waiting = Array.from({ length: 31 }, () => enqueueProvider("queue-test", signal, work));
+  assert.equal(started, 3);
+  await assert.rejects(enqueueProvider("queue-test", signal, work), { status: 429, stage: "queue" });
+  assert.equal(await enqueueProvider("other-client", signal, async () => 5), 5);
+  cancel.abort();
+  await assert.rejects(canceled, { name: "AbortError" });
+  held.resolve(1);
+  await Promise.all([...running, ...waiting]);
+  assert.equal(started, 34);
+});
+
+test("provider cookie sessions persist by service and stay scoped by provider, domain and path", async () => {
+  const alpha = await providerCookieSession("cookie-test-alpha");
+  const origin = "https://example.org/catalog/items";
+  alpha.receive(origin, ["sample=shared; Path=/catalog; Secure; HttpOnly", "expired=no; Max-Age=0"]);
+  const later = await providerCookieSession("cookie-test-alpha");
+  assert.equal(later.header(origin), "sample=shared");
+  assert.equal(later.header("https://example.org/sources"), "");
+  assert.equal(later.header("https://example.net/catalog/items"), "");
+  assert.equal((await providerCookieSession("cookie-test-beta")).header(origin), "");
+  assert.equal(await providerStore("cookie-test-alpha").get("cookies"), undefined);
+  assert.ok((await providerStore("cookie-test-alpha", "network").get("cookies")).cookies.length);
+});
 
 test("Sources API validates quality and rejects malformed or cross-provider references", async () => {
   const issue = async (params: Record<string, string>) => {

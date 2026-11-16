@@ -2,9 +2,9 @@ import "server-only";
 import { lookup } from "node:dns";
 import { Agent, fetch as upstreamFetch } from "undici";
 import ipaddr from "ipaddr.js";
-import { CookieJar } from "tough-cookie";
 import axios, { AxiosError, AxiosHeaders } from "axios";
 import { secureDnsAnswers } from "./provider-dns";
+import { providerCookieSession } from "./provider-cookies";
 
 function publicAddress(address: string) {
   return ipaddr.process(address).range() === "unicast";
@@ -17,6 +17,7 @@ export function publicDnsAnswers(addresses: { address: string; family: number }[
 // The lookup callback supplies the resolved addresses directly to the socket.
 const dispatcher = new Agent({
   connect: {
+    timeout: 30_000,
     lookup(hostname, options, callback) {
       const connect = (addresses: { address: string; family: number }[]) => {
         if (!publicDnsAnswers(addresses)) {
@@ -53,8 +54,8 @@ const maxBody = 8 * 1024 * 1024;
 
 type NetworkIssue = { message: string; status?: number; timeout?: boolean };
 
-export function providerNetwork(signal: AbortSignal, defaultHeaders?: HeadersInit, onIssue?: (issue: NetworkIssue) => void) {
-  const jar = new CookieJar();
+export function providerNetwork(signal: AbortSignal, defaultHeaders?: HeadersInit, onIssue?: (issue: NetworkIssue) => void, provider?: string) {
+  let session: ReturnType<typeof providerCookieSession> | undefined;
   let requests = 0;
   const networkRequest = async (input: string | URL, options?: RequestInit, maxRedirects = 5): Promise<Response> => {
     let url = providerDestination(input);
@@ -63,18 +64,19 @@ export function providerNetwork(signal: AbortSignal, defaultHeaders?: HeadersIni
     const headers = new Headers(defaultHeaders);
     new Headers(options?.headers).forEach((value, key) => headers.set(key, value));
     for (const name of ["host", "connection", "content-length", "proxy-authorization", "transfer-encoding"]) headers.delete(name);
-    const deadline = AbortSignal.any([signal, AbortSignal.timeout(12_000), ...(options?.signal ? [options.signal] : [])]);
+    const deadline = AbortSignal.any([signal, AbortSignal.timeout(30_000), ...(options?.signal ? [options.signal] : [])]);
+    const jar = options?.credentials === "omit" ? undefined : await (session ??= providerCookieSession(provider));
 
     for (let redirect = 0; redirect <= 5; redirect++) {
       if (++requests > 70) throw new Error("Provider request budget exceeded.");
       const outgoing = new Headers(headers);
-      const cookies = await jar.getCookieString(url.href);
+      const cookies = jar?.header(url.href);
       if (cookies && !outgoing.has("cookie")) outgoing.set("cookie", cookies);
       const res = await upstreamFetch(url, {
         method, body: body as string | undefined, headers: Array.from(outgoing.entries()),
         signal: deadline, redirect: "manual", dispatcher,
       });
-      for (const cookie of res.headers.getSetCookie()) await jar.setCookie(cookie, url.href, { ignoreError: true });
+      jar?.receive(url.href, res.headers.getSetCookie());
       const location = res.headers.get("location");
       if (location && options?.redirect !== "manual" && [301, 302, 303, 307, 308].includes(res.status)) {
         if (options?.redirect === "error" || redirect === maxRedirects) {
@@ -148,6 +150,7 @@ export function providerNetwork(signal: AbortSignal, defaultHeaders?: HeadersIni
         headers: Object.entries(config.headers.toJSON(true)).map(([key, value]): [string, string] => [key, String(value)]),
         body: config.data,
         signal: signals.length ? AbortSignal.any(signals) : undefined,
+        credentials: config.withCredentials === false ? "omit" : "include",
         redirect: config.maxRedirects === 0 ? "manual" : undefined,
       }, Math.min(config.maxRedirects ?? 5, 5));
       const response = {
@@ -169,7 +172,7 @@ export function providerNetwork(signal: AbortSignal, defaultHeaders?: HeadersIni
 export async function streamUpstream(value: string, method: string, headers: Headers, signal: AbortSignal) {
   let url = providerDestination(value);
   const connect = new AbortController();
-  const timer = setTimeout(() => connect.abort(), 15_000);
+  const timer = setTimeout(() => connect.abort(new DOMException("Media connection timed out.", "TimeoutError")), 30_000);
   try {
     const deadline = AbortSignal.any([signal, connect.signal]);
     for (let index = 0; index <= 5; index++) {

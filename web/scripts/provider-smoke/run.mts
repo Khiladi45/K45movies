@@ -128,7 +128,7 @@ async function call<T>(params: Record<string, string>) {
   let response: Response;
   try {
     const request = new Request(url, {
-      signal: AbortSignal.timeout(65_000), redirect: "error",
+      signal: AbortSignal.timeout(115_000), redirect: "error",
       headers: clientCookie ? { Cookie: clientCookie } : undefined,
     });
     response = localRoutes ? await trace.run(store, () => localRoutes[0].GET(request)) : await fetch(request);
@@ -154,6 +154,8 @@ const manifest = await call<Provider[]>({ op: "manifest" });
 const manifestIds = manifest.data?.map(({ id }) => id) ?? [];
 if (!manifest.data) throw new Error(JSON.stringify(manifest.outcome));
 const providerIds = ids.length ? ids : [...new Set([...manifestIds, ...supplementalIds])];
+const concurrency = Number(process.env.K45_SMOKE_CONCURRENCY || 4);
+if (!Number.isInteger(concurrency) || concurrency < 1 || concurrency > 4) throw new Error("K45_SMOKE_CONCURRENCY must be 1–4.");
 const skipped = (error: string): Outcome => ({ state: "skipped", error });
 
 async function media(source: Source) {
@@ -227,7 +229,7 @@ async function smoke(id: string) {
 
 const rows: Awaited<ReturnType<typeof smoke>>[] = [];
 let cursor = 0;
-await Promise.all(Array.from({ length: 4 }, async () => {
+await Promise.all(Array.from({ length: concurrency }, async () => {
   for (;;) {
     const index = cursor++;
     if (index >= providerIds.length) return;

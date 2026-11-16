@@ -1,5 +1,7 @@
 "use client";
 
+import { ProviderWait } from "./provider-wait";
+
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Play, X } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -147,7 +149,7 @@ function ProviderHome() {
       (catalog.isPending || featured.some((query) => query.isPending)) && <HeroSkeleton />)}
     <ContinueWatching />
     {!active ? <QueryMessage>Install a provider to browse its catalog.</QueryMessage> :
-      catalog.isPending ? <PendingRail /> :
+      catalog.isPending ? <><ProviderWait message="Loading the provider catalog…" /><PendingRail /></> :
       catalog.isError ? <QueryMessage retry={() => void catalog.refetch()}>{catalog.error.message}</QueryMessage> :
       !catalog.data.length ? <QueryMessage>This provider has no categories.</QueryMessage> :
       catalog.data.map((category) => <ProviderRail key={category.filter + category.title} id={active} category={category} />)}

@@ -1,6 +1,7 @@
 import { getProviders, providerRequest, runProvider } from "@/server/providers";
 import { getProviderHealth, ProviderError, providerIssue, recordProviderHealth } from "@/server/provider-errors";
 import { providerRateLimit } from "@/server/provider-rate-limit";
+import { enqueueProvider } from "@/server/provider-client-queue";
 import type { ProviderStage } from "@/lib/catalog-types";
 
 export const runtime = "nodejs";
@@ -16,7 +17,8 @@ export async function GET(request: Request) {
   let cookie: string | undefined;
   let response: Response;
   try {
-    cookie = providerRateLimit(request);
+    const client = providerRateLimit(request);
+    cookie = client.cookie;
     stage = operation === "manifest" ? "registry" : "request";
     let value;
     if (operation === "manifest") value = await getProviders();
@@ -24,7 +26,7 @@ export async function GET(request: Request) {
     else {
       const input = providerRequest.safeParse(Object.fromEntries(params));
       if (!input.success) throw new ProviderError(400, "Invalid provider request.", "request");
-      value = await runProvider(input.data, request.signal);
+      value = await enqueueProvider(client.clientKey, request.signal, () => runProvider(input.data, request.signal));
       if (!Array.isArray(value) && "sources" in value) recordProviderHealth(input.data.id, operation, value.issue);
       else if (!Array.isArray(value) || value.length) recordProviderHealth(input.data.id, operation);
     }

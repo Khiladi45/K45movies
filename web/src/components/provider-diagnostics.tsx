@@ -44,7 +44,7 @@ export function ProviderDiagnostics() {
     async function step(check: (signal: AbortSignal) => Promise<string | undefined>) {
       const current = stage++;
       const start = performance.now();
-      const signal = AbortSignal.any([run.signal, AbortSignal.timeout(28_000)]);
+      const signal = AbortSignal.any([run.signal, AbortSignal.timeout(115_000)]);
       update(current, { state: "running" });
       try {
         const message = await check(signal);

@@ -23,7 +23,7 @@ const healthTtl = 10 * 60_000;
 
 export function recordProviderHealth(id: string, operation: string, issue?: ProviderIssue) {
   if (!["catalog", "posts", "search", "title", "episodes", "sources"].includes(operation)) return;
-  if (issue && ["request", "registry", "rate-limit"].includes(issue.stage)) return;
+  if (issue && ["request", "registry", "rate-limit", "queue"].includes(issue.stage)) return;
   if (!health.has(id) && health.size >= 256) {
     const oldest = health.keys().next().value;
     if (oldest !== undefined) health.delete(oldest);

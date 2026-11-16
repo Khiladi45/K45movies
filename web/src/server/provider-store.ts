@@ -22,8 +22,8 @@ async function redis<T>(endpoint: string, token: string, ...command: (string | n
   return body.result;
 }
 
-export function providerStore(id: string) {
-  const prefix = "k45:provider:" + id + ":";
+export function providerStore(id: string, scope: "provider" | "network" = "provider") {
+  const prefix = "k45:" + scope + ":" + id + ":";
   const endpoint = process.env.K45_KV_REST_URL;
   const token = process.env.K45_KV_REST_TOKEN;
   if (endpoint || token) {

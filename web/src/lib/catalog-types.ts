@@ -1,4 +1,4 @@
-export type ProviderStage = "request" | "registry" | "rate-limit" | "bundle" | "runtime" | "upstream" | "normalize" | "verification" | "probe";
+export type ProviderStage = "request" | "registry" | "rate-limit" | "queue" | "bundle" | "runtime" | "upstream" | "normalize" | "verification" | "probe";
 export type ProviderIssue = { provider?: string; operation: string; stage: ProviderStage; upstreamStatus?: number; message: string };
 export type ProviderHealth = { state: "healthy" | "degraded" | "needs verification"; checkedAt: number; issue?: ProviderIssue };
 export type Provider = { id: string; name: string; version?: string; description?: string; type?: string; icon?: string; bundleSource?: "vendored" | "api"; searchUnavailable?: string };

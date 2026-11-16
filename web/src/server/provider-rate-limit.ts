@@ -13,7 +13,7 @@ export function providerRateLimit(request: Request) {
   const client = trustedClient(request);
   if (client) {
     rateLimit(request, "providers", 360, "ip:" + client);
-    return;
+    return { clientKey: "ip:" + client };
   }
 
   // Ingress should provide a trusted IP in production. The anonymous cookie
@@ -25,12 +25,13 @@ export function providerRateLimit(request: Request) {
     const expected = signature(value[1]);
     if (supplied.length === expected.length && timingSafeEqual(supplied, expected)) {
       rateLimit(request, "providers", 360, "cookie:" + value[1]);
-      return;
+      return { clientKey: "cookie:" + value[1] };
     }
   }
   const id = randomBytes(18).toString("base64url");
   rateLimit(request, "providers", 360, "cookie:" + id);
-  return cookieName + "=" + id + "." + signature(id).toString("base64url") +
+  const cookie = cookieName + "=" + id + "." + signature(id).toString("base64url") +
     "; Path=/api/proxy/providers; Max-Age=86400; HttpOnly; SameSite=Lax" +
     (new URL(request.url).protocol === "https:" ? "; Secure" : "");
+  return { clientKey: "unsigned", cookie };
 }

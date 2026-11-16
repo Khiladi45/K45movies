@@ -79,18 +79,18 @@ assert.equal(settled.filter(({ status }) => status === "fulfilled").length, 11);
 delete process.env.K45_TRUSTED_CLIENT_IP_HEADER;
 const address = "http://localhost/api/proxy/providers";
 const anonymous = () => new Request(address);
-const cookie1 = providerRateLimit(anonymous()).split(";")[0];
-const cookie2 = providerRateLimit(anonymous()).split(";")[0];
+const cookie1 = providerRateLimit(anonymous()).cookie!.split(";")[0];
+const cookie2 = providerRateLimit(anonymous()).cookie!.split(";")[0];
 const request = (cookie) => new Request(address, { headers: { Cookie: cookie } });
 for (let i = 1; i < 360; i++) providerRateLimit(request(cookie1));
 assert.throws(() => providerRateLimit(request(cookie1)), { status: 429 });
-assert.equal(providerRateLimit(request(cookie2)), undefined);
+assert.equal(providerRateLimit(request(cookie2)).cookie, undefined);
 
 process.env.K45_TRUSTED_CLIENT_IP_HEADER = "x-test-client";
 const trustedRequest = (ip) => new Request(address, { headers: { "x-test-client": ip } });
 for (let i = 0; i < 360; i++) providerRateLimit(trustedRequest("192.0.2.10"));
 assert.throws(() => providerRateLimit(trustedRequest("192.0.2.10")), { status: 429 });
-assert.equal(providerRateLimit(trustedRequest("192.0.2.20")), undefined);
+assert.equal(providerRateLimit(trustedRequest("192.0.2.20")).cookie, undefined);
 
 const network = providerNetwork(AbortSignal.timeout(1000));
 for (const destination of ["http://127.0.0.1/", "http://[::1]/", "https://example.com:8443/"]) {

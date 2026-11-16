@@ -11,6 +11,7 @@ import { decodeReference, encodeReference } from "./references";
 import { createMediaLink, mediaHeaders } from "./media";
 import { HttpError } from "./http";
 import { providerStore } from "./provider-store";
+import { providerCookieSession } from "./provider-cookies";
 import { providerResult } from "./provider-cache";
 import { ProviderError, providerMessage } from "./provider-errors";
 import { normalizeStreams, preferredStreams } from "@/lib/streams";
@@ -141,7 +142,7 @@ async function execute(input: z.infer<typeof providerRequest>, args: Record<stri
       if (error instanceof ProviderError) throw error;
       throw new ProviderError(502, providerMessage(error) || "Provider bundle could not be loaded.", "bundle");
     });
-    const signal = AbortSignal.any([requestSignal, AbortSignal.timeout(25_000)]);
+    const signal = AbortSignal.any([requestSignal, AbortSignal.timeout(75_000)]);
     signal.throwIfAborted();
     let upstream: ProviderError | undefined;
     let verification: ProviderError | undefined;
@@ -149,7 +150,7 @@ async function execute(input: z.infer<typeof providerRequest>, args: Record<stri
     const { request, http } = providerNetwork(signal, androidHeaders, ({ message, status, timeout }) => {
       const issue = new ProviderError(timeout ? 504 : 502, message, "upstream", status);
       if (status || !upstream?.upstreamStatus) upstream = issue;
-    });
+    }, input.id);
     if (input.op === "sources" && Object.hasOwn(mirrorNames, input.id)) {
       http.interceptors.response.use((result) => {
         const url = URL.parse(result.request?.responseURL ?? "");
@@ -277,11 +278,14 @@ function details(provider: string, ref: string, value: unknown): ProviderDetail 
 
 async function sources(provider: string, value: unknown, preference: QualityPreference, signal: AbortSignal): Promise<SourceReport> {
   const streams = preferredStreams(normalizeStreams(value), preference);
+  const session = streams.length ? await providerCookieSession(provider) : undefined;
   const attempts = new Map<string, SourceAttempt>();
   const verified = await probeCandidates(streams, async (stream, deadline): Promise<Source | undefined> => {
     const { raw, server: label, serverKey, quality } = stream;
     const server = providerMessage({ message: label }) || "Stream";
-    const headers = { "user-agent": androidHeaders["User-Agent"], ...mediaHeaders(raw.headers) };
+    const headers: Record<string, string> = { "user-agent": androidHeaders["User-Agent"], ...mediaHeaders(raw.headers) };
+    const cookie = session?.header(stream.url);
+    if (!headers.cookie && cookie) Object.assign(headers, mediaHeaders({ cookie }));
     if (stream.url.length > 5500) {
       attempts.set(stream.url, { server, quality, probe: { status: "failed", reason: "Stream URL exceeds the media link length limit." } });
       return;

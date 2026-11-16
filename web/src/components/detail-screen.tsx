@@ -17,6 +17,7 @@ import { languageName } from "@/lib/languages";
 import { Artwork, BackLink, CardGrid, CatalogSkeleton, QueryMessage, Rail, SaveButton } from "./catalog-ui";
 import { useCatalogReady } from "./catalog-context";
 import { SourceAttempts } from "./source-attempts";
+import { ProviderWait } from "./provider-wait";
 
 function DetailHero({ title, image, backdrop, synopsis, tags, children }: {
   title: string; image?: string; backdrop?: string; synopsis?: string; tags: string[];
@@ -117,6 +118,7 @@ function ProviderEpisodes({ id, detail }: { id: string; detail: ProviderDetail }
       <button className="primary-button" type="button" disabled={!ordered.length || playback.pending}
         onClick={() => choose(ordered[0])}><Play size={16} aria-hidden="true" /> {playback.pending ? "Resolving streams…" : "Watch Now"}</button>
     </div>
+    {playback.pending && <ProviderWait message="Checking provider servers…" />}
     {playback.error && <div role="alert" className="text-sm text-muted">{playback.error}<SourceAttempts attempts={playback.attempts ?? []} /></div>}
     {group.episodesRef && episodes.isPending && !items.length ? <p role="status">Loading episodes…</p> :
       group.episodesRef && episodes.isError && !items.length ? <QueryMessage retry={() => void episodes.refetch()}>{episodes.error.message}</QueryMessage> :
@@ -211,6 +213,7 @@ function MovieChoices({ title, season, episode }: { title: TitleDetail; season: 
         episodeNumber: episode || undefined, seasonNumber: season || undefined, preferredLanguage: language,
       })}><Play size={16} aria-hidden="true" /> {playback.pending ? "Resolving streams…" : "Watch Now"}</button>}
     </div>}
+    {playback.pending && <ProviderWait message="Checking provider servers…" />}
     {playback.error && <div role="alert" className="text-sm text-muted">{playback.error}<SourceAttempts attempts={playback.attempts ?? []} /></div>}
     {!items.length && <p role="status" className="text-muted">{pending ? "Checking installed providers…" : "No matching sources found."}</p>}
   </div>;
