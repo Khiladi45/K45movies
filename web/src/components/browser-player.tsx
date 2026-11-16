@@ -336,7 +336,7 @@ export function BrowserPlayer({ session }: { session: Session }) {
       const result = await resolve(target.item, { qualityIndex: option.index, fallback: formatFailure ? "format" : "network" });
       if (result !== false) return;
     }
-    setNote("");
+    if (!alternatives.length) setNote("");
     setWaiting(false);
     setError(target.item.provider + " · playback · " + (formatFailure ? "This format cannot play in your browser." : "All attempted servers failed."));
   }
