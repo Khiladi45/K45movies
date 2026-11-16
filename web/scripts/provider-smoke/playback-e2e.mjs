@@ -129,6 +129,7 @@ try {
   await page.getByRole("button", { name: "Next episode" }).click();
   await waitPlayback("season1-720-ep2", 0.3);
   assert.deepEqual(requests.map(({ ref }) => ref), ["season1-1080-ep1", "season1-720-ep1", "season1-720-ep2"]);
+  const mainFlowRequests = [...requests];
   assert.ok(mediaRequests.includes("dropped-after-probe"));
   assert.ok(resumed >= 3.8);
   let cancellation;
@@ -147,10 +148,19 @@ try {
     await servers.getByText(/Expired fixture.*HTTP 410.*text\/plain/).waitFor();
     await servers.getByText(/HTML fixture.*HTTP 200.*text\/html.*Invalid streaming manifest/).waitFor();
   }
+  if (movie) await page.route("**/api/proxy/tmdb?*", (route) => {
+    const { searchParams } = new URL(route.request().url());
+    return searchParams.get("op") === "row" ? route.fulfill({ json: { items: [movie], nextPage: false } }) : route.continue();
+  });
+  rejectSources = false;
+  await page.goto("/");
+  await page.locator(".home-hero").getByRole("link", { name: "Play", exact: true }).click();
+  await waitPlayback("season1-720-ep1", 0.3);
+  assert.equal(new URL(page.url()).hash, "");
   await writeFile(output, JSON.stringify({
     browser: browser.version(), mode, tmdbTitle: movie?.title, cancellation, failedProviderDidNotBlockPlayback: !!movie, serverDiagnostics: !movie,
     flow: "Detail → 1080p → server fallback → 720p → Episode 2",
-    requests, playedAt, resumed, serverFallback: true, seasonsFiltered: true,
+    requests: mainFlowRequests, playedAt, resumed, serverFallback: true, seasonsFiltered: true, homePlay: true,
   }, null, 2) + "\n");
 } finally {
   await browser?.close();
