@@ -5,5 +5,5 @@ import typescript from "eslint-config-next/typescript";
 export default defineConfig([
   ...coreWebVitals,
   ...typescript,
-  globalIgnores([".next/**", "out/**", "out-extension/**", "next-env.d.ts", "vendor/android/**"]),
+  globalIgnores([".next/**", ".pages/**", "out/**", "out-extension/**", "next-env.d.ts", "vendor/android/**"]),
 ]);

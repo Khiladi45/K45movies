@@ -5,7 +5,7 @@ import { Info, Pause, Play } from "lucide-react";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Artwork, type Card } from "./catalog-ui";
 
-export type HomeFeature = Card & { backdrop?: string; meta?: string[]; synopsis?: string };
+export type HomeFeature = Card & { backdrop?: string; meta?: string[]; synopsis?: string; playHref?: string | null };
 const interval = 7000;
 
 function useArtworkAccent(src?: string) {
@@ -120,7 +120,7 @@ export function HomeHero({ items }: { items: HomeFeature[] }) {
         {!!item.meta?.length && <p className="home-hero-meta">{item.meta.join(" · ")}</p>}
         {item.synopsis && <p className="home-hero-synopsis">{item.synopsis}</p>}
         <div className="home-hero-actions">
-          <Link className="primary-button home-play" href={item.href + "#play"}><Play size={18} fill="currentColor" aria-hidden="true" />Play</Link>
+          {item.playHref !== null && <Link className="primary-button home-play" href={item.playHref ?? item.href + "#play"}><Play size={18} fill="currentColor" aria-hidden="true" />Play</Link>}
           <Link className="secondary-button home-info" href={item.href}><Info size={17} aria-hidden="true" />More Info</Link>
         </div>
       </div>

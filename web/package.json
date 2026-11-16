@@ -8,6 +8,8 @@
     "build": "next build",
     "start": "next start",
     "start:local": "node scripts/start-local.mjs",
+    "build:pages": "node scripts/build-pages.mjs",
+    "preview:pages": "node scripts/serve-pages.mjs",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test tests/*.test.ts"
@@ -35,7 +37,9 @@
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "eslint": "9.39.5",
+    "esbuild": "0.28.2",
     "eslint-config-next": "16.4.6",
+    "postcss": "8.5.23",
     "tailwindcss": "4.3.5",
     "tsx": "4.23.15",
     "typescript": "5.9.3"
