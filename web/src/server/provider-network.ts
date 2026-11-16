@@ -4,6 +4,7 @@ import { Agent, fetch as upstreamFetch } from "undici";
 import ipaddr from "ipaddr.js";
 import { CookieJar } from "tough-cookie";
 import axios, { AxiosError, AxiosHeaders } from "axios";
+import { secureDnsAnswers } from "./provider-dns";
 
 function publicAddress(address: string) {
   return ipaddr.process(address).range() === "unicast";
@@ -17,14 +18,22 @@ export function publicDnsAnswers(addresses: { address: string; family: number }[
 const dispatcher = new Agent({
   connect: {
     lookup(hostname, options, callback) {
-      lookup(hostname, { ...options, all: true }, (error, addresses) => {
-        if (error) return callback(error, "", 0);
+      const connect = (addresses: { address: string; family: number }[]) => {
         if (!publicDnsAnswers(addresses)) {
           return callback(new Error("Provider network destination is unavailable."), "", 0);
         }
-        if (options.all) return callback(null, addresses);
-        return callback(null, addresses[0].address, addresses[0].family);
+        const matching = addresses.filter(({ family }) => !options.family || options.family === family);
+        if (!matching.length) return callback(new Error("The requested DNS address family is unavailable."), "", 0);
+        if (options.all) return callback(null, matching);
+        return callback(null, matching[0].address, matching[0].family);
+      };
+      const system = () => lookup(hostname, { ...options, all: true }, (error, addresses) => {
+        if (error) return callback(error, "", 0);
+        connect(process.env.K45_DOH === "1" ? addresses.sort((a, b) => a.family - b.family) : addresses);
       });
+      if (process.env.K45_DOH !== "1" || hostname === "localhost" || !hostname.includes(".")) return system();
+      void secureDnsAnswers(hostname).then((addresses) => addresses ? connect(addresses) : system(),
+        (error: Error) => callback(error, "", 0));
     },
   },
 });
@@ -136,7 +145,7 @@ export function providerNetwork(signal: AbortSignal, defaultHeaders?: HeadersIni
         .filter((entry): entry is AbortSignal => !!entry);
       const res = await request(axios.getUri(config), {
         method: config.method,
-        headers: Object.entries(config.headers.toJSON(true)).map(([key, value]) => [key, String(value)]),
+        headers: Object.entries(config.headers.toJSON(true)).map(([key, value]): [string, string] => [key, String(value)]),
         body: config.data,
         signal: signals.length ? AbortSignal.any(signals) : undefined,
         redirect: config.maxRedirects === 0 ? "manual" : undefined,

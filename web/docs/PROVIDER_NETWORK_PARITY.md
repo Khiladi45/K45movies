@@ -88,3 +88,75 @@ node --conditions=react-server --import tsx scripts/provider-smoke/run.mts upstr
 node scripts/provider-smoke/compare-dns.mjs upstream.json dns.json
 node --import tsx scripts/provider-smoke/run.mts deployment.json --url https://your-nextjs-origin.example
 ```
+
+## DNS parity proof, 16 November 2026
+
+The historical home and hotspot files contain exactly two hosts with a non-empty system IPv4 set disjoint from both public DoH IPv4 sets. Testing only whether an address was public missed this difference.
+
+| Host | Historical system IPv4 | Cloudflare and Google IPv4 | Historical IPv4 replay | Fresh IPv4 replay |
+| --- | --- | --- | --- | --- |
+| anime.uniquestream.net | 13.127.247.216 | 104.26.8.81, 104.26.9.81, 172.67.74.13 | Timed out at 4.5 s | HTTP 200 for all three |
+| bzzhr.co | 125.21.240.67 | 104.18.2.146, 104.18.3.146 | TLS hostname verification failed | HTTP 403 for both |
+
+The fresh system lookup matched both DoH resolvers for these hosts on the test connection. For all 27 captured origins the script resolved system, Cloudflare and Google answers, then used anonymous HTTPS HEAD with the original hostname as SNI and Host, verified the certificate, pinned each public address, and left redirects unfollowed. All 27 hosts returned an HTTP response on at least one answer. None of the 49 tested fresh IPv6 addresses returned HTTP on this connection. The HEAD result is an origin test. It cannot establish that a title or signed media URL works. The historical Anime UniqueStream result is consistent with an unreachable alternate endpoint. The prior bzzhr.co answer cannot serve this hostname over authenticated TLS, while the current address serves a separate HTTP access denial.
+
+[Address and TLS evidence](provider-network-parity/doh-origin-check.json) · [System DNS production run](provider-network-parity/doh-system-before.json) · [DoH production run](provider-network-parity/doh-enabled-before-runtime-changes.json)
+
+| Operation | System DNS usable | DoH usable |
+| --- | ---: | ---: |
+| catalog | 39 | 39 |
+| posts | 33 | 32 |
+| search | 29 | 29 |
+| meta | 34 | 33 |
+| episodes | 8 | 7 |
+| stream | 21 | 22 |
+
+| Provider | System DNS | DoH first |
+| --- | --- | --- |
+| 1flex | P / P / P / P / – / P | P / P / P / P / – / P |
+| 1tamilblasters | P / P / P / P / – / E | P / P / P / P / – / E |
+| 1tamilmv | P / P / P / F / – / – | P / P / P / F / – / – |
+| 4khdhub | P / P / P / P / – / E | P / P / P / P / – / P |
+| Joya9tv | P / P / P / P / – / P | P / P / P / P / – / E |
+| anikoto | P / P / P / P / – / P | P / P / P / P / – / P |
+| animesalt | P / E / E / – / – / – | P / E / E / – / – / – |
+| animesub | P / P / P / P / – / E | P / P / P / P / – / E |
+| animeworld | P / P / P / P / P / P | P / P / P / P / P / P |
+| autoEmbed | P / P / P / P / – / P | P / P / P / P / – / P |
+| castle | P / P / P / P / – / P | P / P / P / P / – / P |
+| disneyPlus | F / – / F / – / – / – | F / – / F / – / – / – |
+| drive | P / P / P / P / – / E | P / P / P / P / – / E |
+| dvdplay | P / P / F / P / – / E | P / P / F / P / – / P |
+| gokuHD | P / P / P / P / P / P | P / P / P / P / P / P |
+| hdhub4u | P / P / P / P / – / P | P / P / P / P / – / P |
+| hdmovieslife | P / P / E / P / – / P | P / P / E / P / – / P |
+| hiAnime | P / F / F / – / – / – | P / F / F / – / – / – |
+| hotstar | F / – / F / – / – / – | F / – / F / – / – / – |
+| kickAssAnime | P / P / P / P / – / P | P / P / P / P / – / P |
+| kissKh | P / P / P / P / – / P | P / P / P / P / – / P |
+| kmMovies | P / P / P / P / – / E | P / P / P / P / – / E |
+| luxMovies | P / P / E / P / P / P | P / P / E / P / P / P |
+| marvel | F / – / F / – / – / – | F / – / F / – / – / – |
+| movieBoxWeb | P / P / P / P / P / P | P / P / P / P / P / P |
+| movielinkdb | P / P / P / P / – / P | P / P / P / P / – / P |
+| movies4u | P / P / P / P / – / F | P / P / P / P / – / F |
+| moviesda | P / P / E / P / – / P | P / P / E / P / – / P |
+| movieswood | P / P / F / P / – / P | P / P / F / P / – / P |
+| moviezwap | P / P / P / P / P / P | P / P / P / P / P / P |
+| multi | P / P / P / P / E / P | P / P / P / P / E / P |
+| mxplayer | P / P / P / F / – / – | P / P / P / F / – / – |
+| netflix | F / – / F / – / – / – | F / – / F / – / – / – |
+| pixar | F / – / F / – / – / – | F / – / F / – / – / – |
+| primeVideo | F / – / F / – / – / – | F / – / F / – / – / – |
+| showbox | P / P / F / P / P / F | P / F / F / – / – / – |
+| starWars | F / – / F / – / – / – | F / – / F / – / – / – |
+| torrentio | P / P / P / P / – / E | P / P / P / P / – / E |
+| uhd | P / P / P / P / – / P | P / P / P / P / – / P |
+| uniquestream | P / P / E / P / P / P | P / P / E / P / P / P |
+| vega | P / P / P / P / P / P | P / P / P / P / P / P |
+| zeefliz | P / F / F / – / – / – | P / F / F / – / – / – |
+| disneyMirror | P / E / P / P / – / F | P / E / P / P / – / F |
+| netflixMirror | P / E / P / P / – / F | P / E / P / P / – / F |
+| primeMirror | P / E / P / P / – / F | P / E / P / P / – / F |
+| youtube | P / P / P / P / – / F | P / P / P / P / – / F |
+| moviesApi | F / – / F / – / – / – | F / – / F / – / – / – |
