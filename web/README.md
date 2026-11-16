@@ -1,5 +1,7 @@
 # K45movies web
 
+For a server-free version on GitHub Pages, see the [static preview](docs/STATIC_PAGES.md).
+
 This desktop-first Next.js app lives in `web/`. Use Node.js 24 and run the following from that directory.
 
 ```sh

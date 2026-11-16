@@ -1,0 +1,34 @@
+{
+  "browser": "157.0.8103.51",
+  "origin": "https://khiladi45.github.io",
+  "results": [
+    {
+      "width": 1440,
+      "firstTitle": "Bungo Stray Dogs 5",
+      "episodeCount": 11,
+      "animeSearchCount": 9,
+      "youtubeSeconds": 0.516914,
+      "unavailable": 41,
+      "axe": {
+        "provider": [],
+        "movie": [],
+        "youtube": []
+      },
+      "providerApiCallsToPages": 0
+    },
+    {
+      "width": 390,
+      "firstTitle": "Bungo Stray Dogs 5",
+      "episodeCount": 11,
+      "animeSearchCount": 9,
+      "youtubeSeconds": 0.802749,
+      "unavailable": 41,
+      "axe": {
+        "provider": [],
+        "movie": [],
+        "youtube": []
+      },
+      "providerApiCallsToPages": 0
+    }
+  ]
+}
