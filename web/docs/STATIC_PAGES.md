@@ -1,6 +1,6 @@
 # GitHub Pages preview
 
-The [live GitHub Pages site](https://khiladi45.github.io/K45movies/) reuses the redesigned Home UI and reads the existing K45movies-api manifest and URL registry. The Next.js app remains the full version.
+The public static preview was retired. For local playback, use the [Next.js setup instructions](../README.md). The static preview instructions below are kept for local testing of the browser-only build.
 
 ## Run locally
 
