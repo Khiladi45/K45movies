@@ -67,7 +67,7 @@ export function YouTubeVideo({ reference }: { reference: string }) {
     <BackLink />
     <div id="play" className="youtube-player">
       {playing ? <iframe title={title} src={"https://www.youtube.com/embed/" + videoId + "?autoplay=1"}
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; web-share"
         referrerPolicy="strict-origin-when-cross-origin" allowFullScreen /> :
         <><Artwork src={image} className="youtube-cover" priority />
           <button type="button" className="primary-button youtube-play" onClick={() => setPlaying(true)}><Play size={18} aria-hidden="true" /> Play video</button></>}

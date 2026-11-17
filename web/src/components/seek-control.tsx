@@ -11,6 +11,9 @@ export function formatTime(time: number) {
 export function SeekControl({ position, duration, buffered, seek, source, locked }: {
   position: number; duration: number; buffered: number; seek: (time: number) => void; source?: string; locked: boolean;
 }) {
+  const ratio = (value: number) => duration > 0 ? Math.max(0, Math.min(100, value / duration * 100)) : 0;
+  const played = ratio(position);
+  const loaded = Math.max(played, ratio(buffered));
   const [preview, setPreview] = useState<{ time: number; ratio: number }>();
   const canvas = useRef<HTMLCanvasElement>(null);
   const [image, showImage] = useState(false);
@@ -23,7 +26,9 @@ export function SeekControl({ position, duration, buffered, seek, source, locked
       thumbnail = document.createElement("video");
       thumbnail.preload = "metadata";
       thumbnail.muted = true;
-      thumbnail.onloadedmetadata = () => { if (thumbnail) thumbnail.currentTime = Math.min(time, thumbnail.duration - 0.05); };
+      thumbnail.onloadedmetadata = () => {
+        if (thumbnail && Number.isFinite(thumbnail.duration)) thumbnail.currentTime = Math.max(0, Math.min(time, thumbnail.duration - 0.05));
+      };
       thumbnail.onseeked = () => {
         if (!thumbnail || !canvas.current) return;
         const context = canvas.current.getContext("2d");
@@ -43,6 +48,7 @@ export function SeekControl({ position, duration, buffered, seek, source, locked
   }, [source, time]);
 
   function hover(event: PointerEvent<HTMLInputElement>) {
+    if (event.pointerType === "touch" || !duration) return;
     const bounds = event.currentTarget.getBoundingClientRect();
     const ratio = Math.max(0, Math.min(1, (event.clientX - bounds.left) / bounds.width));
     showImage(false);
@@ -54,8 +60,8 @@ export function SeekControl({ position, duration, buffered, seek, source, locked
       <canvas ref={canvas} width={128} height={72} hidden={!image} />
       <span>{formatTime(preview.time)}</span>
     </div>}
-    <progress className="player-buffer" aria-hidden="true" value={Math.min(buffered, duration)} max={duration || 1} />
-    <input className="relative w-full accent-accent" type="range" min={0} max={duration || 1} step={0.1} value={Math.min(position, duration)}
+    <input className="player-seek" type="range" min={0} max={duration || 1} step={0.1} value={Math.min(position, duration)}
+      style={{ backgroundImage: `linear-gradient(to right, var(--color-accent) ${played}%, #ffffff80 ${played}% ${loaded}%, #ffffff40 ${loaded}%)` }}
       aria-label="Seek" aria-valuetext={formatTime(position)} disabled={!duration || locked}
       onChange={(event) => seek(Number(event.target.value))} onPointerMove={hover}
       onPointerLeave={() => { setPreview(undefined); showImage(false); }} />

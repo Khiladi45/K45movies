@@ -17,6 +17,7 @@ export function attachMedia(video: HTMLVideoElement, source: Source, events: {
   let disposed = false;
   let networkRecovered = false;
   let initialAudio = 0;
+  let nativeDefaultAudio: NativeAudioTrack | undefined;
   let mediaRecovered = false;
   const native = video as NativeMedia;
   const textTracks = () => Array.from(video.textTracks).filter((track) => track.kind === "subtitles" || track.kind === "captions");
@@ -28,10 +29,12 @@ export function attachMedia(video: HTMLVideoElement, source: Source, events: {
 
   function update() {
     if (disposed) return;
+    const nativeAudio = Array.from(native.audioTracks ?? []);
+    nativeDefaultAudio ??= nativeAudio.find((track) => track.enabled) ?? nativeAudio[0];
     events.tracks({
       levels: engine?.levels.map(({ height, name }) => ({ label: height ? height + "p" : name || "HLS" })) ?? [],
       audio: engine?.audioTracks.map(({ name, lang }) => ({ label: name, language: lang })) ??
-        Array.from(native.audioTracks ?? []).map(({ label, language }, i) => ({ label: label || language || "Track " + (i + 1), language })),
+        nativeAudio.map(({ label, language }, i) => ({ label: label || language || "Track " + (i + 1), language })),
       captions: engine?.subtitleTracks.map(({ name, lang }) => ({ label: name, language: lang })) ??
         textTracks().map(({ label, language }, i) => ({ label: label || language || "Track " + (i + 1), language })),
     });
@@ -46,6 +49,9 @@ export function attachMedia(video: HTMLVideoElement, source: Source, events: {
   video.addEventListener("error", nativeFailed);
   video.addEventListener("loadedmetadata", update);
   video.textTracks.addEventListener("addtrack", update);
+  const nativeAudioTracks = native.audioTracks;
+  nativeAudioTracks?.addEventListener("addtrack", update);
+  nativeAudioTracks?.addEventListener("removetrack", update);
 
   async function load() {
     if (!source.hls) {
@@ -88,7 +94,11 @@ export function attachMedia(video: HTMLVideoElement, source: Source, events: {
     quality(index: number) { if (engine) engine.loadLevel = index; },
     audio(index: number) {
       if (engine) engine.audioTrack = index < 0 ? initialAudio : index;
-      else Array.from(native.audioTracks ?? []).forEach((track, i) => { track.enabled = i === Math.max(0, index); });
+      else {
+        const tracks = Array.from(native.audioTracks ?? []);
+        const selected = index >= 0 ? tracks[index] : tracks.find((track) => track === nativeDefaultAudio) ?? tracks[0];
+        if (selected) tracks.forEach((track) => { track.enabled = track === selected; });
+      }
     },
     cues(index: number) {
       if (index < 0) return [];
@@ -110,6 +120,8 @@ export function attachMedia(video: HTMLVideoElement, source: Source, events: {
       video.removeEventListener("error", nativeFailed);
       video.removeEventListener("loadedmetadata", update);
       video.textTracks.removeEventListener("addtrack", update);
+      nativeAudioTracks?.removeEventListener("addtrack", update);
+      nativeAudioTracks?.removeEventListener("removetrack", update);
       engine?.destroy();
       video.removeAttribute("src");
       video.load();

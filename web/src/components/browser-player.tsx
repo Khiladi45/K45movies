@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useEffectEvent, useRef, useState } from "react";
-import { Captions, ChevronDown, Expand, ListVideo, Lock, Maximize, Minimize2, Pause, PictureInPicture2, Play, Server, Settings2, SlidersHorizontal, SkipForward, Unlock, Volume2, VolumeX, X } from "lucide-react";
+import { AudioLines, Captions, ChevronDown, Crop, Expand, ListVideo, Lock, Maximize, Minimize2, Pause, Play, Server, Settings2, SlidersHorizontal, SkipForward, Unlock, Volume2, VolumeX, X } from "lucide-react";
 import { usePlayback, type PlaybackItem } from "@/lib/playback";
 import { CatalogError } from "@/lib/catalog-api";
 import type { SourceAttempt } from "@/lib/catalog-types";
@@ -18,10 +18,17 @@ import { SourceAttempts } from "./source-attempts";
 
 type Session = NonNullable<ReturnType<typeof usePlayback.getState>["session"]>;
 type Cue = ReturnType<typeof parseCues>[number];
-type Panel = "episodes" | "settings" | "quality" | "servers" | null;
+type Panel = "episodes" | "settings" | "quality" | "servers" | "audio" | "framing" | null;
 const savedTimestamp = Date.now;
 const paintClock = performance.now.bind(performance);
-const panelNames = { episodes: "Episodes", settings: "Playback settings", quality: "Quality", servers: "Servers" };
+const panelNames = { episodes: "Episodes", settings: "Playback settings", quality: "Quality", servers: "Servers", audio: "Audio tracks", framing: "Framing and zoom" };
+const framingOptions = [
+  { value: "fit", label: "Fit screen" }, { value: "fill", label: "Fill screen" },
+  { value: "crop", label: "Crop to 16:9" }, { value: "actual", label: "Actual size (100%)" },
+  { value: "stretch", label: "Stretch" },
+] as const;
+const zoomMin = 50;
+const zoomMax = 400;
 
 export function BrowserPlayer({ session }: { session: Session }) {
   const { target, sources } = session;
@@ -64,8 +71,8 @@ export function BrowserPlayer({ session }: { session: Session }) {
   const [cueList, setCueList] = useState<Cue[]>([]);
   const [theater, setTheater] = useState(false);
   const pinch = useRef<{ distance: number; scale: number }>(null);
-  const [scale, setScale] = useState(1);
-  const [fit, setFit] = useState<"contain" | "cover" | "fill" | "none">("contain");
+  const [zoom, setZoom] = useState(100);
+  const [framing, setFraming] = useState<typeof framingOptions[number]["value"]>("fit");
   const [locked, setLocked] = useState(false);
   const [panel, setPanel] = useState<Panel>(null);
   const [error, setError] = useState("");
@@ -106,7 +113,7 @@ export function BrowserPlayer({ session }: { session: Session }) {
   useEffect(() => {
     if (background) return;
     function pauseHidden() {
-      if (document.hidden && !document.pictureInPictureElement) videoRef.current?.pause();
+      if (document.hidden) videoRef.current?.pause();
     }
     document.addEventListener("visibilitychange", pauseHidden);
     return () => document.removeEventListener("visibilitychange", pauseHidden);
@@ -179,15 +186,15 @@ export function BrowserPlayer({ session }: { session: Session }) {
     if (force || now - lastPaint.current >= 225) {
       lastPaint.current = now;
       setPosition(element.currentTime);
-      if (element.buffered.length) {
-        const ranges = element.buffered;
-        for (let index = 0; index < ranges.length; index++) {
-          if (ranges.start(index) <= element.currentTime && element.currentTime <= ranges.end(index)) {
-            setBuffered(ranges.end(index));
-            break;
-          }
+      const ranges = element.buffered;
+      let bufferedEnd = element.currentTime;
+      for (let index = 0; index < ranges.length; index++) {
+        if (ranges.start(index) <= element.currentTime && element.currentTime <= ranges.end(index)) {
+          bufferedEnd = ranges.end(index);
+          break;
         }
       }
+      setBuffered(bufferedEnd);
     }
     if (now - savedAt.current >= 5000) { savedAt.current = now; save(); }
     const time = element.currentTime - captionStyle.delay;
@@ -228,9 +235,23 @@ export function BrowserPlayer({ session }: { session: Session }) {
   function toggle() {
     const element = video();
     if (!element) return;
-    if (element.paused) void element.play().catch(() => setNote("Press Play to start playback."));
+    if (element.paused) startPlayback(element);
     else element.pause();
     wake();
+  }
+
+  function startPlayback(element: HTMLVideoElement) {
+    const activeEngine = engine.current;
+    void element.play().catch((failure: unknown) => {
+      if (engine.current !== activeEngine) return;
+      if (failure instanceof DOMException && failure.name === "AbortError") return;
+      setWaiting(false);
+      if (failure instanceof DOMException && failure.name === "NotAllowedError") {
+        setNote("Autoplay was blocked. Press Play to start.");
+      } else {
+        activeEngine?.fail(undefined, failure instanceof Error ? failure.message : "Could not start playback.");
+      }
+    });
   }
 
   function updateVolume(value: number) {
@@ -254,13 +275,6 @@ export function BrowserPlayer({ session }: { session: Session }) {
     } catch { setNote("Fullscreen is unavailable."); }
   }
 
-  async function pictureInPicture() {
-    try {
-      if (document.pictureInPictureElement) await document.exitPictureInPicture();
-      else await video()?.requestPictureInPicture();
-    } catch { setNote("Picture-in-picture is unavailable for this source."); }
-  }
-
   function changeSource(index: number) {
     if (index === i) return;
     resumePlay.current = !video()?.paused;
@@ -268,6 +282,8 @@ export function BrowserPlayer({ session }: { session: Session }) {
     tried.current.clear();
     setAttempts([]);
     setWaiting(true);
+    setDuration(0);
+    setBuffered(0);
     setError("");
     setNote("");
     setTracks(emptyTracks);
@@ -387,6 +403,8 @@ export function BrowserPlayer({ session }: { session: Session }) {
     const replacement = sources.findIndex((_, index) => !tried.current.has(index));
     if (replacement >= 0) {
       setWaiting(true);
+      setDuration(0);
+      setBuffered(0);
       setNote("Trying another server…");
       setTracks(emptyTracks);
       setQuality(-1);
@@ -427,46 +445,50 @@ export function BrowserPlayer({ session }: { session: Session }) {
       className="browser-player" data-theater={theater} data-mini={minimized} data-locked={locked}
       aria-keyshortcuts="Space ArrowLeft ArrowRight ArrowUp ArrowDown J L F M C"
       onKeyDown={handleKey} onPointerMove={wake}>
-      <div className="player-picture"
-        onTouchStart={(event) => {
-          if (locked || minimized || event.touches.length !== 2 || event.target !== videoRef.current) return;
-          const [a, b] = [event.touches[0], event.touches[1]];
-          pinch.current = { distance: Math.max(1, Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY)), scale };
-        }}
-        onTouchMove={(event) => {
-          if (!pinch.current || event.touches.length !== 2) return;
-          const [a, b] = [event.touches[0], event.touches[1]];
-          const distance = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
-          setScale(Math.max(1, Math.min(3, pinch.current.scale * distance / pinch.current.distance)));
-        }}
-        onTouchEnd={() => { pinch.current = null; }} onTouchCancel={() => { pinch.current = null; }}>
-        <video ref={videoRef} preload="metadata" playsInline
-          style={{ objectFit: fit, transform: scale > 1 && !minimized ? "scale(" + scale + ")" : undefined, touchAction: minimized ? "auto" : "none" }}
-          onClick={() => { if (!locked) toggle(); }}
-          onLoadedMetadata={(event) => {
-            const element = event.currentTarget;
-            setDuration(Number.isFinite(element.duration) ? element.duration : 0);
-            if (positionRef.current > 0 && Number.isFinite(element.duration)) element.currentTime = Math.min(positionRef.current, Math.max(0, element.duration - .2));
-            element.playbackRate = speed;
-            element.volume = volume;
-            element.muted = muted;
-            changingMedia.current = false;
-            if (resumePlay.current) void element.play().catch(() => setWaiting(false));
+      <div className="player-picture">
+        <div className="player-viewport" data-framing={minimized ? "fit" : framing}
+          onTouchStart={(event) => {
+            if (locked || minimized || event.touches.length !== 2 || event.target !== videoRef.current) return;
+            const [a, b] = [event.touches[0], event.touches[1]];
+            pinch.current = { distance: Math.max(1, Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY)), scale: zoom };
           }}
-          onDurationChange={(event) => setDuration(Number.isFinite(event.currentTarget.duration) ? event.currentTarget.duration : 0)}
-          onPlaying={() => { clearTimeout(stalled.current); setPlay(true); setWaiting(false); setNote(""); wake(); }}
-          onPause={() => { clearTimeout(stalled.current); setPlay(false); if (video()?.readyState) save(); }}
-          onWaiting={(event) => {
-            setWaiting(true);
-            clearTimeout(stalled.current);
-            if (!event.currentTarget.paused) {
-              stalled.current = setTimeout(() => { engine.current?.fail(); }, 18_000);
-            }
+          onTouchMove={(event) => {
+            if (!pinch.current || event.touches.length !== 2) return;
+            const [a, b] = [event.touches[0], event.touches[1]];
+            const distance = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+            setZoom(Math.round(Math.max(zoomMin, Math.min(zoomMax, pinch.current.scale * distance / pinch.current.distance))));
           }}
-          onCanPlay={() => setWaiting(false)}
-          onTimeUpdate={() => tick()}
-          onSeeked={() => tick(true)}
-          onEnded={() => { setPlay(false); save(); if (autoplay && next) void resolve(next); }} />
+          onTouchEnd={() => { pinch.current = null; }} onTouchCancel={() => { pinch.current = null; }}>
+          <div className="player-video-window">
+            <video ref={videoRef} preload="metadata" playsInline disablePictureInPicture
+              style={{ transform: !minimized && zoom !== 100 ? `scale(${zoom / 100})` : undefined }}
+              onClick={() => { if (!locked) toggle(); }}
+              onLoadedMetadata={(event) => {
+                const element = event.currentTarget;
+                setDuration(Number.isFinite(element.duration) ? element.duration : 0);
+                if (positionRef.current > 0 && Number.isFinite(element.duration)) element.currentTime = Math.min(positionRef.current, Math.max(0, element.duration - .2));
+                element.playbackRate = speed;
+                element.volume = volume;
+                element.muted = muted;
+                changingMedia.current = false;
+                if (resumePlay.current) startPlayback(element);
+              }}
+              onDurationChange={(event) => setDuration(Number.isFinite(event.currentTarget.duration) ? event.currentTarget.duration : 0)}
+              onPlaying={() => { clearTimeout(stalled.current); setPlay(true); setWaiting(false); setNote(""); wake(); }}
+              onPause={() => { clearTimeout(stalled.current); setPlay(false); if (!changingMedia.current) setWaiting(false); if (video()?.readyState) save(); }}
+              onWaiting={(event) => {
+                setWaiting(true);
+                clearTimeout(stalled.current);
+                if (!event.currentTarget.paused) {
+                  stalled.current = setTimeout(() => { engine.current?.fail(); }, 18_000);
+                }
+              }}
+              onCanPlay={() => { clearTimeout(stalled.current); setWaiting(false); }}
+              onTimeUpdate={() => tick()}
+              onSeeked={() => tick(true)}
+              onEnded={() => { setPlay(false); save(); if (autoplay && next) void resolve(next); }} />
+          </div>
+        </div>
         <div className="player-caption" style={{ bottom: captionStyle.bottom, textAlign: captionStyle.align }}>
           <span ref={captionsRef} style={textStyle(captionStyle)} hidden />
         </div>
@@ -501,12 +523,12 @@ export function BrowserPlayer({ session }: { session: Session }) {
                   <span className="flex-1" />
                   <PlayerButton title="Captions" click={toggleCaptions} pressed={captions !== "off"}><Captions size={20} /></PlayerButton>
                   {target.episodes.length > 1 && <PlayerButton title="Episodes" click={() => setPanel(panel === "episodes" ? null : "episodes")} pressed={panel === "episodes"}><ListVideo size={20} /></PlayerButton>}
-                  {(qualities.length > 1 || !!tracks.levels.length) && <PlayerButton title="Quality" click={() => setPanel(panel === "quality" ? null : "quality")} pressed={panel === "quality"}><SlidersHorizontal size={19} /></PlayerButton>}
+                  <PlayerButton title="Quality" click={() => setPanel(panel === "quality" ? null : "quality")} pressed={panel === "quality"}><SlidersHorizontal size={19} /></PlayerButton>
+                  <PlayerButton title="Audio tracks" click={() => setPanel(panel === "audio" ? null : "audio")} pressed={panel === "audio"}><AudioLines size={19} /></PlayerButton>
+                  <PlayerButton title="Framing and zoom" click={() => setPanel(panel === "framing" ? null : "framing")} pressed={panel === "framing"}><Crop size={19} /></PlayerButton>
                   <PlayerButton title="Servers" click={() => setPanel(panel === "servers" ? null : "servers")} pressed={panel === "servers"}><Server size={18} /></PlayerButton>
                   <PlayerButton title="Playback settings" click={() => setPanel(panel === "settings" ? null : "settings")} pressed={panel === "settings"}><Settings2 size={19} /></PlayerButton>
                   <PlayerButton title="Lock controls" click={() => { setPanel(null); setLocked(true); }}><Lock size={19} /></PlayerButton>
-                  {typeof document !== "undefined" && document.pictureInPictureEnabled &&
-                    <PlayerButton title="Picture-in-picture" click={() => void pictureInPicture()}><PictureInPicture2 size={20} /></PlayerButton>}
                   <PlayerButton title="Theater mode" click={() => setTheater(!theater)} pressed={theater}>{theater ? <Minimize2 size={19} /> : <Expand size={19} />}</PlayerButton>
                   <PlayerButton title="Fullscreen" click={() => void fullscreen()}><Maximize size={19} /></PlayerButton>
                 </>}
@@ -528,34 +550,37 @@ export function BrowserPlayer({ session }: { session: Session }) {
               {[entry.server, entry.quality, entry.format?.toUpperCase()].filter(Boolean).join(" · ")}
             </button></li>)}</ul></li>
         ))}</ul> : panel === "quality" ? <div className="grid min-w-0 gap-4">
-          {qualities.length > 1 && <Picker label="Title quality" value={target.qualityIndex ?? 0} disabled={switching}
-            change={(index) => { if (index !== target.qualityIndex) void resolve(target.item, { qualityIndex: index }); }}
+          {!!qualities.length && <PlayerChoices label="Title quality" value={target.qualityIndex ?? qualities[0].index} disabled={switching}
+            change={(index) => { if (index !== (target.qualityIndex ?? qualities[0].index)) void resolve(target.item, { qualityIndex: index }); }}
             options={qualities.map(({ index, label }) => ({ value: index, label }))} />}
-          {!!tracks.levels.length && <details open>
-            <summary className="mb-2 text-sm">HLS levels</summary>
-            <Picker label="HLS level" value={quality} change={(value) => { qualityChosen.current = true; setQuality(value); engine.current?.quality(value); }}
-              options={[{value:-1,label:"Auto"}, ...tracks.levels.map((track,index) => ({ value:index,label:track.label }))]} />
-          </details>}
+          {!!tracks.levels.length && <PlayerChoices label="HLS levels" value={quality} change={(value) => {
+            qualityChosen.current = true;
+            setQuality(value);
+            engine.current?.quality(value);
+          }} options={[{ value: -1, label: "Auto" }, ...tracks.levels.map((track, index) => ({ value: index, label: track.label }))]} />}
+          {!qualities.length && !tracks.levels.length && <p className="text-sm text-muted">{source.quality ? `Playing at ${source.quality}.` : "This source has one quality."}</p>}
+        </div> : panel === "audio" ? tracks.audio.length ? <PlayerChoices label="Available audio tracks" value={audio} change={(value) => {
+          preferredApplied.current = true;
+          setAudio(value);
+          engine.current?.audio(value);
+        }} options={[{ value: -1, label: "Default" }, ...tracks.audio.map((track, index) => ({ value: index, label: track.label }))]} /> :
+          <p className="text-sm text-muted">This source and browser do not expose alternate audio tracks.</p> : panel === "framing" ? <div className="grid gap-4">
+          <PlayerChoices label="Framing" value={framing} change={(value) => { setFraming(value); setZoom(100); }} options={framingOptions} />
+          <label className="grid gap-2 text-sm">
+            <span className="flex justify-between">Zoom <span className="tabular-nums" aria-hidden="true">{zoom}%</span></span>
+            <input type="range" aria-label="Zoom" aria-valuetext={`${zoom}%`} className="accent-accent" min={zoomMin} max={zoomMax} value={zoom}
+              onChange={(event) => setZoom(event.target.valueAsNumber)} />
+          </label>
+          <button type="button" className="secondary-button justify-self-start" onClick={() => setZoom(100)} disabled={zoom === 100}>Reset zoom</button>
         </div> : <div className="grid gap-4">
           <Picker label="Speed" value={speed} change={(value) => { setSpeed(value); if (video()) video()!.playbackRate = value; }}
             options={[.25,.5,.75,1,1.25,1.5,1.75,2].map((rate) => ({ value: rate, label: rate + "×" }))} />
-          {!!tracks.audio.length && <Picker label="Audio track" value={audio} change={(value) => { setAudio(value); engine.current?.audio(value); }}
-            options={[{value:-1,label:"Default"}, ...tracks.audio.map((track,index) => ({ value:index,label:track.label }))]} />}
           <label className="grid gap-1 text-sm">Subtitle track
             <select className="field" value={captions} onChange={(event) => setCaption(event.target.value, true)}>
               <option value="off">Off</option>
               {source.subtitles.map((track,index) => <option key={index} value={"file:" + index}>{track.label}</option>)}
               {tracks.captions.map((track,index) => <option key={index} value={"hls:" + index}>{track.label}</option>)}
             </select>
-          </label>
-          <label className="grid gap-1 text-sm">Zoom and fit
-            <select className="field" value={fit} onChange={(event) => setFit(event.target.value as typeof fit)}>
-              <option value="contain">Fit</option><option value="cover">Fill frame</option>
-              <option value="fill">Stretch</option><option value="none">Actual size</option>
-            </select>
-          </label>
-          <label className="grid gap-1 text-sm">Zoom level
-            <input type="range" className="accent-accent" min={1} max={3} step={0.05} value={scale} onChange={(event) => setScale(Number(event.target.value))} />
           </label>
           {target.episodes.length > 1 && <label className="flex gap-2 text-sm"><input type="checkbox" checked={autoplay}
             onChange={() => preferences.set("autoplay", !autoplay)} /> Autoplay next episode</label>}
@@ -571,6 +596,20 @@ function PlayerButton({ title, click, children, pressed, disabled }: {
 }) {
   return <button type="button" className="player-button" aria-label={title} title={title} aria-pressed={pressed} disabled={disabled}
     onClick={click}>{children}</button>;
+}
+
+function PlayerChoices<T extends number | string>({ label, value, change, options, disabled }: {
+  label: string; value: T; change: (value: T) => void; options: readonly { value: T; label: string }[]; disabled?: boolean;
+}) {
+  return <div className="grid gap-2">
+    <h3 className="text-sm font-medium">{label}</h3>
+    <ul className="grid gap-1" aria-label={label}>
+      {options.map((option) => <li key={option.value}>
+        <button type="button" className="player-choice" disabled={disabled} aria-pressed={option.value === value}
+          onClick={() => change(option.value)}>{option.label}</button>
+      </li>)}
+    </ul>
+  </div>;
 }
 
 function Picker({ label, value, change, options, disabled }: {

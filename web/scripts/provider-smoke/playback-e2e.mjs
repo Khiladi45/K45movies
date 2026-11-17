@@ -114,13 +114,35 @@ try {
   const waitPlayback = (ref, time) => page.waitForFunction(({ ref, time }) => [...document.querySelectorAll("video")].some(
     (item) => item.currentSrc.endsWith(ref) && item.videoWidth > 0 && item.currentTime >= time), { ref, time }, { timeout: 20_000 });
   await waitPlayback("season1-1080-ep1", 0.3);
+  assert.equal(await video.evaluate((element) => element.disablePictureInPicture && !element.controls), true);
+  assert.equal(await page.getByRole("slider", { name: "Seek", exact: true }).count(), 1);
+  assert.equal(await page.locator(".player-controls progress").count(), 0);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole("button", { name: "Framing and zoom", exact: true }).click();
+  await page.getByRole("button", { name: "Crop to 16:9", exact: true }).click();
+  const cropRatio = await page.locator(".player-video-window").evaluate((element) => element.clientWidth / element.clientHeight);
+  assert.ok(Math.abs(cropRatio - 16 / 9) < 0.02);
+  const zoom = page.getByRole("slider", { name: "Zoom", exact: true });
+  for (const [key, zoomPercent, scale] of [["Home", "50%", "0.5"], ["End", "400%", "4"]]) {
+    await zoom.press(key);
+    assert.equal(await zoom.getAttribute("aria-valuetext"), zoomPercent);
+    assert.equal(await video.evaluate((element) => element.style.transform), `scale(${scale})`);
+  }
+  await page.getByRole("button", { name: "Reset zoom" }).click();
+  assert.equal(await zoom.getAttribute("aria-valuetext"), "100%");
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth), 390);
+  await page.getByRole("button", { name: "Audio tracks", exact: true }).click();
+  await page.getByText("This source and browser do not expose alternate audio tracks.").waitFor();
+  await page.getByRole("button", { name: "Close panel" }).click();
+  await page.setViewportSize({ width: 1440, height: 900 });
   await video.evaluate((element) => { element.currentTime = 4; });
   await waitPlayback("season1-1080-ep1", 3.8);
   const playedAt = await video.evaluate((element) => element.currentTime);
   await page.getByRole("button", { name: "Quality", exact: true }).click();
-  const playerPicker = page.getByLabel("Title quality");
-  assert.deepEqual(await playerPicker.locator("option").allTextContents(), ["Season 1 · 720p", "Season 1 · 1080p"]);
-  await playerPicker.selectOption("0");
+  const playerPicker = page.getByRole("list", { name: "Title quality" });
+  assert.deepEqual(await playerPicker.getByRole("button").allTextContents(), ["Season 1 · 720p", "Season 1 · 1080p"]);
+  assert.equal(await playerPicker.getByRole("button", { name: "Season 1 · 1080p" }).getAttribute("aria-pressed"), "true");
+  await playerPicker.getByRole("button", { name: "Season 1 · 720p" }).click();
   await waitPlayback("season1-720-ep1", 3.8);
   const resumed = await video.evaluate((element) => element.currentTime);
   await page.getByRole("button", { name: "Servers", exact: true }).click();
