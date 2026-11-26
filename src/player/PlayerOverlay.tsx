@@ -91,7 +91,7 @@ import {
   QualityPreference,
 } from "@/lib/streams";
 import { HD_TARGET_HEIGHT } from "@/lib/streamRanking";
-import { autoFit, HEIGHT_120, scaleYFor } from "@/lib/screenFit";
+import { autoFit, FILL_NO_BARS, fitTransform, HEIGHT_120 } from "@/lib/screenFit";
 
 const mmkv = createMMKV();
 import { orderEpisodes } from "@/lib/episodes";
@@ -131,8 +131,9 @@ const ASPECTS: { key: any; label: string }[] = [
   { key: ResizeMode.CONTAIN, label: "Fit" },
   { key: ResizeMode.COVER, label: "Cover" },
   { key: ResizeMode.STRETCH, label: "Stretch" },
-  // Fit, then 20% taller with the width unchanged (top/bottom edges cropped).
-  { key: HEIGHT_120, label: "Height 120%" },
+  // No black bars: zoom (shape kept, edges cropped) or stretch the height.
+  { key: FILL_NO_BARS, label: "Fill screen (no black bars)" },
+  { key: HEIGHT_120, label: "Height fill (no black bars)" },
   { key: ResizeMode.NONE, label: "100%" },
 ];
 
@@ -621,7 +622,19 @@ export default function PlayerOverlay() {
   const [rate, setRate] = useState(1);
   // Auto fit by default on phones and TV: fills the screen when the video's
   // shape is close to it, otherwise fits the whole picture with black bars.
-  const [aspectIdx, setAspectIdx] = useState(0);
+  // The chosen screen size is kept for the next videos (and app restarts).
+  const [aspectIdx, setAspectIdxState] = useState(() => {
+    const saved = usePreferencesStore.getState().playerFitKey;
+    const index = ASPECTS.findIndex((a) => a.key === saved);
+    return index >= 0 ? index : 0;
+  });
+  const setAspectIdx = useCallback((next: number | ((value: number) => number)) => {
+    setAspectIdxState((value) => {
+      const index = typeof next === "function" ? next(value) : next;
+      usePreferencesStore.getState().setPreference("playerFitKey", String(ASPECTS[index]?.key ?? AUTO_ASPECT));
+      return index;
+    });
+  }, []);
   // Width / height of the playing video, for the Auto screen fit.
   const [videoAspect, setVideoAspect] = useState<number | null>(null);
   const [locked, setLocked] = useState(false);
@@ -2916,12 +2929,19 @@ const renderSeekButton = (side: "left" | "right") => {
 
   const resolvedResizeMode = useMemo(() => {
     const key = ASPECTS[aspectIdx]?.key ?? ResizeMode.CONTAIN;
-    if (key === HEIGHT_120) return ResizeMode.CONTAIN;
-    if (key !== AUTO_ASPECT) return key;
     const screenAspect = screenHeight > 0 ? screenWidth / screenHeight : 16 / 9;
+    const fill = fitTransform(key, videoAspect, screenAspect);
+    if (fill) return fill.resize === "cover" ? ResizeMode.COVER : ResizeMode.CONTAIN;
+    if (key !== AUTO_ASPECT) return key;
     return autoFit(videoAspect, screenAspect) === "stretch"
       ? ResizeMode.STRETCH
       : ResizeMode.CONTAIN;
+  }, [aspectIdx, videoAspect, screenWidth, screenHeight]);
+
+  // Extra zoom / height stretch for the "no black bars" modes (1 = none).
+  const fillScale = useMemo(() => {
+    const screenAspect = screenHeight > 0 ? screenWidth / screenHeight : 16 / 9;
+    return fitTransform(ASPECTS[aspectIdx]?.key, videoAspect, screenAspect) ?? { scaleX: 1, scaleY: 1 };
   }, [aspectIdx, videoAspect, screenWidth, screenHeight]);
 
   const videoSource = useMemo(() => {
@@ -3032,7 +3052,8 @@ const renderSeekButton = (side: "left" | "right") => {
                   { translateX: zoomTranslate.x },
                   { translateY: zoomTranslate.y },
                   { scale: zoomScale },
-                  { scaleY: expanded ? scaleYFor(ASPECTS[aspectIdx]?.key) : 1 },
+                  { scaleX: expanded ? fillScale.scaleX : 1 },
+                  { scaleY: expanded ? fillScale.scaleY : 1 },
                 ],
               },
             ]}

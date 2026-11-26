@@ -98,4 +98,10 @@ for (const f of fs.readdirSync(path.join(root, "src/TV/youtube"))) {
   assert.ok(!/startDownload|startTv\w*Download/.test(read(`src/TV/youtube/${f}`)), `src/TV/youtube/${f}`);
 }
 
+// Fast downloads: parallel byte ranges with a verified fallback to one connection.
+assert.ok(manager.includes("const PARALLEL_PARTS = 6;") && manager.includes("const HLS_CONCURRENCY = 12;"));
+assert.ok(manager.includes('Range: "bytes=0-1023"') && manager.includes("probe.size !== 1024"), "ranges verified before splitting");
+assert.ok(/if \(!fast\) \{\s*await downloadToFile\(/.test(manager), "falls back to one download");
+assert.ok(manager.includes('job.storage !== "custom" &&'), "chosen folders keep the old path");
+
 console.log("tv-downloads regression: OK");

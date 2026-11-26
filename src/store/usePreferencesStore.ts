@@ -53,6 +53,8 @@ export type Preferences = {
   // the app must ask instead of silently using internal storage.
   downloadLocationChosen: boolean;
   wifiOnlyDownloads: boolean;
+  /** Player screen size chosen last (kept across videos); unset = Auto. */
+  playerFitKey?: string;
 };
 
 export const DEFAULT_SUBTITLE_BOTTOM = 36;

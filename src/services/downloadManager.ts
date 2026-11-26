@@ -14,7 +14,7 @@ import {
 import { usePreferencesStore } from "@/store/usePreferencesStore";
 
 const MAX_CONCURRENT = 2;
-const HLS_CONCURRENCY = 6;
+const HLS_CONCURRENCY = 12;
 const APP_DOWNLOAD_DIR = "k45-downloads";
 
 const queue: string[] = [];
@@ -421,6 +421,129 @@ async function downloadToFile(
     await task.downloadAsync();
   } finally {
     task.release();
+  }
+}
+
+/** Parallel connections for one plain video file (servers often cap each connection). */
+const PARALLEL_PARTS = 6;
+/** Smaller files are not worth splitting. */
+const MIN_PARALLEL_BYTES = 24 * 1024 * 1024;
+const COPY_CHUNK = 4 * 1024 * 1024;
+
+/** File size from a HEAD request when the server says it serves byte ranges; else 0. */
+async function rangeSizeOf(url: string, headers: Record<string, string>, signal: AbortSignal): Promise<number> {
+  try {
+    const res = await fetch(url, { method: "HEAD", headers, signal });
+    if (!res.ok) return 0;
+    const accepts = (res.headers.get("accept-ranges") || "").toLowerCase();
+    const size = Number(res.headers.get("content-length"));
+    return accepts.includes("bytes") && Number.isFinite(size) && size > 0 ? size : 0;
+  } catch (error) {
+    if (signal.aborted) throw error;
+    return 0;
+  }
+}
+
+/**
+ * Fast path for a plain file: PARALLEL_PARTS native downloads of byte ranges
+ * into cache parts, then joined into `destFile`. Returns false (nothing
+ * written) when the server does not really serve ranges, so the caller can
+ * fall back to one normal download.
+ */
+async function downloadParallel(
+  url: string,
+  headers: Record<string, string>,
+  destFile: File,
+  controller: AbortController,
+  onProgress: (bytesWritten: number, totalBytes: number) => void,
+): Promise<boolean> {
+  const { signal } = controller;
+  const size = await rangeSizeOf(url, headers, signal);
+  if (size < MIN_PARALLEL_BYTES) return false;
+
+  const dir = new Directory(Paths.cache, "k45-parts");
+  if (!dir.exists) dir.create({ intermediates: true });
+  const key = shortHash(url + destFile.uri);
+
+  // Make sure ranges are honoured (a server that ignores them would send the
+  // whole file for every part).
+  const probe = new File(dir, `${key}.probe`);
+  deleteQuietly(probe);
+  try {
+    const task = File.createDownloadTask(url, probe, { headers: { ...headers, Range: "bytes=0-1023" }, signal });
+    try {
+      await task.downloadAsync();
+    } finally {
+      task.release();
+    }
+    if (!probe.exists || probe.size !== 1024) return false;
+  } catch (error) {
+    if (signal.aborted) throw error;
+    return false;
+  } finally {
+    deleteQuietly(probe);
+  }
+
+  const partSize = Math.ceil(size / PARALLEL_PARTS);
+  const parts = Array.from({ length: PARALLEL_PARTS }, (_, i) => {
+    const start = i * partSize;
+    const end = Math.min(size - 1, start + partSize - 1);
+    return { file: new File(dir, `${key}.part${i}`), start, end, written: 0 };
+  }).filter((p) => p.start <= p.end);
+  const report = () => onProgress(parts.reduce((n, p) => n + p.written, 0), size);
+
+  try {
+    await Promise.all(
+      parts.map(async (part) => {
+        deleteQuietly(part.file);
+        const task = File.createDownloadTask(url, part.file, {
+          headers: { ...headers, Range: `bytes=${part.start}-${part.end}` },
+          signal,
+          onProgress: ({ bytesWritten }) => {
+            part.written = bytesWritten;
+            report();
+          },
+        });
+        try {
+          await task.downloadAsync();
+        } finally {
+          task.release();
+        }
+        if (!part.file.exists || part.file.size !== part.end - part.start + 1) {
+          throw new Error("A download part came back incomplete. Please retry.");
+        }
+      }),
+    );
+    assertNotAborted(signal);
+
+    // Join the parts in order.
+    deleteQuietly(destFile);
+    destFile.create();
+    const out = destFile.open(FileMode.Append);
+    try {
+      for (const part of parts) {
+        const input = part.file.open(readOnlyMode());
+        try {
+          let left = part.end - part.start + 1;
+          input.offset = 0;
+          while (left > 0) {
+            assertNotAborted(signal);
+            const bytes = input.readBytes(Math.min(COPY_CHUNK, left));
+            if (!bytes.byteLength) throw new Error("Could not read a download part.");
+            out.writeBytes(bytes);
+            left -= bytes.byteLength;
+          }
+        } finally {
+          input.close();
+        }
+        deleteQuietly(part.file);
+      }
+    } finally {
+      out.close();
+    }
+    return true;
+  } finally {
+    for (const part of parts) deleteQuietly(part.file);
   }
 }
 
@@ -923,21 +1046,22 @@ async function runJob(id: string) {
         createdFile = target;
       }
 
-      await downloadToFile(
-        url,
-        headers,
-        createdFile,
-        id,
-        controller,
-        (bytesWritten, totalBytes) => {
-          useDownloadsStore.getState().patchJob(id, {
-            status: "downloading",
-            bytesReceived: bytesWritten,
-            bytesTotal: totalBytes > 0 ? totalBytes : 0,
-            progress: totalBytes > 0 ? bytesWritten / totalBytes : 0,
-          });
-        },
-      );
+      const onFileProgress = (bytesWritten: number, totalBytes: number) => {
+        useDownloadsStore.getState().patchJob(id, {
+          status: "downloading",
+          bytesReceived: bytesWritten,
+          bytesTotal: totalBytes > 0 ? totalBytes : 0,
+          progress: totalBytes > 0 ? bytesWritten / totalBytes : 0,
+        });
+      };
+      // App storage: several connections at once when the server allows it;
+      // otherwise (or for a chosen folder) one normal download as before.
+      const fast =
+        job.storage !== "custom" &&
+        (await downloadParallel(url, headers, createdFile, controller, onFileProgress));
+      if (!fast) {
+        await downloadToFile(url, headers, createdFile, id, controller, onFileProgress);
+      }
 
       assertNotAborted(controller.signal);
 
