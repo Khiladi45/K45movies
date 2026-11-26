@@ -7,6 +7,7 @@ import { muxFragmentedMp4, type ByteSource } from "@/lib/mp4Mux";
 import { DEFAULT_UA } from "@/services/SandboxManager";
 import {
   DownloadJob,
+  type DownloadTmdbRef,
   isActiveDownload,
   useDownloadsStore,
 } from "@/store/useDownloadsStore";
@@ -1025,6 +1026,8 @@ type StartOptions = {
   stream?: PlayableStream;
   /** With a video-only `stream`: the audio-only file to join it with. */
   audioStream?: PlayableStream;
+  /** TV Movie Based: which TMDB title/episode this is (optional). */
+  tmdb?: DownloadTmdbRef;
 };
 
 export async function startDownload(
@@ -1061,6 +1064,7 @@ export async function startDownload(
     providerId: options.providerId,
     type: options.type,
     image: options.image,
+    ...(options.tmdb ? { tmdb: options.tmdb } : {}),
     status: "queued",
     progress: 0,
     bytesReceived: 0,

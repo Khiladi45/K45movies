@@ -45,7 +45,8 @@ assert.ok(/layout === "provider"\) return <ProviderShell key="provider" \/>/.tes
 assert.ok(/layout === "youtube"\) return <YouTubeShell key="youtube" \/>/.test(shell));
 assert.ok(/return <MovieShell key="movie" \/>/.test(shell));
 
-// The Movie shell is untouched: same 4 sections and screens, same SideNav.
+// The Movie shell keeps its 4 original sections and screens (a fifth,
+// "Downloads", was added on purpose in feat/tv-downloads).
 for (const line of [
   '{section === "home" ? <TvHomeScreen /> : null}',
   '{section === "search" ? <TvSearchScreen /> : null}',
@@ -56,7 +57,9 @@ for (const line of [
   assert.ok(app.includes(line), `TvMain unchanged: ${line}`);
 }
 const sideNav = read("src/TV/components/SideNav.tsx");
-assert.ok(/const ITEMS: [\s\S]*"home"[\s\S]*"search"[\s\S]*"mylist"[\s\S]*"settings"/.test(sideNav), "Movie SideNav items unchanged");
+assert.ok(/const ITEMS: [\s\S]*"home"[\s\S]*"search"[\s\S]*"mylist"[\s\S]*"settings"/.test(sideNav), "Movie SideNav original items kept");
+assert.ok(/"mylist"[\s\S]*"downloads"[\s\S]*"settings"/.test(sideNav), "Downloads sits between My List and Settings");
+assert.ok(app.includes('{section === "downloads" ? <TvDownloadsScreen /> : null}'), "Downloads section");
 
 // Rails per layout.
 const provider = read("src/TV/shell/ProviderShell.tsx");

@@ -16,6 +16,7 @@ import TvHomeScreen from "./screens/TvHomeScreen";
 import TvSearchScreen from "./screens/TvSearchScreen";
 import TvMyListScreen from "./screens/TvMyListScreen";
 import TvSettingsScreen from "./screens/TvSettingsScreen";
+import TvDownloadsScreen from "./downloads/TvDownloadsScreen";
 import TvDetailScreen from "./screens/TvDetailScreen";
 import { TV } from "./theme";
 import { useRestoreTvFocus } from "./useRestoreTvFocus";
@@ -58,6 +59,7 @@ function TvMain() {
         {section === "home" ? <TvHomeScreen /> : null}
         {section === "search" ? <TvSearchScreen /> : null}
         {section === "mylist" ? <TvMyListScreen /> : null}
+        {section === "downloads" ? <TvDownloadsScreen /> : null}
         {section === "settings" ? <TvSettingsScreen /> : null}
       </View>
     </View>

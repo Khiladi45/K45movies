@@ -37,6 +37,9 @@ import { PosterRow } from "../components/PosterRow";
 import { useOpenTvTitle } from "./TvHomeScreen";
 import { TV } from "../theme";
 import { useRestoreTvFocus } from "../useRestoreTvFocus";
+import { useDownloadsStore } from "@/store/useDownloadsStore";
+import { useTvTitleDownload } from "../downloads/tvDownloads";
+import { OFFLINE_SUFFIX, downloadedEpisodes } from "../downloads/tvDownloadMatch";
 
 type Sources = {
   options: SourceOption[];
@@ -144,6 +147,8 @@ function Header({
   stage,
   error,
   playRef,
+  offline = false,
+  download,
 }: {
   playRef: RefObject<View | null>;
   details: TmdbDetails;
@@ -152,6 +157,10 @@ function Header({
   busy: boolean;
   stage: string | null;
   error: string | null;
+  /** Play opens the downloaded file (no internet needed). */
+  offline?: boolean;
+  /** TV downloads: the Download button next to My List. */
+  download?: { label: string; icon: keyof typeof Ionicons.glyphMap; onPress: () => void };
 }) {
   const primaryColor = useThemeStore((s) => s.primaryColor);
   const saved = useTmdbWatchlistStore((s) =>
@@ -194,7 +203,7 @@ function Header({
           {busy ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Ionicons name="play" size={18} color="#fff" />
+            <Ionicons name={offline ? "checkmark-done-circle" : "play"} size={18} color="#fff" />
           )}
           <Text style={styles.buttonText}>{playLabel}</Text>
         </Focusable>
@@ -214,6 +223,12 @@ function Header({
           <Ionicons name={saved ? "checkmark" : "add"} size={18} color="#fff" />
           <Text style={styles.buttonText}>{saved ? "In My List" : "My List"}</Text>
         </Focusable>
+        {download ? (
+          <Focusable style={styles.button} onPress={download.onPress} accessibilityLabel={download.label}>
+            <Ionicons name={download.icon} size={18} color="#fff" />
+            <Text style={styles.buttonText}>{download.label}</Text>
+          </Focusable>
+        ) : null}
       </View>
       {stage ? <Text style={styles.stage}>{stage}</Text> : null}
       {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -266,22 +281,41 @@ function MovieBody({
   const start = (option: SourceOption) => play(option, target, undefined, buildQueue(sources));
   const pending = usePlayWhenReady(sources, start, playingId);
   const open = useOpenTvTitle();
+  const dl = useTvTitleDownload({
+    tmdb: { id: details.id, mediaType: "movie" },
+    title: details.title,
+    image: tmdbImage(details.poster, "w342") || undefined,
+    options: sources.options,
+    loading: sources.loading,
+    providerNames: useProviderNames(sources),
+  });
 
   return (
     <>
       <Header
         playRef={playRef}
         details={details}
-        playLabel={sources.options.length || !sources.loading ? "Play" : "Play when ready"}
+        offline={!!dl.offline}
+        download={{ ...dl.button, onPress: dl.onPressDownload }}
+        playLabel={
+          dl.offline
+            ? `Play${OFFLINE_SUFFIX}`
+            : sources.options.length || !sources.loading
+              ? "Play"
+              : "Play when ready"
+        }
         busy={!!playingId || pending.wanted}
         stage={stage || (pending.wanted ? "Finding the best source…" : null)}
         error={
+          dl.message ||
           error ||
-          (!sources.loading && sources.options.length === 0 && !sources.noProviders
+          (!dl.offline && !sources.loading && sources.options.length === 0 && !sources.noProviders
             ? "No source found for this title."
             : null)
         }
         onPlay={() => {
+          // A downloaded copy plays from the file, without the internet.
+          if (dl.offline && dl.playOffline()) return;
           const first = sources.options[0];
           if (first) start(first);
           else pending.request();
@@ -289,7 +323,15 @@ function MovieBody({
       />
       <SourceList sources={sources} playingId={playingId} onPlay={start} />
       <PosterRow title="More like this" items={details.similar} onOpen={open} reportFocus={false} />
+      {dl.dialogs}
     </>
+  );
+}
+
+function useProviderNames(sources: Sources): Record<string, string> {
+  return useMemo(
+    () => Object.fromEntries(sources.providers.map((p) => [p.providerId, p.name])),
+    [sources.providers],
   );
 }
 
@@ -345,22 +387,38 @@ function SeriesBody({
   const pending = usePlayWhenReady(sources, start, playingId);
   const open = useOpenTvTitle();
   const still = (path: string | null) => tmdbImage(path, "w342") || tmdbImage(details.backdrop, "w342");
+  const dl = useTvTitleDownload({
+    tmdb: { id: details.id, mediaType: "tv", season: current.season, episode: current.episode },
+    title: details.title,
+    image: tmdbImage(details.poster, "w342") || undefined,
+    episodeName: current.name,
+    options: sources.options,
+    loading: sources.loading,
+    providerNames: useProviderNames(sources),
+  });
+  const jobs = useDownloadsStore((s) => s.jobs);
+  const downloadedHere = useMemo(() => downloadedEpisodes(jobs, details.id, season), [jobs, details.id, season]);
 
   return (
     <>
       <Header
         playRef={playRef}
         details={details}
-        playLabel={`${resume && !selected ? "Continue" : "Play"} S${current.season} E${current.episode}`}
+        offline={!!dl.offline}
+        download={{ ...dl.button, onPress: dl.onPressDownload }}
+        playLabel={`${resume && !selected ? "Continue" : "Play"} S${current.season} E${current.episode}${dl.offline ? OFFLINE_SUFFIX : ""}`}
         busy={!!playingId || pending.wanted}
         stage={stage || (pending.wanted ? "Finding the best source…" : null)}
         error={
+          dl.message ||
           error ||
-          (!sources.loading && sources.options.length === 0 && !sources.noProviders
+          (!dl.offline && !sources.loading && sources.options.length === 0 && !sources.noProviders
             ? "No source found for this episode."
             : null)
         }
         onPlay={() => {
+          // A downloaded episode plays from the file, without the internet.
+          if (dl.offline && dl.playOffline()) return;
           const first = sources.options[0];
           if (first) start(first);
           else pending.request();
@@ -411,6 +469,11 @@ function SeriesBody({
                 <Text style={styles.episodeText} numberOfLines={2}>
                   {ep.number}. {ep.name}
                 </Text>
+                {downloadedHere.has(ep.number) ? (
+                  <View style={styles.episodeBadge}>
+                    <Ionicons name="checkmark-done" size={12} color="#fff" />
+                  </View>
+                ) : null}
               </Focusable>
             );
           }}
@@ -419,6 +482,7 @@ function SeriesBody({
 
       <SourceList sources={sources} playingId={playingId} onPlay={start} />
       <PosterRow title="More like this" items={details.similar} onOpen={open} reportFocus={false} />
+      {dl.dialogs}
     </>
   );
 }
@@ -515,5 +579,13 @@ const styles = StyleSheet.create({
   episodeActive: { borderColor: "rgba(255,255,255,0.6)" },
   episodeImage: { ...StyleSheet.absoluteFill, borderRadius: TV.radius - 2 },
   episodeShade: { ...StyleSheet.absoluteFill, backgroundColor: "rgba(0,0,0,0.4)" },
+  episodeBadge: {
+    position: "absolute",
+    top: 6,
+    right: 6,
+    padding: 3,
+    borderRadius: 10,
+    backgroundColor: "rgba(34,197,94,0.9)",
+  },
   episodeText: { color: "#fff", fontSize: TV.text.small, fontWeight: "700", padding: 8 },
 });

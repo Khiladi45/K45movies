@@ -36,6 +36,13 @@ export type DownloadDirectSource = {
   height?: number;
 };
 
+export type DownloadTmdbRef = {
+  id: number;
+  mediaType: "movie" | "tv";
+  season?: number;
+  episode?: number;
+};
+
 export type DownloadJob = {
   id: string;
   link: string;
@@ -54,6 +61,8 @@ export type DownloadJob = {
   fileUri?: string;
   /** Quality picked in the download sheet; skips re-resolving the provider. */
   direct?: DownloadDirectSource;
+  /** TV Movie Based: the TMDB title/episode this file is (plays offline from its page). */
+  tmdb?: DownloadTmdbRef;
   storage: "app" | "custom";
   /** Folder URI captured when the download started. */
   storageUri?: string;

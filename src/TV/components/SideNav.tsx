@@ -5,12 +5,13 @@ import { useThemeStore } from "@/store/useThemeStore";
 import Focusable from "./Focusable";
 import { TV } from "../theme";
 
-export type TvSection = "home" | "search" | "mylist" | "settings";
+export type TvSection = "home" | "search" | "mylist" | "downloads" | "settings";
 
 const ITEMS: { key: TvSection; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { key: "home", label: "Home", icon: "home" },
   { key: "search", label: "Search", icon: "search" },
   { key: "mylist", label: "My List", icon: "bookmark" },
+  { key: "downloads", label: "Downloads", icon: "download" },
   { key: "settings", label: "Settings", icon: "settings" },
 ];
 

@@ -1,5 +1,5 @@
 import React from "react";
-import { Modal, StyleSheet, Text, View } from "react-native";
+import { Modal, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Focusable from "./Focusable";
 import { TV } from "../theme";
@@ -40,7 +40,8 @@ export default function TvDialog({
               {subtitle}
             </Text>
           ) : null}
-          <View style={styles.actions}>
+          {/* Long lists scroll; focus moves the scroll with the remote. */}
+          <ScrollView style={styles.scroll} contentContainerStyle={styles.actions}>
             {actions.map((action, index) => (
               <Focusable
                 key={action.label}
@@ -67,7 +68,7 @@ export default function TvDialog({
               <Ionicons name="close" size={18} color={TV.muted} />
               <Text style={[styles.actionText, { color: TV.muted }]}>Cancel</Text>
             </Focusable>
-          </View>
+          </ScrollView>
         </View>
       </View>
     </Modal>
@@ -82,7 +83,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   box: {
-    width: 380,
+    width: 440,
     maxWidth: "80%",
     padding: 20,
     borderRadius: 12,
@@ -90,7 +91,8 @@ const styles = StyleSheet.create({
   },
   title: { color: "#fff", fontSize: TV.text.row, fontWeight: "800" },
   subtitle: { color: TV.muted, fontSize: TV.text.small, marginTop: 4 },
-  actions: { marginTop: 14, gap: 6 },
+  scroll: { marginTop: 14, maxHeight: 340 },
+  actions: { gap: 6 },
   action: {
     flexDirection: "row",
     alignItems: "center",
