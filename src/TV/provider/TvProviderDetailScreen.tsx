@@ -16,6 +16,8 @@ import { TV } from "../theme";
 import { useRestoreTvFocus } from "../useRestoreTvFocus";
 import { entryLabel, isSeriesInfo, linkListOf } from "./providerMeta";
 import { useTvProviderPlayback } from "./useTvProviderPlayback";
+import { useTvProviderDownloads } from "./useTvProviderDownloads";
+import { OFFLINE_SUFFIX } from "../downloads/tvDownloadMatch";
 
 const MAX_ITEMS = 200;
 
@@ -45,6 +47,8 @@ export default function TvProviderDetailScreen({ route }: any) {
   const playItem = (index: number) => {
     const item = items[index];
     if (!item) return;
+    // A downloaded copy plays from the file, without the internet.
+    if (dl.playOffline(item.link)) return;
     play(item.link, item.type || (series ? "series" : "movie"), {
       qualityIndex: Math.min(entryIndex, list.length - 1),
       itemIndex: index,
@@ -83,6 +87,9 @@ export default function TvProviderDetailScreen({ route }: any) {
     .filter(Boolean)
     .map(String)
     .join("  ·  ");
+
+  const dl = useTvProviderDownloads({ items, post, providerId, title, image: poster, series });
+  const firstOffline = items[0] ? !!dl.offlineFor(items[0].link) : false;
 
   return (
     <View style={styles.screen}>
@@ -127,10 +134,11 @@ export default function TvProviderDetailScreen({ route }: any) {
                   {playingLink || wantPlay ? (
                     <ActivityIndicator color="#fff" />
                   ) : (
-                    <Ionicons name="play" size={18} color="#fff" />
+                    <Ionicons name={firstOffline ? "checkmark-done-circle" : "play"} size={18} color="#fff" />
                   )}
                   <Text style={styles.buttonText}>
                     {series && items[0] ? `Play ${items[0].title || "Episode 1"}` : "Play"}
+                    {firstOffline ? OFFLINE_SUFFIX : ""}
                   </Text>
                 </Focusable>
                 <Focusable
@@ -149,8 +157,17 @@ export default function TvProviderDetailScreen({ route }: any) {
                   <Ionicons name={saved ? "checkmark" : "add"} size={18} color="#fff" />
                   <Text style={styles.buttonText}>{saved ? "In Watchlist" : "Watchlist"}</Text>
                 </Focusable>
+                <Focusable style={styles.button} onPress={dl.onPressDownload} accessibilityLabel={dl.button.label}>
+                  {dl.loadingLink ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Ionicons name={dl.button.icon} size={18} color="#fff" />
+                  )}
+                  <Text style={styles.buttonText}>{dl.button.label}</Text>
+                </Focusable>
               </View>
               {error ? <Text style={styles.error}>{error}</Text> : null}
+              {dl.message ? <Text style={styles.note}>{dl.message}</Text> : null}
             </View>
           </View>
 
@@ -175,6 +192,9 @@ export default function TvProviderDetailScreen({ route }: any) {
           ) : null}
 
           <Text style={styles.section}>{series ? "Episodes" : "Links"}</Text>
+          {items.length > 0 ? (
+            <Text style={styles.hint}>OK plays (downloaded ones play offline) · hold OK to download</Text>
+          ) : null}
           {needsEpisodes && episodesQuery.isLoading ? (
             <ActivityIndicator color="#fff" style={{ alignSelf: "flex-start", marginLeft: TV.safeX }} />
           ) : needsEpisodes && episodesQuery.isError ? (
@@ -190,11 +210,14 @@ export default function TvProviderDetailScreen({ route }: any) {
                   key={`${item.link}-${index}`}
                   style={styles.row}
                   onPress={() => playItem(index)}
+                  // Hold OK: download / cancel / play offline / delete this item.
+                  onLongPress={() => dl.openItemMenu(index)}
                   accessibilityLabel={`Play ${item.title || `Item ${index + 1}`}`}
                 >
                   <Text style={styles.rowTitle} numberOfLines={1}>
                     {item.title || (series ? `Episode ${index + 1}` : `Link ${index + 1}`)}
                   </Text>
+                  <RowDownloadState state={dl.stateFor(item.link)} loading={dl.loadingLink === item.link} />
                   {playingLink === item.link ? (
                     <ActivityIndicator color="#fff" />
                   ) : (
@@ -206,8 +229,24 @@ export default function TvProviderDetailScreen({ route }: any) {
           )}
         </ScrollView>
       )}
+      {dl.dialogs}
     </View>
   );
+}
+
+/** Per-row download badge: ✓ when downloaded, % while downloading. */
+function RowDownloadState({
+  state,
+  loading,
+}: {
+  state: { state: string; label: string };
+  loading: boolean;
+}) {
+  if (loading) return <ActivityIndicator color="#fff" size="small" />;
+  if (state.state === "done") return <Ionicons name="checkmark-done" size={16} color="#4ade80" />;
+  if (state.state === "active") return <Text style={styles.rowState}>{state.label.replace("Downloading ", "")}</Text>;
+  if (state.state === "failed") return <Ionicons name="alert-circle-outline" size={16} color="#f87171" />;
+  return null;
 }
 
 const styles = StyleSheet.create({
@@ -231,6 +270,9 @@ const styles = StyleSheet.create({
   },
   buttonText: { color: "#fff", fontSize: TV.text.body, fontWeight: "700" },
   error: { color: "#f87171", fontSize: TV.text.body, marginTop: 10 },
+  note: { color: TV.muted, fontSize: TV.text.small, marginTop: 8 },
+  hint: { color: TV.muted, fontSize: TV.text.small, marginLeft: TV.safeX, marginBottom: 8, marginTop: -4 },
+  rowState: { color: TV.muted, fontSize: TV.text.small, fontWeight: "700" },
   section: {
     color: "#fff",
     fontSize: TV.text.row,

@@ -76,11 +76,26 @@ assert.ok(!/\bTextInput\b/.test(screen + tv), "no TextInput");
 assert.ok(screen.includes("useRestoreTvFocus(firstRef)"));
 assert.ok(read("src/TV/components/SideNav.tsx").includes('{ key: "downloads", label: "Downloads", icon: "download" }'));
 
-// Downloads stay out of the Provider / YouTube TV layouts.
-for (const dir of ["src/TV/provider", "src/TV/youtube"]) {
-  for (const f of fs.readdirSync(path.join(root, dir))) {
-    assert.ok(!read(`${dir}/${f}`).includes("startDownload"), `${dir}/${f}`);
-  }
+// Provider Based: link-keyed downloads (same ids as phone downloads).
+const lj = (id, status, createdAt = 0) => ({ id, status, createdAt });
+assert.strictEqual(m.findLinkJob([lj("x", "error", 9), lj("x", "completed", 1)], ["x"]).status, "completed");
+assert.strictEqual(m.findLinkJob([lj("post", "completed")], ["item", "post"]).id, "post", "phone movie download (post link)");
+assert.strictEqual(m.findLinkJob([lj("other", "completed")], ["item", undefined]), undefined);
+const pdl = read("src/TV/provider/useTvProviderDownloads.tsx");
+assert.ok(pdl.includes("normalizeStreams(") && pdl.includes("filter((s) => !s.downloadOnly)"), "phone stream rule");
+assert.ok(pdl.includes('title="Choose download quality"') && pdl.includes('"Download which episode?"'));
+assert.ok(pdl.includes("series ? [link] : [link, post.link]"), "movie matches phone post-link download");
+assert.ok(pdl.includes("job.status === \"completed\" && downloadFileExists(job)"), "offline only with the file present");
+assert.ok(/ensureAppStorageOnTv\(\);\s*return startDownload\(options\)/.test(tv), "provider downloads use TV storage rules");
+const pdetail = read("src/TV/provider/TvProviderDetailScreen.tsx");
+assert.ok(/if \(!item\) return;\s*\/\/[^\n]*\n\s*if \(dl\.playOffline\(item\.link\)\) return;\s*play\(/.test(pdetail), "provider Play tries the offline file first");
+assert.ok(pdetail.includes("onLongPress={() => dl.openItemMenu(index)}"));
+assert.ok(pdetail.includes("useRestoreTvFocus(playRef)"), "focus restore kept");
+assert.ok(read("src/TV/shell/ProviderShell.tsx").includes('{ key: "downloads", label: "Downloads", icon: "download" }'));
+
+// Downloads stay out of the YouTube TV layout.
+for (const f of fs.readdirSync(path.join(root, "src/TV/youtube"))) {
+  assert.ok(!/startDownload|startTv\w*Download/.test(read(`src/TV/youtube/${f}`)), `src/TV/youtube/${f}`);
 }
 
 console.log("tv-downloads regression: OK");

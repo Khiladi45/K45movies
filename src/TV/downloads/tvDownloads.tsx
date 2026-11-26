@@ -16,6 +16,7 @@ import { usePreferencesStore } from "@/store/usePreferencesStore";
 import { downloadFileExists, playDownloadedJob } from "@/lib/localPlayback";
 import { languageName } from "@/lib/languages";
 import type { SourceOption } from "@/lib/titleBridge";
+import type { PlayableStream } from "@/lib/streams";
 import TvDialog, { type TvDialogAction } from "../components/TvDialog";
 import {
   downloadButtonState,
@@ -77,6 +78,60 @@ function sourceLabel(option: SourceOption, providerNames: Record<string, string>
   ]
     .filter(Boolean)
     .join(" · ");
+}
+
+/**
+ * Dialog actions for an existing download (Movie and Provider pages):
+ * finished → Play offline / Delete; running → Cancel; failed → Retry /
+ * pick another / Remove.
+ */
+export function jobActions(
+  job: DownloadJob,
+  {
+    playOffline,
+    onMessage,
+    pickAnother,
+  }: {
+    playOffline: () => void;
+    onMessage: (message: string | null) => void;
+    pickAnother?: { label: string; onPress: () => void };
+  },
+): TvDialogAction[] {
+  const state = downloadButtonState(job).state;
+  if (state === "done") {
+    return [
+      { label: "Play offline", icon: "play", onPress: playOffline },
+      { label: "Delete download", icon: "trash-outline", destructive: true, onPress: () => void deleteDownload(job.id) },
+    ];
+  }
+  if (state === "active") {
+    return [{ label: "Cancel download", icon: "close", destructive: true, onPress: () => cancelDownload(job.id) }];
+  }
+  return [
+    {
+      label: "Retry download",
+      icon: "refresh",
+      onPress: () => {
+        ensureAppStorageOnTv();
+        retryDownload(job.id).then((r) => onMessage(r.ok ? null : r.error || "Retry failed."));
+      },
+    },
+    ...(pickAnother ? [{ label: pickAnother.label, icon: "list" as const, onPress: pickAnother.onPress }] : []),
+    { label: "Remove", icon: "trash-outline", destructive: true, onPress: () => void deleteDownload(job.id) },
+  ];
+}
+
+/** Provider Based TV: download one provider link (episode or movie link). */
+export async function startTvProviderDownload(options: {
+  link: string;
+  providerId: string;
+  type?: string;
+  title: string;
+  image?: string;
+  stream?: PlayableStream;
+}): Promise<StartResult> {
+  ensureAppStorageOnTv();
+  return startDownload(options);
 }
 
 /**
@@ -144,30 +199,13 @@ export function useTvTitleDownload({
     },
   }));
 
-  let manageActions: TvDialogAction[] = [];
-  if (job && button.state === "done") {
-    manageActions = [
-      { label: "Play offline", icon: "play", onPress: () => void playOffline() },
-      { label: "Delete download", icon: "trash-outline", destructive: true, onPress: () => void deleteDownload(job.id) },
-    ];
-  } else if (job && button.state === "active") {
-    manageActions = [
-      { label: "Cancel download", icon: "close", destructive: true, onPress: () => cancelDownload(job.id) },
-    ];
-  } else if (job) {
-    manageActions = [
-      {
-        label: "Retry download",
-        icon: "refresh",
-        onPress: () => {
-          ensureAppStorageOnTv();
-          retryDownload(job.id).then((r) => setMessage(r.ok ? null : r.error || "Retry failed."));
-        },
-      },
-      { label: "Choose another source", icon: "list", onPress: () => setTimeout(() => setDialog("pick"), 250) },
-      { label: "Remove", icon: "trash-outline", destructive: true, onPress: () => void deleteDownload(job.id) },
-    ];
-  }
+  const manageActions = job
+    ? jobActions(job, {
+        playOffline: () => void playOffline(),
+        onMessage: setMessage,
+        pickAnother: { label: "Choose another source", onPress: () => setTimeout(() => setDialog("pick"), 250) },
+      })
+    : [];
 
   const dialogs = (
     <>

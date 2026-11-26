@@ -48,6 +48,26 @@ export function findTmdbJob<J extends JobLike>(jobs: J[], ref: TmdbRef): J | und
   return best;
 }
 
+/**
+ * Provider Based: the download for any of these provider links (the job id
+ * is the link it was downloaded from, as on the phone). Same ranking.
+ */
+export function findLinkJob<J extends JobLike>(jobs: J[], links: (string | undefined)[]): J | undefined {
+  const wanted = new Set(links.filter(Boolean) as string[]);
+  let best: J | undefined;
+  for (const job of jobs) {
+    if (!wanted.has(job.id)) continue;
+    if (
+      !best ||
+      rank(job.status) < rank(best.status) ||
+      (rank(job.status) === rank(best.status) && (job.createdAt || 0) > (best.createdAt || 0))
+    ) {
+      best = job;
+    }
+  }
+  return best;
+}
+
 /** Episode numbers of this show's season that are fully downloaded. */
 export function downloadedEpisodes(jobs: JobLike[], showId: number, season: number): Set<number> {
   const out = new Set<number>();

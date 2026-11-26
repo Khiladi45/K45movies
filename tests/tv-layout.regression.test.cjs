@@ -65,7 +65,8 @@ assert.ok(app.includes('{section === "downloads" ? <TvDownloadsScreen /> : null}
 const provider = read("src/TV/shell/ProviderShell.tsx");
 assert.deepStrictEqual(
   [...provider.matchAll(/\{ key: "(\w+)", label:/g)].map((m) => m[1]),
-  ["home", "search", "watchlist", "providers", "settings"],
+  // "downloads" added on purpose in feat/tv-downloads.
+  ["home", "search", "watchlist", "downloads", "providers", "settings"],
 );
 const youtube = read("src/TV/shell/YouTubeShell.tsx");
 assert.deepStrictEqual(

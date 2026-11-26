@@ -32,7 +32,9 @@ for (const file of screens) {
   assert.ok(!/\bTextInput\b/.test(src), `${file}: no TextInput`);
   // Out of scope on TV.
   const code = src.replace(/\/\/.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, "");
-  assert.ok(!/Share\.share|setMini|PictureInPicture|ScreenOrientation|startDownload/.test(code), `${file}: TV scope`);
+  assert.ok(!/Share\.share|setMini|PictureInPicture|ScreenOrientation/.test(code), `${file}: TV scope`);
+  // Downloads: Movie and Provider layouts only (feat/tv-downloads), never YouTube.
+  if (file.includes("/youtube/")) assert.ok(!/startDownload|startTv\w*Download/.test(code), `${file}: no downloads`);
 }
 
 // Player: when there is no screen to go back to, TV goes to TvMain (there is

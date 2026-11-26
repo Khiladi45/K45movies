@@ -4,16 +4,18 @@ import TvShell from "./TvShell";
 import TvProviderHomeScreen from "../provider/TvProviderHomeScreen";
 import TvProviderSearchScreen from "../provider/TvProviderSearchScreen";
 import TvProviderWatchlistScreen from "../provider/TvProviderWatchlistScreen";
+import TvDownloadsScreen from "../downloads/TvDownloadsScreen";
 import type { TvRailItem } from "./TvSideRail";
 import TvSettingsScreen, { ProvidersBlock } from "../screens/TvSettingsScreen";
 import { TV } from "../theme";
 
-export type ProviderSection = "home" | "search" | "watchlist" | "providers" | "settings";
+export type ProviderSection = "home" | "search" | "watchlist" | "downloads" | "providers" | "settings";
 
 export const PROVIDER_RAIL: TvRailItem<ProviderSection>[] = [
   { key: "home", label: "Home", icon: "home" },
   { key: "search", label: "Search", icon: "search" },
   { key: "watchlist", label: "Watchlist", icon: "bookmark" },
+  { key: "downloads", label: "Downloads", icon: "download" },
   { key: "providers", label: "Providers", icon: "extension-puzzle" },
   { key: "settings", label: "Settings", icon: "settings" },
 ];
@@ -42,6 +44,8 @@ export default function ProviderShell() {
             return <TvProviderSearchScreen />;
           case "watchlist":
             return <TvProviderWatchlistScreen />;
+          case "downloads":
+            return <TvDownloadsScreen />;
           case "providers":
             return <ProvidersSection />;
           case "settings":
